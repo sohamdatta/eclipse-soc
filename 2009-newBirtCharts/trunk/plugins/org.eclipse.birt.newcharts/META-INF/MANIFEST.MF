@@ -1,0 +1,12 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: BIRT Newcharts Plug-in
+Bundle-SymbolicName: org.eclipse.birt.newcharts; singleton:=true
+Bundle-Version: 1.0.0
+Require-Bundle: org.eclipse.swt,
+ org.eclipse.core.runtime,
+ org.eclipse.ui
+Import-Package: junit.framework,
+ org.eclipse.swt.widgets,
+ org.eclipse.ui.part
+Bundle-RequiredExecutionEnvironment: JavaSE-1.6
