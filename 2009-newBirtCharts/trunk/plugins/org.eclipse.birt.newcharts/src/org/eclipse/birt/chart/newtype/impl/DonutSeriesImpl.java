@@ -1,5 +1,7 @@
 package org.eclipse.birt.chart.newtype.impl;
 
-public class DonutSeriesImpl {
+import org.eclipse.birt.chart.model.component.impl.SeriesImpl;
+
+public class DonutSeriesImpl extends SeriesImpl{
 
 }

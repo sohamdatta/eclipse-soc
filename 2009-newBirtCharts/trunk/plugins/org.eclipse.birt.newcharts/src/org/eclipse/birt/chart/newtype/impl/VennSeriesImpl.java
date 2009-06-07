@@ -1,5 +1,7 @@
 package org.eclipse.birt.chart.newtype.impl;
 
-public class VennSeriesImpl {
+import org.eclipse.birt.chart.model.component.impl.SeriesImpl;
+
+public class VennSeriesImpl extends SeriesImpl{
 
 }

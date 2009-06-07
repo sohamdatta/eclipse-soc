@@ -2,6 +2,7 @@ package org.eclipse.birt.newcharts.views;
 
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.TabFolder;
@@ -20,9 +21,10 @@ public class NewChartView extends ViewPart {
 		TabItem donutTab = new TabItem(tabFolder,SWT.TOP);
 		donutTab.setText("Donut Tab");
 		
-		Label tbd = new Label(parent,SWT.TOP);
+		Label tbd = new Label(tabFolder,SWT.TOP);
 		tbd.setText("Donut chart not implemented, yet");
 
+		donutTab.setControl(tbd);
 	}
 
 	@Override
