@@ -85,12 +85,16 @@ public class IPAddressFormatter extends AbstractFormatter{
 	 * 
 	 * @param b beginning index (inclusive)
 	 * @param e end index (exclusive)
+	 * @return Return new position of the cursor
 	 */
-	private void clear(int b,int e){
+	private int clear(int b,int e){
 		for(int pos=b;pos<e;pos++){
 			if(inputCache.charAt(pos)!='.') inputCache.setCharAt(pos, SPACE);
 		}
 		adjustInputCache();
+		locateCurrentArea();
+		if(e>0&&inputCache.charAt(e-1)==SPACE) return begin;
+		else return e;
 	}
 	/**
 	 * When doing some modifications,the input cache should be adjusted,thus every number in
@@ -255,8 +259,7 @@ public class IPAddressFormatter extends AbstractFormatter{
 		if(ignore) return;
 		e.doit = false;
 	  	if ( e.keyCode == SWT.BS || e.keyCode == SWT.DEL ) {
-	  		clear(e.start, e.end);
-	  		e.start=e.end;
+	  		e.start = clear(e.start, e.end);
 	  	} else {
 	  		e.start = insert(e.text, e.start);
 	  	}
