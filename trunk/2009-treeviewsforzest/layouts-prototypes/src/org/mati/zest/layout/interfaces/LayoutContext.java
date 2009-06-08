@@ -71,6 +71,22 @@ public interface LayoutContext {
 	public boolean isContinuousLayoutEnabled();
 
 	/**
+	 * Sets the mail layout algorithm for this context. Main algorithm will be
+	 * used to relayout graph items using {@link LayoutAlgorithm#applyLayout()}
+	 * after every event that is not intercepted by any listener.
+	 * 
+	 * @param algorithm
+	 */
+	public void setMainLayoutAlgorithm(LayoutAlgorithm algorithm);
+
+	/**
+	 * 
+	 * @return the main algorithm of this context (see
+	 *         {@link #setMainLayoutAlgorithm(LayoutAlgorithm)} for details)
+	 */
+	public LayoutAlgorithm getMainLayoutAlgorithm();
+
+	/**
 	 * Adds a listener to the context that will be notified about changes in
 	 * this context's layout, that is movement and resizing of nodes /
 	 * subgraphs. The notifications will not include changes made with API
