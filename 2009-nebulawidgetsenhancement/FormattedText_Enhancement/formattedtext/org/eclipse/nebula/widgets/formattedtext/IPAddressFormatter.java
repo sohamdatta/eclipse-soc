@@ -3,9 +3,6 @@ package org.eclipse.nebula.widgets.formattedtext;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.KeyListener;
-import org.eclipse.swt.events.MouseAdapter;
-import org.eclipse.swt.events.MouseEvent;
-import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.events.VerifyEvent;
 import org.eclipse.swt.widgets.Text;
 
@@ -17,8 +14,6 @@ public class IPAddressFormatter extends AbstractFormatter{
 	private int begin=0,end=0;
 	/** Key listener */
 	protected KeyListener klistener;
-	/** Mouse listener,used to control the position of the cursor when mouse clicking*/
-	protected MouseListener mlistener;
 	/**
 	 * An empty constructer.<br>
 	 * An ip address will have an unique format,so there is no necessary to offer an new format
@@ -41,13 +36,6 @@ public class IPAddressFormatter extends AbstractFormatter{
 				e.doit=false;
 			}
 			public void keyReleased(KeyEvent e) {
-				
-			}
-			
-		};
-		
-		mlistener = new MouseAdapter(){
-			public void mouseDown(MouseEvent arg0) {
 				
 			}
 			
@@ -93,7 +81,9 @@ public class IPAddressFormatter extends AbstractFormatter{
 		}
 		adjustInputCache();
 		locateCurrentArea();
-		if(e>0&&inputCache.charAt(e-1)==SPACE) return begin;
+		if((e>0&&inputCache.charAt(e-1)==SPACE)&&(e<15&&inputCache.charAt(e)=='.')
+				||(e==15&&inputCache.charAt(e-1)==SPACE)) 
+			return begin;
 		else return e;
 	}
 	/**
@@ -135,17 +125,26 @@ public class IPAddressFormatter extends AbstractFormatter{
 		int b=0;//first pos containing a none space character
 		while(b<3&&currEdit.charAt(b)==SPACE) b++;
 		int relativeInsertPos = pos-begin-1;
-		if(relativeInsertPos>end||relativeInsertPos<b) relativeInsertPos=3;
+		if(relativeInsertPos>end||relativeInsertPos<b) relativeInsertPos=b;
 		currEdit.insert(relativeInsertPos, txt);
 		if(!isValidPart(currEdit.toString().trim())){
 			beep();
 			return end;
 		}else{
-			int l=currEdit.length();
-			currEdit.delete(0, l-3);
+			int currLength=currEdit.length();//contain all characters
+			currEdit.delete(0, currLength-3);//cut it to retain only 3 characters
 			inputCache.replace(begin+1, end, currEdit.toString());
-			if(pos==end&&currEdit.toString().trim().length()==3) return end+1;
-			return end;
+			currLength=currEdit.toString().trim().length();//without SPACE length
+			if(currLength==3){
+				if(pos==end) return end+1;
+				else return end;
+			}else{
+				if(pos>0&&pos<15&&inputCache.charAt(pos-1)!=SPACE&&inputCache.charAt(pos)!=SPACE) 
+					return pos;
+				else if(pos<15&&inputCache.charAt(pos)==SPACE)
+					return begin+b+1;
+				else return end;
+			}
 		}
 	}
 	/**
