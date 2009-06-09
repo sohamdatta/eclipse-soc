@@ -18,7 +18,7 @@ public class IPAddressFormatterSnippet1 {
 
     final FormattedText text = new FormattedText(shell, SWT.BORDER);
     text.setFormatter(new IPAddressFormatter());
-    //text.setValue("192.192.192.192");
+    text.setValue("192.192.92.192");
     GridData data = new GridData();
     data.widthHint = 100;
     text.getControl().setLayoutData(data);
