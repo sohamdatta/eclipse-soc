@@ -67,7 +67,7 @@ public class IPAddressFormatter extends AbstractFormatter{
 		else return false;
 	}
 	/**
-	 * Clear a part of the input cache.<br>
+	 * Clear a part of the input cache when knocking DEL key.<br>
 	 * Characters are replaced by spaces in the fields, but separators are
 	 * preserved.
 	 * 
@@ -75,7 +75,7 @@ public class IPAddressFormatter extends AbstractFormatter{
 	 * @param e end index (exclusive)
 	 * @return Return new position of the cursor
 	 */
-	private int clear(int b,int e){
+	private int delClear(int b,int e){
 		for(int pos=b;pos<e;pos++){
 			if(inputCache.charAt(pos)!='.') inputCache.setCharAt(pos, SPACE);
 		}
@@ -84,6 +84,31 @@ public class IPAddressFormatter extends AbstractFormatter{
 		if((e>0&&inputCache.charAt(e-1)==SPACE)&&(e<15&&inputCache.charAt(e)=='.')
 				||(e==15&&inputCache.charAt(e-1)==SPACE)) 
 			return begin;
+		else return e;
+	}
+	/**
+	 * Clear a part of the input cache when knocking BackSpace key.<br>
+	 * Characters are replaced by spaces in the fields, but separators are
+	 * preserved.
+	 * 
+	 * @param b beginning index (inclusive)
+	 * @param e end index (exclusive)
+	 * @return Return new position of the cursor
+	 */
+	private int bspaceClear(int b,int e){
+		for(int pos=b;pos<e;pos++){//firstly,we just replace the position char of SPACE
+			if(inputCache.charAt(pos)!='.') inputCache.setCharAt(pos, SPACE);
+		}
+		//use adjustInputCache function to delete non-uself middle SPACE between numbers 
+		//and add useful SPACE in front
+		adjustInputCache(); 
+		locateCurrentArea();
+		
+		String currPart = inputCache.substring(begin+1, end);
+		int p=0;//first pos containing a none space character
+		while(p<3&&currPart.charAt(p)==SPACE) p++;
+		if((e<15)&&inputCache.charAt(e)==SPACE) return begin+p+1;
+		else if((e<15)&&inputCache.charAt(e)=='.') return end+1;
 		else return e;
 	}
 	/**
@@ -98,9 +123,9 @@ public class IPAddressFormatter extends AbstractFormatter{
 			StringBuffer temp=new StringBuffer(part);
 			for(int j=0;j<temp.length();j++) if(temp.charAt(j)==SPACE) temp.deleteCharAt(j);//remove SPACE in the middle
 			int spaceLength=3-temp.length();
-			while(spaceLength-->0) temp.insert(0, SPACE);
+			while(spaceLength-->0) temp.insert(0, SPACE);//insert space in front
 			part=temp.toString();
-			inputCache.replace(4*(i-1), 4*i-1, part);
+			inputCache.replace(4*(i-1), 4*i-1, part);//update the input cache
 			i++;
 		}
 	}
@@ -249,7 +274,7 @@ public class IPAddressFormatter extends AbstractFormatter{
 				i++;
 			}
 		}else if(value==null){
-			clear(0,15);
+			delClear(0,15);
 		}else{
 			throw new IllegalArgumentException("Invalid ip address");
 		}
@@ -257,9 +282,13 @@ public class IPAddressFormatter extends AbstractFormatter{
 	public void verifyText(VerifyEvent e) {
 		if(ignore) return;
 		e.doit = false;
-	  	if ( e.keyCode == SWT.BS || e.keyCode == SWT.DEL ) {
-	  		e.start = clear(e.start, e.end);
-	  	} else {
+		//when knocking backspace or delete key,the caret should be have a different action
+		//so there are two clear functions
+	  	if ( e.keyCode == SWT.BS) {
+	  		e.start = bspaceClear(e.start, e.end);
+	  	}else if(e.keyCode == SWT.DEL){
+	  		e.start = delClear(e.start, e.end);
+	  	}else {
 	  		e.start = insert(e.text, e.start);
 	  	}
 		updateText(inputCache.toString(),e.start);
