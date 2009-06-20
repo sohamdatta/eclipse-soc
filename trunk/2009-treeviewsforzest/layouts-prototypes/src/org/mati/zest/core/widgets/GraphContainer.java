@@ -595,7 +595,7 @@ public class GraphContainer extends GraphNode {
 	 * Gets the graph that this container has been added to.
 	 */
 	public Graph getGraph() {
-		return this.graph.getGraph();
+		return this.graph;
 	}
 
 	public int getItemType() {
@@ -903,15 +903,6 @@ public class GraphContainer extends GraphNode {
 
 	public List getNodes() {
 		return this.childNodes;
-	}
-
-	void paint() {
-		Iterator iterator = getNodes().iterator();
-
-		while (iterator.hasNext()) {
-			GraphNode node = (GraphNode) iterator.next();
-			node.paint();
-		}
 	}
 
 }
