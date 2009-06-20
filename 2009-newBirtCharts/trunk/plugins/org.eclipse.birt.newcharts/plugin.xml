@@ -16,5 +16,18 @@
             id="org.eclipse.birt.newcharts.views.SampleView">
       </view>
    </extension>
+   <extension
+         point="org.eclipse.birt.chart.engine.modelrenderers">
+      <modelRenderer
+            renderer="org.eclipse.birt.chart.newtype.render.Donut"
+            series="DonutSeriesImpl"></modelRenderer>
+   </extension>
+   <extension
+         point="org.eclipse.birt.chart.engine.datasetprocessors">
+      <datasetProcessor
+            processor="org.eclipse.birt.chart.datafeed.DataSetProcessorImpl"
+            series="DonutSeriesImpl">
+      </datasetProcessor>
+   </extension>
 
 </plugin>
