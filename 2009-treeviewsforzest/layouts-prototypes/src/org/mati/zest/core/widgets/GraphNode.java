@@ -12,15 +12,12 @@ import org.eclipse.draw2d.geometry.Insets;
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.draw2d.geometry.PrecisionPoint;
 import org.eclipse.draw2d.geometry.Rectangle;
-import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.zest.core.widgets.ZestStyles;
 import org.eclipse.zest.core.widgets.internal.GraphLabel;
-import org.eclipse.zest.layouts.LayoutEntity;
-import org.eclipse.zest.layouts.constraints.LayoutConstraint;
 import org.eclipse.zest.layouts.dataStructures.DisplayIndependentDimension;
 import org.eclipse.zest.layouts.dataStructures.DisplayIndependentPoint;
 import org.mati.zest.layout.interfaces.NodeLayout;
@@ -56,7 +53,6 @@ public class GraphNode extends GraphItem {
 	private Font font;
 	private boolean cacheLabel;
 	private boolean visible = true;
-	private LayoutEntity layoutEntity;
 
 	protected Graph graph;
 	protected NodeContainerAdapter parent;
@@ -144,7 +140,6 @@ public class GraphNode extends GraphItem {
 		this.foreColor = graphModel.getGraph().DARK_BLUE;
 		this.backColor = graphModel.getGraph().LIGHT_BLUE;
 		this.highlightColor = graphModel.getGraph().HIGHLIGHT_COLOR;
-		this.nodeStyle = SWT.NONE;
 		this.borderColor = ColorConstants.lightGray;
 		this.borderHighlightColor = ColorConstants.blue;
 		this.borderWidth = 1;
@@ -154,7 +149,6 @@ public class GraphNode extends GraphItem {
 		this.graph = graphModel.getGraph();
 		this.cacheLabel = false;
 		this.setText(text);
-		this.layoutEntity = new LayoutGraphNode();
 		if (image != null) {
 			this.setImage(image);
 		}
@@ -170,10 +164,6 @@ public class GraphNode extends GraphItem {
 	 */
 	public String toString() {
 		return "GraphModelNode: " + getText();
-	}
-
-	public LayoutEntity getLayoutEntity() {
-		return layoutEntity;
 	}
 
 	/*
@@ -276,9 +266,11 @@ public class GraphNode extends GraphItem {
 	 * Sets the current location for this node.
 	 */
 	public void setLocation(double x, double y) {
-		currentLocation.x = (int) x;
-		currentLocation.y = (int) y;
-		refreshLocation();
+		if (currentLocation.x != x || currentLocation.y != y) {
+			currentLocation.x = (int) x;
+			currentLocation.y = (int) y;
+			refreshLocation();
+		}
 	}
 
 	/**
@@ -530,7 +522,7 @@ public class GraphNode extends GraphItem {
 		this.cacheLabel = cacheLabel;
 	}
 
-	public IFigure getNodeFigure() {
+	IFigure getNodeFigure() {
 		return this.nodeFigure;
 	}
 
@@ -738,74 +730,6 @@ public class GraphNode extends GraphItem {
 		return NODE;
 	}
 
-	class LayoutGraphNode implements LayoutEntity {
-		Object layoutInformation = null;
-
-		public double getHeightInLayout() {
-			return getSize().height;
-		}
-
-		public Object getLayoutInformation() {
-			return layoutInformation;
-		}
-
-		public String toString() {
-			return getText();
-		}
-
-		public double getWidthInLayout() {
-			return getSize().width;
-		}
-
-		public double getXInLayout() {
-			return getLocation().x;
-		}
-
-		public double getYInLayout() {
-			return getLocation().y;
-		}
-
-		public void populateLayoutConstraint(LayoutConstraint constraint) {
-			/* what are constraints for? */
-		}
-
-		public void setLayoutInformation(Object internalEntity) {
-			this.layoutInformation = internalEntity;
-
-		}
-
-		public void setLocationInLayout(double x, double y) {
-			setLocation(x, y);
-		}
-
-		public void setSizeInLayout(double width, double height) {
-			setSize(width, height);
-		}
-
-		/**
-		 * Compares two nodes.
-		 */
-		public int compareTo(Object otherNode) {
-			int rv = 0;
-			if (otherNode instanceof GraphNode) {
-				GraphNode node = (GraphNode) otherNode;
-				if (getText() != null) {
-					rv = getText().compareTo(node.getText());
-				}
-			}
-			return rv;
-		}
-
-		public Object getGraphData() {
-			return GraphNode.this;
-		}
-
-		public void setGraphData(Object o) {
-			// TODO Auto-generated method stub
-
-		}
-	}
-
 	IFigure getFigure() {
 		if (this.nodeFigure == null) {
 			initFigure();
@@ -822,6 +746,16 @@ public class GraphNode extends GraphItem {
 		return layout;
 	}
 
+	void applyLayout() {
+		if (layout != null) {
+			DisplayIndependentPoint newLocation = layout.getLocation();
+			setLocation(newLocation.x, newLocation.y);
+
+			DisplayIndependentDimension newSize = layout.getSize();
+			setSize(newSize.width, newSize.height);
+		}
+	}
+
 	private class InternalNodeLayout implements NodeLayout {
 		private DisplayIndependentPoint location;
 		private DisplayIndependentDimension size;
@@ -830,8 +764,7 @@ public class GraphNode extends GraphItem {
 
 		public DisplayIndependentPoint getLocation() {
 			if (location == null) {
-				Point location2 = GraphNode.this.getLocation();
-				location = new DisplayIndependentPoint(location2.x, location2.y);
+				location = new DisplayIndependentPoint(currentLocation.x, currentLocation.y);
 			}
 			return new DisplayIndependentPoint(location);
 		}
@@ -850,7 +783,6 @@ public class GraphNode extends GraphItem {
 		}
 
 		public boolean isMovable() {
-			// TODO Auto-generated method stub
 			return true;
 		}
 
@@ -865,8 +797,7 @@ public class GraphNode extends GraphItem {
 		}
 
 		public boolean isResizable() {
-			// TODO Auto-generated method stub
-			return false;
+			return (nodeStyle & ZestStyles.NODES_NO_LAYOUT_RESIZE) > 0;
 		}
 
 		public void prune(SubgraphLayout subgraph) {

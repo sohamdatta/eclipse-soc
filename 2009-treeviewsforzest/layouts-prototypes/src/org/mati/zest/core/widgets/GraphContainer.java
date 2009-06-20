@@ -32,16 +32,10 @@ import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.zest.core.widgets.ZestStyles;
 import org.eclipse.zest.core.widgets.internal.AspectRatioFreeformLayer;
 import org.eclipse.zest.core.widgets.internal.ContainerFigure;
 import org.eclipse.zest.core.widgets.internal.ZestRootLayer;
-import org.eclipse.zest.layouts.InvalidLayoutConfiguration;
 import org.eclipse.zest.layouts.LayoutAlgorithm;
-import org.eclipse.zest.layouts.LayoutEntity;
-import org.eclipse.zest.layouts.LayoutRelationship;
-import org.eclipse.zest.layouts.LayoutStyles;
-import org.eclipse.zest.layouts.algorithms.TreeLayoutAlgorithm;
 
 /**
  * A Container that can be added to a Graph. Nodes can be added to this
@@ -609,52 +603,6 @@ public class GraphContainer extends GraphNode {
 		this.layoutAlgorithm = algorithm;
 		if (applyLayout) {
 			applyLayout();
-		}
-
-	}
-
-	public void applyLayout() {
-		if ((this.getNodes().size() == 0)) {
-			return;
-		}
-
-		int layoutStyle = 0;
-
-		if (checkStyle(ZestStyles.NODES_NO_LAYOUT_RESIZE)) {
-			layoutStyle = LayoutStyles.NO_LAYOUT_NODE_RESIZING;
-		}
-
-		if (layoutAlgorithm == null) {
-			layoutAlgorithm = new TreeLayoutAlgorithm(layoutStyle);
-		}
-
-		layoutAlgorithm.setStyle(layoutAlgorithm.getStyle() | layoutStyle);
-
-		// calculate the size for the layout algorithm
-		//Dimension d = this.scalledLayer.getSize();
-		Dimension d = new Dimension();
-		d.width = (int) SCALED_WIDTH - 10;
-		d.height = (int) SCALED_HEIGHT - 10;
-
-		//if (d.height <= 0) {
-		//d.height = (CONTAINER_HEIGHT);
-		//}
-		//d.scale(1 / this.scalledLayer.getScale());
-
-		if (d.isEmpty()) {
-			return;
-		}
-		LayoutRelationship[] connectionsToLayout = getGraph().getConnectionsToLayout(getNodes());
-		LayoutEntity[] nodesToLayout = getGraph().getNodesToLayout(getNodes());
-
-		try {
-			Animation.markBegin();
-			layoutAlgorithm.applyLayout(nodesToLayout, connectionsToLayout, 25, 25, d.width - 50, d.height - 50, false, false);
-			Animation.run(ANIMATION_TIME);
-			getFigure().getUpdateManager().performUpdate();
-
-		} catch (InvalidLayoutConfiguration e) {
-			e.printStackTrace();
 		}
 
 	}

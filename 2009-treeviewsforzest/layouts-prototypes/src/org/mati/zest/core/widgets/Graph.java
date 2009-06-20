@@ -3,7 +3,6 @@ package org.mati.zest.core.widgets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 
 import org.eclipse.draw2d.Animation;
@@ -38,8 +37,6 @@ import org.eclipse.swt.widgets.Item;
 import org.eclipse.zest.core.widgets.ZestStyles;
 import org.eclipse.zest.core.widgets.internal.ContainerFigure;
 import org.eclipse.zest.core.widgets.internal.ZestRootLayer;
-import org.eclipse.zest.layouts.LayoutEntity;
-import org.eclipse.zest.layouts.LayoutRelationship;
 import org.eclipse.zest.layouts.dataStructures.DisplayIndependentRectangle;
 import org.mati.zest.layout.interfaces.ContextListener;
 import org.mati.zest.layout.interfaces.GraphStructureListener;
@@ -86,6 +83,7 @@ public class Graph extends FigureCanvas {
 	private int nodeStyle;
 	private ScalableFreeformLayeredPane fishEyeLayer = null;
 	LayoutAlgorithm layoutAlgorithm = null;
+	LayoutContext layoutContext = null;
 	private volatile boolean isLayoutScheduled;
 	private Dimension preferredSize = null;
 	int style = 0;
@@ -327,12 +325,26 @@ public class Graph extends FigureCanvas {
 	}
 
 	/**
-	 * Runs the layout on this graph. It uses the reveal listner to run the
-	 * layout only if the view is visible. Otherwise it will be deferred until
-	 * after the view is available.
+	 * Runs the layout on this graph. If the view is not visible layout will be
+	 * deferred until after the view is available.
 	 */
 	public void applyLayout() {
 		scheduleLayoutOnReveal();
+	}
+
+	private void applyLayoutInternal() {
+		if (layoutAlgorithm == null) {
+			return;
+		}
+		Display.getDefault().asyncExec(new Runnable() {
+			public void run() {
+				Animation.markBegin();
+				layoutAlgorithm.applyLayout();
+				layoutContext.flushChanges(false);
+				Animation.run(ANIMATION_TIME);
+				getLightweightSystem().getUpdateManager().performUpdate();
+			}
+		});
 	}
 
 	/**
@@ -350,7 +362,14 @@ public class Graph extends FigureCanvas {
 	 * @param algorithm
 	 */
 	public void setLayoutAlgorithm(LayoutAlgorithm algorithm, boolean applyLayout) {
+		if (this.layoutAlgorithm != null) {
+			this.layoutAlgorithm.setLayoutContext(null);
+		}
 		this.layoutAlgorithm = algorithm;
+		if (layoutContext == null) {
+			layoutContext = new GraphLayoutContext();
+		}
+		this.layoutAlgorithm.setLayoutContext(layoutContext);
 		if (applyLayout) {
 			applyLayout();
 		}
@@ -724,64 +743,6 @@ public class Graph extends FigureCanvas {
 		return connsArray;
 	}
 
-	LayoutRelationship[] getConnectionsToLayout(List nodesToLayout) {
-
-		// @tag zest.bug.156528-Filters.follows : make sure not to layout
-		// filtered connections, if the style says so. LayoutRelationship[]
-		// entities;
-		// if (ZestStyles.checkStyle(style, ZestStyles.IGNORE_INVISIBLE_LAYOUT))
-		// {
-		// LinkedList connectionList = new LinkedList();
-		// for (Iterator i = this.getConnections().iterator(); i.hasNext();) {
-		// GraphConnection next = (GraphConnection) i.next();
-		// if (next.isVisible() && nodesToLayout.contains(next.getSource()) &&
-		// nodesToLayout.contains(next.getDestination())) {
-		// connectionList.add(next.getLayoutRelationship());
-		// }
-		// }
-		// entities = (LayoutRelationship[]) connectionList.toArray(new
-		// LayoutRelationship[] {});
-		// } else {
-		// LinkedList nodeList = new LinkedList();
-		// for (Iterator i = this.getConnections().iterator(); i.hasNext();) {
-		// GraphConnection next = (GraphConnection) i.next();
-		// if (nodesToLayout.contains(next.getSource()) &&
-		// nodesToLayout.contains(next.getDestination())) {
-		// nodeList.add(next.getLayoutRelationship());
-		// }
-		// }
-		// entities = (LayoutRelationship[]) nodeList.toArray(new
-		// LayoutRelationship[] {});
-		// }
-		// return entities;
-
-		return null;
-	}
-
-	LayoutEntity[] getNodesToLayout(List nodes) {
-		// @tag zest.bug.156528-Filters.follows : make sure not to layout
-		// filtered nodes, if the style says so.
-		LayoutEntity[] entities;
-		if (ZestStyles.checkStyle(style, ZestStyles.IGNORE_INVISIBLE_LAYOUT)) {
-			LinkedList nodeList = new LinkedList();
-			for (Iterator i = nodes.iterator(); i.hasNext();) {
-				GraphNode next = (GraphNode) i.next();
-				if (next.isVisible()) {
-					nodeList.add(next.getLayoutEntity());
-				}
-			}
-			entities = (LayoutEntity[]) nodeList.toArray(new LayoutEntity[] {});
-		} else {
-			LinkedList nodeList = new LinkedList();
-			for (Iterator i = nodes.iterator(); i.hasNext();) {
-				GraphNode next = (GraphNode) i.next();
-				nodeList.add(next.getLayoutEntity());
-			}
-			entities = (LayoutEntity[]) nodeList.toArray(new LayoutEntity[] {});
-		}
-		return entities;
-	}
-
 	void removeConnection(GraphConnection connection) {
 		IFigure figure = connection.getConnectionFigure();
 		PolylineConnection sourceContainerConnectionFigure = connection.getSourceContainerConnectionFigure();
@@ -843,7 +804,7 @@ public class Graph extends FigureCanvas {
 		}
 	}
 
-	private void applyLayoutInternal() {
+	// private void applyLayoutInternal() {
 
 		// if ((this.getNodes().size() == 0)) {
 		// return;
@@ -891,7 +852,7 @@ public class Graph extends FigureCanvas {
 		// e.printStackTrace();
 		// }
 
-	}
+	// }
 
 	/**
 	 * Schedules a layout to be performed after the view is revealed (or
@@ -1085,7 +1046,10 @@ public class Graph extends FigureCanvas {
 
 		public void flushChanges(boolean animationHint) {
 			// TODO Auto-generated method stub
-
+			for (Iterator iterator = Graph.this.nodes.iterator(); iterator.hasNext();) {
+				GraphNode node = (GraphNode) iterator.next();
+				node.applyLayout();
+			}
 		}
 
 		public DisplayIndependentRectangle getBounds() {
