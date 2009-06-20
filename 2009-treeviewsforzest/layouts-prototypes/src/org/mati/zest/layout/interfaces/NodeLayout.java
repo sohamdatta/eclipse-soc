@@ -52,19 +52,23 @@ public interface NodeLayout {
 	public void prune(SubgraphLayout subgraph);
 
 	/**
-	 * Returns all connections that have this node as their target. Any
-	 * subsequent changes to the returned array do not affect this node.
+	 * Returns all nodes that are direct successors of this node. If this node
+	 * is a part of an undirected graph, the method returns the same result as
+	 * {@link #getDirectPredecessors()}. Any subsequent changes to the returned
+	 * array do not affect this node.
 	 * 
 	 * @return array of connections entering this node
 	 */
-	public ConnectionLayout[] getIncomingConnections();
+	public NodeLayout[] getDirectSuccessors();
 
 	/**
-	 * Returns all connections that have this node as their source. Any
-	 * subsequent changes to the returned array do not affect this node.
+	 * Returns all nodes that are direct predecessors of this node. If this node
+	 * is a part of an undirected graph, the method returns the same result as
+	 * {@link #getDirectSuccessors()}. Any subsequent changes to the returned
+	 * array do not affect this node.
 	 * 
 	 * @return array of connections starting at this node
 	 */
-	public ConnectionLayout[] getOutgoingConnections();
+	public NodeLayout[] getDirectPredecessors();
 
 }

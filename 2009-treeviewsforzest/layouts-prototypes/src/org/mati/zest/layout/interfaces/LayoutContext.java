@@ -18,14 +18,6 @@ public interface LayoutContext {
 	public NodeLayout[] getNodes();
 
 	/**
-	 * Returns all the connections between nodes that should be laid out.
-	 * Replacing elements in the returned array does not affect this context.
-	 * 
-	 * @return array of connections between nodes
-	 */
-	public ConnectionLayout[] getConnections();
-
-	/**
 	 * 
 	 * @return bounds in which the graph elements can be placed
 	 */

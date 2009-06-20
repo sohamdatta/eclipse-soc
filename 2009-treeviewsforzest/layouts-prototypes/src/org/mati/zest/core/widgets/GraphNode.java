@@ -21,8 +21,12 @@ import org.eclipse.zest.core.widgets.ZestStyles;
 import org.eclipse.zest.core.widgets.internal.GraphLabel;
 import org.eclipse.zest.layouts.LayoutEntity;
 import org.eclipse.zest.layouts.constraints.LayoutConstraint;
+import org.eclipse.zest.layouts.dataStructures.DisplayIndependentDimension;
+import org.eclipse.zest.layouts.dataStructures.DisplayIndependentPoint;
+import org.mati.zest.layout.interfaces.NodeLayout;
+import org.mati.zest.layout.interfaces.SubgraphLayout;
 
-/*
+/**
  * Simple node class which has the following properties: color, size, location,
  * and a label. It also has a list of connections and anchors.
  * 
@@ -35,8 +39,6 @@ import org.eclipse.zest.layouts.constraints.LayoutConstraint;
 public class GraphNode extends GraphItem {
 	public static final int HIGHLIGHT_NONE = 0;
 	public static final int HIGHLIGHT_ON = 1;
-	// @tag ADJACENT : Removed highlight adjacent
-	//public static final int HIGHLIGHT_ADJACENT = 2;
 
 	private int nodeStyle;
 
@@ -46,8 +48,6 @@ public class GraphNode extends GraphItem {
 	private Color foreColor;
 	private Color backColor;
 	private Color highlightColor;
-	// @tag ADJACENT : Removed highlight adjacent
-	//private Color highlightAdjacentColor;
 	private Color borderColor;
 	private Color borderHighlightColor;
 	private int borderWidth;
@@ -76,7 +76,7 @@ public class GraphNode extends GraphItem {
 	}
 
 	public GraphNode(Graph graphModel, int style, Object data) {
-		this(graphModel.getGraph(), style, "" /* text */, null /* image */, data);
+		this(graphModel, style, "" /* text */, null /* image */, data);
 	}
 
 	public GraphNode(Graph graphModel, int style, String text) {
@@ -84,7 +84,7 @@ public class GraphNode extends GraphItem {
 	}
 
 	public GraphNode(Graph graphModel, int style, String text, Object data) {
-		this(graphModel.getGraph(), style, text, null /* image */, data);
+		this(graphModel, style, text, null /* image */, data);
 	}
 
 	public GraphNode(Graph graphModel, int style, String text, Image image) {
@@ -144,8 +144,6 @@ public class GraphNode extends GraphItem {
 		this.foreColor = graphModel.getGraph().DARK_BLUE;
 		this.backColor = graphModel.getGraph().LIGHT_BLUE;
 		this.highlightColor = graphModel.getGraph().HIGHLIGHT_COLOR;
-		// @tag ADJACENT : Removed highlight adjacent
-		//this.highlightAdjacentColor = ColorConstants.orange;
 		this.nodeStyle = SWT.NONE;
 		this.borderColor = ColorConstants.lightGray;
 		this.borderHighlightColor = ColorConstants.blue;
@@ -386,28 +384,6 @@ public class GraphNode extends GraphItem {
 	}
 
 	/**
-	 * Get the highlight adjacent colour for this node. This is the colour that
-	 * adjacent nodes will get
-	 */
-	// @tag ADJACENT : Removed highlight adjacent
-	/*
-	public Color getHighlightAdjacentColor() {
-		return highlightAdjacentColor;
-	}
-	*/
-
-	/**
-	 * Set the highlight adjacent colour for this node. This is the colour that
-	 * adjacent node will get.
-	 */
-	// @tag ADJACENT : Removed highlight adjacent
-	/*
-	public void setHighlightAdjacentColor(Color c) {
-		this.highlightAdjacentColor = c;
-	}
-	*/
-
-	/**
 	 * Highlights the node changing the background color and border color. The
 	 * source and destination connections are also highlighted, and the adjacent
 	 * nodes are highlighted too in a different color.
@@ -445,64 +421,8 @@ public class GraphNode extends GraphItem {
 		if (nodeFigure == null || nodeFigure.getParent() == null) {
 			return; // node figure has not been created yet
 		}
-		//nodeFigure.setBounds(bounds);
 		nodeFigure.getParent().setConstraint(nodeFigure, bounds);
 	}
-
-	/**
-	 * Highlights this node using the adjacent highlight color. This only does
-	 * something if highlighAdjacentNodes is set to true and if the node isn't
-	 * already highlighted.
-	 * 
-	 * @see #setHighlightAdjacentNodes(boolean)
-	 */
-	// @tag ADJACENT : removed highlight adjacent
-	/*
-	public void highlightAdjacent() {
-		if (highlighted > 0) {
-			return;
-		}
-		highlighted = HIGHLIGHT_ADJACENT;
-		updateFigureForModel(nodeFigure);
-		if (parent.getItemType() == GraphItem.CONTAINER) {
-			((GraphContainer) parent).highlightNode(this);
-		} else {
-			((Graph) parent).highlightNode(this);
-		}
-	}
-	*/
-
-	/**
-	 * Returns if the nodes adjacent to this node will be highlighted when this
-	 * node is selected.
-	 * 
-	 * @return GraphModelNode
-	 */
-	// @tag ADJACENT : Removed highlight adjacent
-	/*
-	public boolean isHighlightAdjacentNodes() {
-		return ZestStyles.checkStyle(nodeStyle, ZestStyles.NODES_HIGHLIGHT_ADJACENT);
-	}
-	*/
-
-	/**
-	 * Sets if the adjacent nodes to this one should be highlighted when this
-	 * node is selected.
-	 * 
-	 * @param highlightAdjacentNodes
-	 *            The highlightAdjacentNodes to set.
-	 */
-	// @tag ADJACENT : Removed highlight adjacent
-	/*
-	public void setHighlightAdjacentNodes(boolean highlightAdjacentNodes) {
-		if (!highlightAdjacentNodes) {
-			this.nodeStyle |= ZestStyles.NODES_HIGHLIGHT_ADJACENT;
-			this.nodeStyle ^= ZestStyles.NODES_HIGHLIGHT_ADJACENT;
-			return;
-		}
-		this.nodeStyle |= ZestStyles.NODES_HIGHLIGHT_ADJACENT;
-	}
-	*/
 
 	public Color getBorderColor() {
 		return borderColor;
@@ -615,20 +535,21 @@ public class GraphNode extends GraphItem {
 	}
 
 	public void setVisible(boolean visible) {
-		// graph.addRemoveFigure(this, visible);
 		this.visible = visible;
 		this.getFigure().setVisible(visible);
-		List sConnections = (this).getSourceConnections();
-		List tConnections = (this).getTargetConnections();
-		for (Iterator iterator2 = sConnections.iterator(); iterator2.hasNext();) {
+		for (Iterator iterator2 = sourceConnections.iterator(); iterator2.hasNext();) {
 			GraphConnection connection = (GraphConnection) iterator2.next();
 			connection.setVisible(visible);
 		}
 
-		for (Iterator iterator2 = tConnections.iterator(); iterator2.hasNext();) {
+		for (Iterator iterator2 = targetConnections.iterator(); iterator2.hasNext();) {
 			GraphConnection connection = (GraphConnection) iterator2.next();
 			connection.setVisible(visible);
 		}
+	}
+
+	public boolean isVisible() {
+		return visible;
 	}
 
 	public int getStyle() {
@@ -693,10 +614,6 @@ public class GraphNode extends GraphItem {
 
 	boolean isHighlighted() {
 		return highlighted > 0;
-	}
-
-	void invokeLayoutListeners(LayoutConstraint constraint) {
-		graph.invokeConstraintAdapters(this, constraint);
 	}
 
 	protected void updateFigureForModel(IFigure currentFigure) {
@@ -781,10 +698,6 @@ public class GraphNode extends GraphItem {
 		return label;
 	}
 
-	public boolean isVisible() {
-		return visible;
-	}
-
 	void addSourceConnection(GraphConnection connection) {
 		this.sourceConnections.add(connection);
 	}
@@ -853,7 +766,7 @@ public class GraphNode extends GraphItem {
 		}
 
 		public void populateLayoutConstraint(LayoutConstraint constraint) {
-			invokeLayoutListeners(constraint);
+			/* what are constraints for? */
 		}
 
 		public void setLayoutInformation(Object internalEntity) {
@@ -891,7 +804,6 @@ public class GraphNode extends GraphItem {
 			// TODO Auto-generated method stub
 
 		}
-
 	}
 
 	IFigure getFigure() {
@@ -901,7 +813,95 @@ public class GraphNode extends GraphItem {
 		return this.getNodeFigure();
 	}
 
-	void paint() {
+	private InternalNodeLayout layout;
 
+	InternalNodeLayout getLayout() {
+		if (layout == null) {
+			layout = new InternalNodeLayout();
+		}
+		return layout;
+	}
+
+	private class InternalNodeLayout implements NodeLayout {
+		private DisplayIndependentPoint location;
+		private DisplayIndependentDimension size;
+		private List successors;
+		private List predecessors;
+
+		public DisplayIndependentPoint getLocation() {
+			if (location == null) {
+				Point location2 = GraphNode.this.getLocation();
+				location = new DisplayIndependentPoint(location2.x, location2.y);
+			}
+			return new DisplayIndependentPoint(location);
+		}
+
+		public DisplayIndependentDimension getSize() {
+			if (size == null) {
+				Dimension size2 = GraphNode.this.getSize();
+				size = new DisplayIndependentDimension(size2.width, size2.height);
+			}
+			return new DisplayIndependentDimension(size);
+		}
+
+		public SubgraphLayout getSubgraph() {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		public boolean isMovable() {
+			// TODO Auto-generated method stub
+			return true;
+		}
+
+		public boolean isPrunable() {
+			// TODO Auto-generated method stub
+			return false;
+		}
+
+		public boolean isPruned() {
+			// TODO Auto-generated method stub
+			return false;
+		}
+
+		public boolean isResizable() {
+			// TODO Auto-generated method stub
+			return false;
+		}
+
+		public void prune(SubgraphLayout subgraph) {
+			// TODO Auto-generated method stub
+
+		}
+
+		public void setLocation(double x, double y) {
+			location = new DisplayIndependentPoint(x, y);
+		}
+
+		public void setSize(double width, double height) {
+			size = new DisplayIndependentDimension(width, height);
+		}
+
+		public NodeLayout[] getDirectPredecessors() {
+			if (predecessors == null) {
+				predecessors = new ArrayList();
+				for (Iterator iterator = targetConnections.iterator(); iterator.hasNext();) {
+					GraphConnection connection = (GraphConnection) iterator.next();
+					predecessors.add(connection.getSource().getLayout());
+				}
+			}
+			return (NodeLayout[]) predecessors.toArray(new NodeLayout[predecessors.size()]);
+		}
+
+		public NodeLayout[] getDirectSuccessors() {
+			if (successors == null) {
+				successors = new ArrayList();
+				for (Iterator iterator = sourceConnections.iterator(); iterator.hasNext();) {
+					GraphConnection connection = (GraphConnection) iterator.next();
+					successors.add(connection.getDestination().getLayout());
+				}
+			}
+			return (NodeLayout[]) successors.toArray(new NodeLayout[successors.size()]);
+		}
 	}
 }

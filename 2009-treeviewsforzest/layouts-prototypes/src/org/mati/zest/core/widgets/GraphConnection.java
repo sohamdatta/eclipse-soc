@@ -41,7 +41,7 @@ public class GraphConnection extends GraphItem {
 	private Color foreground;
 	private int lineWidth;
 	private int lineStyle;
-	private final Graph graphModel;
+	private final Graph graph;
 
 	private int connectionStyle;
 	private int curveDepth;
@@ -60,7 +60,6 @@ public class GraphConnection extends GraphItem {
 	private IFigure tooltip;
 
 	private boolean highlighted;
-	// TODO private GraphLayoutConnection layoutConnection = null;
 	private boolean hasCustomTooltip;
 
 	public GraphConnection(Graph graphModel, int style, GraphNode source, GraphNode destination) {
@@ -77,9 +76,8 @@ public class GraphConnection extends GraphItem {
 		this.lineWidth = 1;
 		this.lineStyle = Graphics.LINE_SOLID;
 		setWeight(weight);
-		this.graphModel = graphModel;
+		this.graph = graphModel;
 		this.curveDepth = 0;
-		// TODO this.layoutConnection = new GraphLayoutConnection();
 		this.font = Display.getDefault().getSystemFont();
 		registerConnection(source, destination);
 	}
@@ -97,9 +95,9 @@ public class GraphConnection extends GraphItem {
 		if (source.getParent().getItemType() == GraphItem.CONTAINER && destination.getParent().getItemType() == GraphItem.CONTAINER && (source.getParent() == destination.getParent())) {
 			// 196189: Edges should not draw on the edge layer if both the src and dest are in the same container
 			// https://bugs.eclipse.org/bugs/show_bug.cgi?id=196189
-			graphModel.addConnection(this, ZestRootLayer.EDGES_ON_TOP);
+			graph.addConnection(this, ZestRootLayer.EDGES_ON_TOP);
 		} else {
-			graphModel.addConnection(this, true);
+			graph.addConnection(this, true);
 		}
 
 		if ((source.getParent()).getItemType() == GraphItem.CONTAINER) {
@@ -117,7 +115,7 @@ public class GraphConnection extends GraphItem {
 			destination.getParent().addConnectionFigure((PolylineConnection) targetContainerConnectionFigure);
 			this.setVisible(false);
 		}
-		graphModel.getGraph().registerItem(this);
+		graph.registerItem(this);
 	}
 
 	void removeFigure() {
@@ -145,7 +143,7 @@ public class GraphConnection extends GraphItem {
 		this.isDisposed = true;
 		(getSource()).removeSourceConnection(this);
 		(getDestination()).removeTargetConnection(this);
-		graphModel.removeConnection(this);
+		graph.removeConnection(this);
 		if (sourceContainerConnectionFigure != null) {
 			sourceContainerConnectionFigure.getParent().remove(sourceContainerConnectionFigure);
 		}
@@ -160,22 +158,10 @@ public class GraphConnection extends GraphItem {
 
 	public Connection getConnectionFigure() {
 		if (connectionFigure == null) {
-			connectionFigure = createFigure();
+			connectionFigure = doCreateFigure();
 		}
 		return connectionFigure;
 	}
-
-	/**
-	 * Gets a proxy to this connection that can be used with the Zest layout
-	 * engine
-	 * 
-	 * @return
-	 */
-	// TODO
-	/*
-	 * public LayoutRelationship getLayoutRelationship() { return
-	 * this.layoutConnection; }
-	 */
 
 	/**
 	 * Gets the external connection object.
@@ -405,7 +391,7 @@ public class GraphConnection extends GraphItem {
 		}
 		highlighted = true;
 		updateFigure(connectionFigure);
-		graphModel.highlightEdge(this);
+		graph.highlightEdge(this);
 	}
 
 	/**
@@ -417,7 +403,7 @@ public class GraphConnection extends GraphItem {
 		}
 		highlighted = false;
 		updateFigure(connectionFigure);
-		graphModel.unhighlightEdge(this);
+		graph.unhighlightEdge(this);
 	}
 
 	/**
@@ -435,7 +421,7 @@ public class GraphConnection extends GraphItem {
 	 * @return The graph model that this connection is contained in
 	 */
 	public Graph getGraphModel() {
-		return this.graphModel;
+		return this.graph;
 	}
 
 	/**
@@ -451,9 +437,9 @@ public class GraphConnection extends GraphItem {
 		if (this.curveDepth == 0 && depth != 0 || this.curveDepth != 0 && depth == 0) {
 			// There is currently no curve, so we have to create
 			// a curved connection
-			graphModel.removeConnection(this);
+			graph.removeConnection(this);
 			this.curveDepth = depth;
-			this.connectionFigure = createFigure();
+			this.connectionFigure = doCreateFigure();
 			registerConnection(sourceNode, destinationNode);
 			updateFigure(this.connectionFigure);
 		} else {
@@ -477,7 +463,6 @@ public class GraphConnection extends GraphItem {
 	 * @see org.eclipse.mylar.zest.core.internal.graphmodel.GraphItem#setVisible(boolean)
 	 */
 	public void setVisible(boolean visible) {
-		//graphModel.addRemoveFigure(this, visible);
 		if (getSource().isVisible() && getDestination().isVisible() && visible) {
 			this.getFigure().setVisible(visible);
 			if (sourceContainerConnectionFigure != null) {
@@ -549,7 +534,6 @@ public class GraphConnection extends GraphItem {
 		connectionShape.setLineStyle(getLineStyle());
 
 		if (this.getText() != null || this.getImage() != null) {
-			//Label l = new Label(this.getText(), this.getImage());
 			if (this.getImage() != null) {
 				this.connectionLabel.setIcon(this.getImage());
 			}
@@ -590,24 +574,6 @@ public class GraphConnection extends GraphItem {
 			toolTip = this.getTooltip();
 		}
 		connection.setToolTip(toolTip);
-	}
-
-	private Connection createFigure() {
-		/*
-		if ((sourceNode.getParent()).getItemType() == GraphItem.CONTAINER) {
-			GraphContainer container = (GraphContainer) sourceNode.getParent();
-			sourceContainerConnectionFigure = doCreateFigure();
-			container.addConnectionFigure((PolylineConnection) sourceContainerConnectionFigure);
-		}
-		if ((destinationNode.getParent()).getItemType() == GraphItem.CONTAINER) {
-			GraphContainer container = (GraphContainer) destinationNode.getParent();
-			targetContainerConnectionFigure = doCreateFigure();
-			container.addConnectionFigure((PolylineConnection) targetContainerConnectionFigure);
-		}
-		*/
-
-		return doCreateFigure();
-
 	}
 
 	private Connection doCreateFigure() {
@@ -659,39 +625,6 @@ public class GraphConnection extends GraphItem {
 	private boolean isBidirectionalInLayout() {
 		return !ZestStyles.checkStyle(connectionStyle, ZestStyles.CONNECTIONS_DIRECTED);
 	}
-
-	/*
-	 * class GraphLayoutConnection implements LayoutRelationship {
-	 * 
-	 * Object layoutInformation = null;
-	 * 
-	 * public void clearBendPoints() { // @tag TODO : add bendpoints }
-	 * 
-	 * public LayoutEntity getDestinationInLayout() { return
-	 * getDestination().getLayoutEntity(); }
-	 * 
-	 * public Object getLayoutInformation() { return layoutInformation; }
-	 * 
-	 * public LayoutEntity getSourceInLayout() { return
-	 * getSource().getLayoutEntity(); }
-	 * 
-	 * public void populateLayoutConstraint(LayoutConstraint constraint) {
-	 * graphModel.invokeConstraintAdapters(GraphConnection.this, constraint); }
-	 * 
-	 * public void setBendPoints(LayoutBendPoint[] bendPoints) { // @tag TODO :
-	 * add bendpoints }
-	 * 
-	 * public void setLayoutInformation(Object layoutInformation) {
-	 * this.layoutInformation = layoutInformation; }
-	 * 
-	 * public Object getGraphData() { return GraphConnection.this; }
-	 * 
-	 * public void setGraphData(Object o) {
-	 * 
-	 * }
-	 * 
-	 * }
-	 */
 
 	IFigure getFigure() {
 		return this.getConnectionFigure();
