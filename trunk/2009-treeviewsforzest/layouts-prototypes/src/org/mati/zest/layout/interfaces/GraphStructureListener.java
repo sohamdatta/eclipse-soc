@@ -12,11 +12,11 @@ public interface GraphStructureListener {
 			return false;
 		}
 
-		public boolean connectionAdded(LayoutContext context, NodeLayout source, NodeLayout target) {
+		public boolean connectionAdded(LayoutContext context, ConnectionLayout connection) {
 			return false;
 		}
 
-		public boolean connectionRemoved(LayoutContext context, NodeLayout source, NodeLayout target) {
+		public boolean connectionRemoved(LayoutContext context, ConnectionLayout connection) {
 			return false;
 		}
 	}
@@ -59,9 +59,9 @@ public interface GraphStructureListener {
 	public boolean nodeRemoved(LayoutContext context, NodeLayout node);
 
 	/**
-	 * This method is called whenever a connection between two nodes is added to
-	 * an observed context. It can be assumed that both source and target nodes
-	 * of the added connection already exist in the context.
+	 * This method is called whenever a connection is added to a context. It can
+	 * be assumed that both source and target nodes of the added connection
+	 * already exist in the context.
 	 * 
 	 * If true is returned, it means that the receiving listener has intercepted
 	 * this event. Intercepted events will not be passed to the rest of the
@@ -71,19 +71,17 @@ public interface GraphStructureListener {
 	 * 
 	 * @param context
 	 *            the context that fired the event
-	 * @param source
-	 *            a source node of the new connection
-	 * @param target
-	 *            a target node of the new connection
+	 * @param connection
+	 *            the added connection
 	 * @return true if no further operations after this event are required
 	 */
-	public boolean connectionAdded(LayoutContext context, NodeLayout source, NodeLayout target);
+	public boolean connectionAdded(LayoutContext context, ConnectionLayout connection);
 
 	/**
-	 * This method is called whenever a connection between two nodes is removed
-	 * from an observed context. It can be assumed that both source and target
-	 * nodes of the removed connection still exist in the context and will not
-	 * be removed along with the connection.
+	 * This method is called whenever a connection is removed from a context. It
+	 * can be assumed that both source and target nodes of the removed
+	 * connection still exist in the context and will not be removed along with
+	 * it.
 	 * 
 	 * If true is returned, it means that the receiving listener has intercepted
 	 * this event. Intercepted events will not be passed to the rest of the
@@ -93,12 +91,10 @@ public interface GraphStructureListener {
 	 * 
 	 * @param context
 	 *            the context that fired the event
-	 * @param source
-	 *            a source node of the removed connection
-	 * @param target
-	 *            a target node of the removec connection
+	 * @param connection
+	 *            the added connection
 	 * @return true if no further operations after this event are required
 	 */
-	public boolean connectionRemoved(LayoutContext context, NodeLayout source, NodeLayout target);
+	public boolean connectionRemoved(LayoutContext context, ConnectionLayout connection);
 
 }

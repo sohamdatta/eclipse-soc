@@ -18,6 +18,36 @@ public interface LayoutContext {
 	public NodeLayout[] getNodes();
 
 	/**
+	 * Returns all the connections between nodes that should be laid out.
+	 * Replacing elements in the returned array does not affect this context.
+	 * 
+	 * @return array of connections between nodes
+	 */
+	public ConnectionLayout[] getConnections();
+
+	/**
+	 * Returns all entities that are currently placed on the graph, that is
+	 * subgraphs and unpruned nodes. Replacing elements in the returned array
+	 * does not affect this context.
+	 * 
+	 * @return array of entities to layout
+	 */
+	public EntityLayout[] getEntities();
+
+	/**
+	 * Returns all the connections between given source and target entities. If
+	 * given entity is a subgraph, connections adjacent to each of its nodes
+	 * will be included in the result. All the undirected nodes connecting the
+	 * two nodes will be also included in the result. Replacing elements in the
+	 * returned array does not affect this context.
+	 * 
+	 * @param layoutEntity1
+	 * @param layoutEntity2
+	 * @return
+	 */
+	public ConnectionLayout[] getConnections(EntityLayout layoutEntity1, EntityLayout layoutEntity2);
+
+	/**
 	 * 
 	 * @return bounds in which the graph elements can be placed
 	 */

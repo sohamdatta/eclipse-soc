@@ -2,6 +2,7 @@ package org.mati.zest.core.widgets;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
@@ -38,7 +39,9 @@ import org.eclipse.zest.core.widgets.ZestStyles;
 import org.eclipse.zest.core.widgets.internal.ContainerFigure;
 import org.eclipse.zest.core.widgets.internal.ZestRootLayer;
 import org.eclipse.zest.layouts.dataStructures.DisplayIndependentRectangle;
+import org.mati.zest.layout.interfaces.ConnectionLayout;
 import org.mati.zest.layout.interfaces.ContextListener;
+import org.mati.zest.layout.interfaces.EntityLayout;
 import org.mati.zest.layout.interfaces.GraphStructureListener;
 import org.mati.zest.layout.interfaces.LayoutAlgorithm;
 import org.mati.zest.layout.interfaces.LayoutContext;
@@ -78,7 +81,6 @@ public class Graph extends FigureCanvas {
 	/** This maps all visible nodes to their model element. */
 	private HashMap figure2ItemMap = null;
 
-	/** Maps user nodes to internal nodes */
 	private int connectionStyle;
 	private int nodeStyle;
 	private ScalableFreeformLayeredPane fishEyeLayer = null;
@@ -1054,8 +1056,8 @@ public class Graph extends FigureCanvas {
 
 		public DisplayIndependentRectangle getBounds() {
 			Dimension d = getViewport().getSize();
-			d.width = d.width - 10;
-			d.height = d.height - 10;
+			d.width *= 0.8;
+			d.height *= 0.8;
 
 			if (preferredSize.width >= 0) {
 				d.width = preferredSize.width;
@@ -1063,7 +1065,7 @@ public class Graph extends FigureCanvas {
 			if (preferredSize.height >= 0) {
 				d.height = preferredSize.height;
 			}
-			return new DisplayIndependentRectangle(0, 0, d.width, d.height);
+			return new DisplayIndependentRectangle(d.width * 0.1, d.width * 0.1, d.width, d.height);
 		}
 
 		public LayoutAlgorithm getMainLayoutAlgorithm() {
@@ -1072,6 +1074,11 @@ public class Graph extends FigureCanvas {
 
 		public NodeLayout[] getNodes() {
 			return (NodeLayout[]) nodes.toArray(new NodeLayout[nodes.size()]);
+		}
+
+		public EntityLayout[] getEntities() {
+			// TODO Auto-generated method stub
+			return getNodes();
 		}
 
 		public SubgraphLayout[] getSubgraphs() {
@@ -1108,6 +1115,32 @@ public class Graph extends FigureCanvas {
 
 		public void setMainLayoutAlgorithm(LayoutAlgorithm algorithm) {
 			mainAlgorithm = algorithm;
+		}
+
+		public ConnectionLayout[] getConnections() {
+			List connections = Graph.this.getConnections();
+			ConnectionLayout[] result = new ConnectionLayout[connections.size()];
+			int i = 0;
+			for (Iterator iterator = connections.iterator(); iterator.hasNext();) {
+				GraphConnection connection = (GraphConnection) iterator.next();
+				result[i++] = connection.getLayout();
+			}
+			return result;
+		}
+
+		public ConnectionLayout[] getConnections(EntityLayout source, EntityLayout target) {
+			// TODO should we store the result?
+			HashSet result = new HashSet();
+			// TODO add support for subgraphs
+			if (source instanceof NodeLayout && target instanceof NodeLayout) {
+				ConnectionLayout[] outgoingConnections = ((NodeLayout) source).getOutgoingConnections();
+				for (int i = 0; i < outgoingConnections.length; i++) {
+					ConnectionLayout connection = outgoingConnections[i];
+					if (connection.getTarget() == target || connection.getSource() == target)
+						result.add(connection);
+				}
+			}
+			return (ConnectionLayout[]) result.toArray(new ConnectionLayout[result.size()]);
 		}
 
 	}

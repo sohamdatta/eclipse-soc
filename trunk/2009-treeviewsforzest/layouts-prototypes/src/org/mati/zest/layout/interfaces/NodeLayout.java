@@ -1,36 +1,7 @@
 package org.mati.zest.layout.interfaces;
 
-import org.eclipse.zest.layouts.dataStructures.DisplayIndependentDimension;
-import org.eclipse.zest.layouts.dataStructures.DisplayIndependentPoint;
 
-public interface NodeLayout {
-
-	/**
-	 * Returns a point laying in the center of this node. Any subsequent changes
-	 * to the returned point won't affect this node.
-	 * 
-	 * @return position of the center of this node
-	 */
-	public DisplayIndependentPoint getLocation();
-
-	/**
-	 * Sets the position of this node. The node will be moved so that it's
-	 * center is located in the given point.
-	 * 
-	 * @param x
-	 *            the x-position
-	 * @param y
-	 *            the y-position
-	 */
-	public void setLocation(double x, double y);
-
-	public DisplayIndependentDimension getSize();
-
-	public void setSize(double width, double height);
-
-	public boolean isResizable();
-
-	public boolean isMovable();
+public interface NodeLayout extends EntityLayout {
 
 	public boolean isPrunable();
 
@@ -52,23 +23,43 @@ public interface NodeLayout {
 	public void prune(SubgraphLayout subgraph);
 
 	/**
-	 * Returns all nodes that are direct successors of this node. If this node
-	 * is a part of an undirected graph, the method returns the same result as
-	 * {@link #getDirectPredecessors()}. Any subsequent changes to the returned
+	 * Returns all nodes that are direct successors of this node. Nodes
+	 * connected with this node with a bidirectional connection are considered
+	 * both successors and predecessors. Any subsequent changes to the returned
 	 * array do not affect this node.
 	 * 
-	 * @return array of connections entering this node
+	 * @return array of successors of this node
 	 */
 	public NodeLayout[] getDirectSuccessors();
 
 	/**
-	 * Returns all nodes that are direct predecessors of this node. If this node
-	 * is a part of an undirected graph, the method returns the same result as
-	 * {@link #getDirectSuccessors()}. Any subsequent changes to the returned
+	 * Returns all nodes that are direct predecessors of this node. Nodes
+	 * connected with this node with a bidirectional connection are considered
+	 * both successors and predecessors. Any subsequent changes to the returned
 	 * array do not affect this node.
 	 * 
-	 * @return array of connections starting at this node
+	 * @return array of predecessors of this node
 	 */
 	public NodeLayout[] getDirectPredecessors();
+
+	/**
+	 * Returns all connections that have this node as a target. All connections
+	 * that are bidirectional and are adjacent to this node will be also
+	 * included in the result. Any subsequent changes to the returned array do
+	 * not affect this node.
+	 * 
+	 * @return array of connections entering this node
+	 */
+	public ConnectionLayout[] getIncomingConnections();
+
+	/**
+	 * Returns all connections that have this node as a source. All connections
+	 * that are bidirectional and are adjacent to this node will be also
+	 * included in the result. Any subsequent changes to the returned array do
+	 * not affect this node.
+	 * 
+	 * @return array of connections leaving this node
+	 */
+	public ConnectionLayout[] getOutgoingConnections();
 
 }
