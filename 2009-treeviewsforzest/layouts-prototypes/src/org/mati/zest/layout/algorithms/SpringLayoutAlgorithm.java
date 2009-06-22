@@ -10,19 +10,14 @@
  *******************************************************************************/
 package org.mati.zest.layout.algorithms;
 
-import java.util.HashSet;
-import java.util.Iterator;
+import java.util.HashMap;
 
-import org.eclipse.draw2d.ColorConstants;
-import org.eclipse.swt.graphics.GC;
-import org.eclipse.swt.graphics.Region;
 import org.eclipse.zest.layouts.dataStructures.DisplayIndependentPoint;
 import org.eclipse.zest.layouts.dataStructures.DisplayIndependentRectangle;
 import org.mati.zest.layout.interfaces.ConnectionLayout;
 import org.mati.zest.layout.interfaces.EntityLayout;
 import org.mati.zest.layout.interfaces.LayoutAlgorithm;
 import org.mati.zest.layout.interfaces.LayoutContext;
-import org.mati.zest.layout.interfaces.NodeLayout;
 
 /**
  * The SpringLayoutAlgorithm has its own data repository and relation
@@ -60,16 +55,6 @@ public class SpringLayoutAlgorithm implements LayoutAlgorithm {
     public static final boolean DEFAULT_SPRING_RANDOM = true;
 
     /**
-     * The default value for ignoring unconnected nodes.
-     */
-    public static final boolean DEFAULT_SPRING_IGNORE_UNCON = true;
-
-    /**
-     * The default value for separating connected components.
-     */
-    public static final boolean DEFAULT_SPRING_SEPARATE_COMPONENTS = true;
-
-    /**
      * The default value for the spring layout move-control.
      */
     public static final double DEFAULT_SPRING_MOVE = 1.0f;
@@ -77,7 +62,7 @@ public class SpringLayoutAlgorithm implements LayoutAlgorithm {
     /**
      * The default value for the spring layout strain-control.
      */
-    public static final double DEFAULT_SPRING_STRAIN = 1.0f;
+	public static final double DEFAULT_SPRING_STRAIN = 1.0f;
 
     /**
      * The default value for the spring layout length-control.
@@ -87,7 +72,7 @@ public class SpringLayoutAlgorithm implements LayoutAlgorithm {
     /**
      * The default value for the spring layout gravitation-control.
      */
-    public static final double DEFAULT_SPRING_GRAVITATION = 1.0f;
+	public static final double DEFAULT_SPRING_GRAVITATION = 1.0f;
 
 	/**
 	 * Minimum distance considered between nodes
@@ -153,34 +138,13 @@ public class SpringLayoutAlgorithm implements LayoutAlgorithm {
 		while (performAnotherNonContinuousIteration()) {
 			computeOneIteration(entities);
 		}
+		AlgorithmHelper.maximizeSizes(entities);
+		AlgorithmHelper.fitWithinBounds(entities, context.getBounds());
 		reset();
 	}
     
     public void setLayoutContext(LayoutContext context) {
 		this.context = context;
-	}
-
-	public void performIteration() {
-		if (iteration == 0) {
-			initLayout(context.getNodes());
-		}
-		computeOneIteration(context.getNodes());
-		context.flushChanges(false);
-	}
-
-	public void paint(GC gc) {
-		if (iteration > 0) {
-			gc.setClipping((Region) null);
-			gc.setForeground(ColorConstants.black);
-			gc.drawText(context.getBounds().toString(), 5, 5, true);
-			NodeLayout[] nodes = context.getNodes();
-			computeForces(context.getNodes());
-			gc.setForeground(ColorConstants.red);
-			for (int i = 0; i < nodes.length; i++) {
-				DisplayIndependentPoint location = nodes[i].getLocation();
-				gc.drawLine((int) location.x, (int) location.y, (int) (location.x + forcesX[i]), (int) (location.y + forcesY[i]));
-			}
-		}
 	}
 
 	/**
@@ -336,26 +300,23 @@ public class SpringLayoutAlgorithm implements LayoutAlgorithm {
 
 	private void initLayout(EntityLayout[] entities) {
 		srcDestToSumOfWeights = new double[entities.length][entities.length];
+		
 
-        for (int i = 0; i < entities.length - 1; i++) {
-			EntityLayout layoutEntity1 = entities[i];
-			for (int j = i + 1; j < entities.length; j++) {
-				EntityLayout layoutEntity2 = entities[j];
-				HashSet connectionsSet = new HashSet();
-				ConnectionLayout[] connections = context.getConnections(layoutEntity1, layoutEntity2);
-				for (int k = 0; k < connections.length; k++)
-					connectionsSet.add(connections[k]);
-				connections = context.getConnections(layoutEntity2, layoutEntity1);
-				for (int k = 0; k < connections.length; k++)
-					connectionsSet.add(connections[k]);
-				for (Iterator it = connectionsSet.iterator(); it.hasNext();) {
-					ConnectionLayout connection = (ConnectionLayout) it.next();
-					double weight = connection.getWeight();
-					weight = (weight <= 0 ? 0.1 : weight);
-					srcDestToSumOfWeights[i][j] += weight;
-				}
-            }
-        }
+		HashMap entityToPosition = new HashMap();
+		for (int i = 0; i < entities.length; i++) {
+			entityToPosition.put(entities[i], new Integer(i));
+		}
+
+		ConnectionLayout[] connections = context.getConnections();
+		for (int i = 0; i < connections.length; i++) {
+			ConnectionLayout connection = connections[i];
+			Integer source = (Integer) entityToPosition.get(connection.getSource());
+			Integer target = (Integer) entityToPosition.get(connection.getTarget());
+			double weight = connection.getWeight();
+			weight = (weight <= 0 ? 0.1 : weight);
+			srcDestToSumOfWeights[source.intValue()][target.intValue()] += weight;
+			srcDestToSumOfWeights[target.intValue()][source.intValue()] += weight;
+		}
 
         if (sprRandom)
 			placeRandomly(entities); // put vertices in random places
@@ -402,9 +363,6 @@ public class SpringLayoutAlgorithm implements LayoutAlgorithm {
 		computeForces(entities);
 		computePositions(entities);
 
-		AlgorithmHelper.maximizeSizes(entities);
-		AlgorithmHelper.fitWithinBounds(entities, context.getBounds());
-
         iteration++;
     }
         
@@ -448,9 +406,6 @@ public class SpringLayoutAlgorithm implements LayoutAlgorithm {
 		for (int i = 0; i < entities.length - 1; i++) {
 			EntityLayout sourceEntity = entities[i];
 			DisplayIndependentPoint srcLocation = sourceEntity.getLocation();
-            double fx = forcesX[i]; // force in x direction
-            double fy = forcesY[i]; // force in y direction
-            
 
 			for (int j = i + 1; j < entities.length; j++) {
 				EntityLayout destinationEntity = entities[j];
@@ -467,42 +422,26 @@ public class SpringLayoutAlgorithm implements LayoutAlgorithm {
                     // then decrease force on srcObj (a pull) in direction of destObj
                     // If no relation between srcObj and destObj then increase
                     // force on srcObj (a push) from direction of destObj.
-					double sumOfWeights = srcDestToSumOfWeights[i][j];
+					double sumOfWeights = 2 * srcDestToSumOfWeights[i][j];
+
+					double f;
 					if (sumOfWeights > 0) {
                         // nodes are pulled towards each other
-						double f = sprStrain * Math.log(distance / sprLength) * sumOfWeights;
-                        
-                        fx = fx - (f * dx / distance);
-                        fy = fy - (f * dy / distance);
-                        
+						f = -sprStrain * Math.log(distance / sprLength) * sumOfWeights;
                     } else {
                         // nodes are repelled from each other
-                        //double f = Math.min(100, sprGravitation / (distance*distance));
-                        double f = sprGravitation / (distance_sq);
-                        fx = fx + (f * dx / distance);
-                        fy = fy + (f * dy / distance);
+						f = sprGravitation / (distance_sq);
                     }
+					double dfx = f * dx / distance;
+					double dfy = f * dy / distance;
 
-                    // According to Newton, "for every action, there is an equal
-                    // and opposite reaction."
-                    // so give the dest an opposite force
-                    forcesX[j] = forcesX[j] - fx;
-                    forcesY[j] = forcesY[j] - fy;
+					forcesX[i] += dfx;
+					forcesY[i] += dfy;
+
+					forcesX[j] -= dfx;
+					forcesY[j] -= dfy;
                 } 
             } 
-
-            /*
-             * //make sure forces aren't too big if (fx > 0 ) fx = Math.min(fx,
-             * 10*sprMove); else fx = Math.max(fx, -10*sprMove); if (fy > 0) fy =
-             * Math.min(fy, 10*sprMove); else fy = Math.max(fy, -10*sprMove);
-             */
-            forcesX[i] = fx;
-            forcesY[i] = fy;
-            // Remove the src object from the list of destinations since
-            // we've already calculated the force from it on all other
-            // objects.
-            // dests.remove(srcObj);
-
         }
     }
 

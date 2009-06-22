@@ -1136,7 +1136,8 @@ public class Graph extends FigureCanvas {
 				ConnectionLayout[] outgoingConnections = ((NodeLayout) source).getOutgoingConnections();
 				for (int i = 0; i < outgoingConnections.length; i++) {
 					ConnectionLayout connection = outgoingConnections[i];
-					if (connection.getTarget() == target || connection.getSource() == target)
+					if ((connection.getTarget() == target && connection.getSource() == source)
+							|| (connection.getTarget() == source && connection.getSource() == target))
 						result.add(connection);
 				}
 			}

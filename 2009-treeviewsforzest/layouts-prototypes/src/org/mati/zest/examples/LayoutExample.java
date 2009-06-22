@@ -10,12 +10,7 @@
 package org.mati.zest.examples;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.PaintEvent;
-import org.eclipse.swt.events.PaintListener;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.FillLayout;
-import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.mati.zest.core.widgets.Graph;
@@ -41,7 +36,7 @@ public class LayoutExample {
 		Shell shell = new Shell(d);
 		shell.setText("GraphSnippet1");
 		shell.setLayout(new FillLayout());
-		shell.setSize(1000, 500);
+		shell.setSize(500, 500);
 
 		final Graph g = new Graph(shell, SWT.NONE);
 		g.setSize(500, 500);
@@ -55,26 +50,9 @@ public class LayoutExample {
 			new GraphConnection(g, SWT.NONE, root, n);
 		}
 
-
 		final SpringLayoutAlgorithm springLayoutAlgorithm = new SpringLayoutAlgorithm();
 
-		g.setLayoutAlgorithm(springLayoutAlgorithm, false);
-
-		Button b = new Button(shell, SWT.FLAT);
-		b.setText("step");
-		b.addSelectionListener(new SelectionAdapter() {
-			public void widgetSelected(SelectionEvent e) {
-				springLayoutAlgorithm.performIteration();
-				g.redraw();
-			}
-		});
-
-		g.addPaintListener(new PaintListener() {
-			public void paintControl(PaintEvent e) {
-				springLayoutAlgorithm.paint(e.gc);
-			}
-		});
-
+		g.setLayoutAlgorithm(springLayoutAlgorithm, true);
 		shell.open();
 		while (!shell.isDisposed()) {
 			while (!d.readAndDispatch()) {
