@@ -11,9 +11,9 @@
 package org.mati.zest.layout.algorithms;
 
 import org.eclipse.zest.layouts.dataStructures.DisplayIndependentRectangle;
+import org.mati.zest.layout.interfaces.EntityLayout;
 import org.mati.zest.layout.interfaces.LayoutAlgorithm;
 import org.mati.zest.layout.interfaces.LayoutContext;
-import org.mati.zest.layout.interfaces.NodeLayout;
 
 
 /**
@@ -41,7 +41,7 @@ public class GridLayoutAlgorithm implements LayoutAlgorithm {
 	public void applyLayout() {
 		DisplayIndependentRectangle bounds = context.getBounds();
 		calculateGrid(bounds);
-		applyLayoutInternal(context.getNodes(), bounds);
+		applyLayoutInternal(context.getEntities(), bounds);
 	}
 
 	/**
@@ -80,7 +80,7 @@ public class GridLayoutAlgorithm implements LayoutAlgorithm {
 	 * @param bounds
 	 *            the bounds in which the layout can place the entities.
 	 */
-	protected synchronized void applyLayoutInternal(NodeLayout[] entitiesToLayout, DisplayIndependentRectangle bounds) {
+	protected synchronized void applyLayoutInternal(EntityLayout[] entitiesToLayout, DisplayIndependentRectangle bounds) {
 		
 		int index = 0;
 		for( int i = 0; i < rows; i++ ) {
@@ -89,7 +89,7 @@ public class GridLayoutAlgorithm implements LayoutAlgorithm {
 					// find new position for child
 					double xmove = bounds.x + j * colWidth + offsetX;
 					double ymove = bounds.y + i * rowHeight + offsetY;
-					NodeLayout node = entitiesToLayout[index++];
+					EntityLayout node = entitiesToLayout[index++];
 					if (node.isMovable())
 						node.setLocation(xmove, ymove);
 					if (node.isResizable())
@@ -102,7 +102,7 @@ public class GridLayoutAlgorithm implements LayoutAlgorithm {
 	/**
 	 * Calculates and returns an array containing the number of columns, followed by the number of rows
 	 */
-	protected int[] calculateNumberOfRowsAndCols (int numChildren, double boundX, double boundY, double boundWidth, double boundHeight) {
+	protected int[] calculateNumberOfRowsAndCols(int numChildren, double boundX, double boundY, double boundWidth, double boundHeight) {
 		if (aspectRatio == 1.0) {
 			return calculateNumberOfRowsAndCols_square (numChildren, boundX, boundY, boundWidth, boundHeight);
 		} else {

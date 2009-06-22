@@ -20,6 +20,8 @@ import org.eclipse.zest.core.widgets.internal.LoopAnchor;
 import org.eclipse.zest.core.widgets.internal.PolylineArcConnection;
 import org.eclipse.zest.core.widgets.internal.RoundedChopboxAnchor;
 import org.eclipse.zest.core.widgets.internal.ZestRootLayer;
+import org.mati.zest.layout.interfaces.ConnectionLayout;
+import org.mati.zest.layout.interfaces.NodeLayout;
 
 /*
  * This is the graph connection model which stores the source and destination
@@ -75,7 +77,7 @@ public class GraphConnection extends GraphItem {
 		this.highlightColor = graphModel.DARK_BLUE;
 		this.lineWidth = 1;
 		this.lineStyle = Graphics.LINE_SOLID;
-		setWeight(weight);
+		setWeight(1.0);
 		this.graph = graphModel;
 		this.curveDepth = 0;
 		this.font = Display.getDefault().getSystemFont();
@@ -628,5 +630,34 @@ public class GraphConnection extends GraphItem {
 
 	IFigure getFigure() {
 		return this.getConnectionFigure();
+	}
+
+	private InternalConnectionLayout layout;
+
+	InternalConnectionLayout getLayout() {
+		if (layout == null) {
+			layout = new InternalConnectionLayout();
+		}
+		return layout;
+	}
+
+	class InternalConnectionLayout implements ConnectionLayout {
+
+		public NodeLayout getSource() {
+			return sourceNode.getLayout();
+		}
+
+		public NodeLayout getTarget() {
+			return destinationNode.getLayout();
+		}
+
+		public double getWeight() {
+			return GraphConnection.this.getWeightInLayout();
+		}
+
+		public boolean isDirected() {
+			return !ZestStyles.checkStyle(getConnectionStyle(), ZestStyles.CONNECTIONS_DIRECTED);
+		}
+
 	}
 }

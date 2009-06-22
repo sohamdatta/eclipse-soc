@@ -1,7 +1,5 @@
 package org.mati.zest.layout.interfaces;
 
-import org.eclipse.zest.layouts.dataStructures.DisplayIndependentDimension;
-import org.eclipse.zest.layouts.dataStructures.DisplayIndependentPoint;
 
 /**
  * An interface for subgraphs in layout. A subgraph is a set of pruned nodes
@@ -9,7 +7,7 @@ import org.eclipse.zest.layouts.dataStructures.DisplayIndependentPoint;
  * node (empty subgraphs will be removed from its context). Every node can
  * belong to at most one subgraph.
  */
-public interface SubgraphLayout {
+public interface SubgraphLayout extends EntityLayout {
 
 	/**
 	 * Returns all the nodes belonging to this subgraph. Replacing elements in
@@ -36,30 +34,4 @@ public interface SubgraphLayout {
 	 */
 	public void removeNodes(NodeLayout[] nodes);
 
-	/**
-	 * Returns a point laying in the center of this subgraph. Any subsequent
-	 * changes to the returned point won't affect this subgraph.
-	 * 
-	 * @return position of the center of this node
-	 */
-	public DisplayIndependentPoint getLocation();
-
-	/**
-	 * Sets the position of this subgraph. The subgraph will be moved so that
-	 * it's center is located in the given point.
-	 * 
-	 * @param x
-	 *            the x-position
-	 * @param y
-	 *            the y-position
-	 */
-	public void setLocation(double x, double y);
-
-	public DisplayIndependentDimension getSize();
-
-	public void setSize(double width, double height);
-
-	public boolean isResizable();
-
-	public boolean isMovable();
 }
