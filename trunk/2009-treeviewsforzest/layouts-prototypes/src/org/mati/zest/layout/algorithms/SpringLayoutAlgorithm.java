@@ -126,24 +126,29 @@ public class SpringLayoutAlgorithm implements LayoutAlgorithm {
 
 	private double[][] srcDestToSumOfWeights;
 
-    private double[] forcesX;
+	private EntityLayout[] entities;
 
-    private double[] forcesY;
-    
+	private double[] forcesX, forcesY;
+
+	private double[] locationsX, locationsY;
+
+	private DisplayIndependentRectangle bounds;
+
+	private double boundaryScale = 1.0;
+
 	private LayoutContext context;
 
 	public void applyLayout() {
-		EntityLayout[] entities = context.getEntities();
-		initLayout(entities);
+		initLayout();
 		while (performAnotherNonContinuousIteration()) {
-			computeOneIteration(entities);
+			computeOneIteration();
 		}
+		saveLocations();
 		AlgorithmHelper.maximizeSizes(entities);
-		AlgorithmHelper.fitWithinBounds(entities, context.getBounds());
-		reset();
+		AlgorithmHelper.fitWithinBounds(entities, bounds);
 	}
     
-    public void setLayoutContext(LayoutContext context) {
+	public void setLayoutContext(LayoutContext context) {
 		this.context = context;
 	}
 
@@ -283,25 +288,14 @@ public class SpringLayoutAlgorithm implements LayoutAlgorithm {
         return sprRandom;
     }
 
-    /**
-     * Clean up after done
-     */
-	private void reset() {
-        forcesX = null;
-        forcesY = null;
-		sprMove = DEFAULT_SPRING_MOVE;
-		sprStrain = DEFAULT_SPRING_STRAIN;
-		sprLength = DEFAULT_SPRING_LENGTH;
-		sprGravitation = DEFAULT_SPRING_GRAVITATION;
-		sprIterations = DEFAULT_SPRING_ITERATIONS;
-    }
-
     private long startTime = 0;
 
-	private void initLayout(EntityLayout[] entities) {
-		srcDestToSumOfWeights = new double[entities.length][entities.length];
-		
+	private void initLayout() {
+		entities = context.getEntities();
+		bounds = context.getBounds();
+		loadLocations();
 
+		srcDestToSumOfWeights = new double[entities.length][entities.length];
 		HashMap entityToPosition = new HashMap();
 		for (int i = 0; i < entities.length; i++) {
 			entityToPosition.put(entities[i], new Integer(i));
@@ -319,17 +313,36 @@ public class SpringLayoutAlgorithm implements LayoutAlgorithm {
 		}
 
         if (sprRandom)
-			placeRandomly(entities); // put vertices in random places
+			placeRandomly(); // put vertices in random places
 
         iteration = 1;
-
-		forcesX = new double[entities.length];
-		forcesY = new double[entities.length];
 
 		startTime = System.currentTimeMillis();
     }
 
-    /**
+    private void loadLocations() {
+		if (locationsX == null || locationsX.length != entities.length) {
+			locationsX = new double[entities.length];
+			locationsY = new double[entities.length];
+		}
+		if (forcesX == null || forcesX.length != entities.length) {
+			forcesX = new double[entities.length];
+			forcesY = new double[entities.length];
+		}
+		for (int i = 0; i < entities.length; i++) {
+			DisplayIndependentPoint location = entities[i].getLocation();
+			locationsX[i] = location.x;
+			locationsY[i] = location.y;
+		}
+	}
+
+	private void saveLocations() {
+		for (int i = 0; i < entities.length; i++) {
+			entities[i].setLocation(locationsX[i], locationsY[i]);
+		}
+	}
+
+	/**
      * Scales the current iteration counter based on how long the algorithm has
      * been running for. You can set the MaxTime in maxTimeMS!
      */
@@ -359,27 +372,31 @@ public class SpringLayoutAlgorithm implements LayoutAlgorithm {
         return sprIterations;
     }
 
-	protected void computeOneIteration(EntityLayout[] entities) {
-		computeForces(entities);
-		computePositions(entities);
-
+	protected void computeOneIteration() {
+		computeForces();
+		computePositions();
+		improveBoundary();
+		moveToCenter();
         iteration++;
     }
         
     /**
      * Puts vertices in random places, all between (0,0) and (1,1).
      */
-	public void placeRandomly(EntityLayout[] entities) {
+	public void placeRandomly() {
         // If only one node in the data repository, put it in the middle
-		DisplayIndependentRectangle bounds = context.getBounds();
-		if (entities.length == 1) {
+		if (locationsX.length == 1) {
             // If only one node in the data repository, put it in the middle
-			entities[0].setLocation(bounds.x + 0.5 * bounds.width, bounds.y + 0.5 * bounds.height);
+			locationsX[0] = bounds.x + 0.5 * bounds.width;
+			locationsY[0] = bounds.y + 0.5 * bounds.height;
         } else {
-			entities[0].setLocation(bounds.x, bounds.y);
-			entities[1].setLocation(bounds.x + bounds.width, bounds.y + bounds.height);
-			for (int i = 2; i < entities.length; i++) {
-				entities[i].setLocation(bounds.x + Math.random() * bounds.width, bounds.y + Math.random() * bounds.height);
+			locationsX[0] = bounds.x;
+			locationsY[0] = bounds.y;
+			locationsX[1] = bounds.x + bounds.width;
+			locationsY[1] = bounds.y + bounds.height;
+			for (int i = 2; i < locationsX.length; i++) {
+				locationsX[i] = bounds.x + Math.random() * bounds.width;
+				locationsY[i] = bounds.y + Math.random() * bounds.height;
             }
         }
     }
@@ -392,27 +409,20 @@ public class SpringLayoutAlgorithm implements LayoutAlgorithm {
      * Computes the force for each node in this SpringLayoutAlgorithm. The
      * computed force will be stored in the data repository
      */
-	protected void computeForces(EntityLayout[] entities) {
+	protected void computeForces() {
 
         // initialize all forces to zero
-		for (int i = 0; i < entities.length; i++) {
+		for (int i = 0; i < forcesX.length; i++) {
             forcesX[i] = 0.0;
             forcesY[i] = 0.0;
         }
-		DisplayIndependentRectangle bounds = context.getBounds();
-
         // TODO: Again really really slow!
 
-		for (int i = 0; i < entities.length - 1; i++) {
-			EntityLayout sourceEntity = entities[i];
-			DisplayIndependentPoint srcLocation = sourceEntity.getLocation();
+		for (int i = 0; i < locationsX.length; i++) {
 
-			for (int j = i + 1; j < entities.length; j++) {
-				EntityLayout destinationEntity = entities[j];
-				DisplayIndependentPoint destLocation = destinationEntity.getLocation();
-                if (!destinationEntity.equals(sourceEntity)) {
-					double dx = (srcLocation.x - destLocation.x) / bounds.width;
-					double dy = (srcLocation.y - destLocation.y) / bounds.height;
+			for (int j = i + 1; j < locationsX.length; j++) {
+				double dx = (locationsX[i] - locationsX[j]) / bounds.width / boundaryScale;
+				double dy = (locationsY[i] - locationsY[j]) / bounds.height / boundaryScale;
 					double distance_sq = dx * dx + dy * dy;
 					// make sure distance and distance squared not too small
 					distance_sq = Math.max(MIN_DISTANCE * MIN_DISTANCE, distance_sq);
@@ -422,7 +432,7 @@ public class SpringLayoutAlgorithm implements LayoutAlgorithm {
                     // then decrease force on srcObj (a pull) in direction of destObj
                     // If no relation between srcObj and destObj then increase
                     // force on srcObj (a push) from direction of destObj.
-					double sumOfWeights = 2 * srcDestToSumOfWeights[i][j];
+					double sumOfWeights = srcDestToSumOfWeights[i][j];
 
 					double f;
 					if (sumOfWeights > 0) {
@@ -440,8 +450,7 @@ public class SpringLayoutAlgorithm implements LayoutAlgorithm {
 
 					forcesX[j] -= dfx;
 					forcesY[j] -= dfy;
-                } 
-            } 
+			}
         }
     }
 
@@ -450,32 +459,59 @@ public class SpringLayoutAlgorithm implements LayoutAlgorithm {
      * The computed position will be stored in the data repository. position =
      * position + sprMove * force
      */
-	protected void computePositions(EntityLayout[] entities) {
-		DisplayIndependentRectangle bounds = context.getBounds();
+	protected void computePositions() {
 		for (int i = 0; i < entities.length; i++) {
 			if (entities[i].isMovable()) {
                 double deltaX = sprMove * forcesX[i];
                 double deltaY = sprMove * forcesY[i];
 
-                // constrain movement, so that nodes don't shoot way off to the edge
-                double maxMovement = 0.2d * sprMove;
-                if (deltaX >= 0) {
-                    deltaX = Math.min(deltaX, maxMovement);
-                } else {
-                    deltaX = Math.max(deltaX, -maxMovement);
-                }
-                if (deltaY >= 0) {
-                    deltaY = Math.min(deltaY, maxMovement);
-                } else {
-                    deltaY = Math.max(deltaY, -maxMovement);
-                }
+				// constrain movement, so that nodes don't shoot way off to the
+				// edge
+				double dist = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+				double maxMovement = 0.2d * sprMove;
+				if (dist > maxMovement) {
+					deltaX *= maxMovement / dist;
+					deltaY *= maxMovement / dist;
+				}
 
-				DisplayIndependentPoint location = entities[i].getLocation();
-				entities[i].setLocation(location.x + deltaX * bounds.width, location.y + deltaY * bounds.height);
+				locationsX[i] += deltaX * bounds.width * boundaryScale;
+				locationsY[i] += deltaY * bounds.height * boundaryScale;
             }
-            
         }
+	}
 
-    }
+	private void improveBoundary() {
+		double minX, maxX, minY, maxY;
+		minX = minY = Double.POSITIVE_INFINITY;
+		maxX = maxY = Double.NEGATIVE_INFINITY;
+
+		for (int i = 0; i < locationsX.length; i++) {
+			maxX = Math.max(maxX, locationsX[i]);
+			minX = Math.min(minX, locationsX[i]);
+			maxY = Math.max(maxY, locationsY[i]);
+			minY = Math.min(minY, locationsY[i]);
+		}
+
+		double boundaryProportion = Math.max((maxX - minX) / bounds.width, (maxY - minY) / bounds.height);
+		if (boundaryProportion < 0.9)
+			boundaryScale *= 1.01;
+		if (boundaryProportion > 1)
+			boundaryScale *= 0.99;
+	}
+
+	private void moveToCenter() {
+		double sumX, sumY;
+		sumX = sumY = 0;
+		for (int i = 0; i < locationsX.length; i++) {
+			sumX += locationsX[i];
+			sumY += locationsY[i];
+		}
+		double avgX = sumX / locationsX.length - (bounds.x + bounds.width / 2);
+		double avgY = sumY / locationsX.length - (bounds.y + bounds.height / 2);
+		for (int i = 0; i < locationsX.length; i++) {
+			locationsX[i] -= avgX;
+			locationsY[i] -= avgY;
+		}
+	}
 }
 
