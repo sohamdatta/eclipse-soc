@@ -1,0 +1,13 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Charts Demo Plug-in
+Bundle-SymbolicName: org.eclipse.birt.newcharts.views; singleton:=true
+Bundle-Version: 1.0.0
+Bundle-Vendor: EclipseSource
+Require-Bundle: org.eclipse.core.runtime,
+ org.eclipse.birt.chart.device.extension;bundle-version="2.3.1",
+ org.eclipse.birt.chart.engine;bundle-version="2.3.1",
+ org.eclipse.birt.chart.engine.extension;bundle-version="2.3.1",
+ org.eclipse.ui,
+ org.eclipse.birt.newcharts;bundle-version="1.0.0"
+Bundle-RequiredExecutionEnvironment: J2SE-1.4
