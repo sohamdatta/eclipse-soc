@@ -34,6 +34,8 @@ public static void main (String [] args) {
     item2.setText("Second item");
     GridItem item3 = new GridItem(item2,SWT.NONE);
     item3.setText("Third Item");
+    GridItem item4 = new GridItem(item1,SWT.NONE,-1);
+    item4.setText("test");
     
     shell.setSize(200,200);
     shell.open ();
