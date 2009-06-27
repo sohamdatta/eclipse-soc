@@ -70,6 +70,11 @@ public class GridItem extends Item
      * List of column spaning.
      */
     private ArrayList columnSpans = new ArrayList();
+    
+    /**
+     * List of area spanning.Every element in this list should be a Point structure:(horizontal span,virtical span).
+     */
+    private ArrayList areaSpans = new ArrayList();
 
     /**
      * Default background color.
@@ -500,10 +505,18 @@ public class GridItem extends Item
         if (origin.x < 0 && parent.isRowHeaderVisible())
         	return new Rectangle(-1000,-1000,0,0);
 
-        int width = 0;
+        int width = 0,height=0;
+        int column_span = 0,row_span = 0;
+        
+        if(parent.onlyUseExtensibleSpanMethod()){
+        	column_span = getAreaSpan(columnIndex).x;
+        	row_span = getAreaSpan(columnIndex).y;
+        }else{
+        	column_span = getColumnSpan(columnIndex);
+        	row_span = 0;
+        }
 
-        int span = getColumnSpan(columnIndex);
-        for (int i = 0; i <= span; i++)
+        for (int i = 0; i <= column_span; i++)
         {
             if (parent.getColumnCount() <= columnIndex + i)
             {
@@ -511,8 +524,17 @@ public class GridItem extends Item
             }
             width += parent.getColumn(columnIndex + i).getWidth();
         }
+        int currentItemIndex = parent.indexOf(this);
+        for(int i = 0 ; i <= row_span; i++)
+        {
+        	if (parent.getItemCount() <= currentItemIndex + i)
+        	{
+        		break;
+        	}
+        	height += parent.getItem(currentItemIndex + i).getHeight();
+        }
 
-        return new Rectangle(origin.x, origin.y, width - 1, getHeight());
+        return new Rectangle(origin.x, origin.y, width - 1, height - 1);
     }
 
     /**
@@ -560,7 +582,6 @@ public class GridItem extends Item
 
     /**
      * Returns the column span for the given column index in the receiver.
-     *
      * @param index the column index
      * @return the number of columns spanned (0 equals no columns spanned)
      * @throws org.eclipse.swt.SWTException
@@ -580,7 +601,28 @@ public class GridItem extends Item
         }
         return i.intValue();
     }
-
+    /**
+     * Returns the area span for the given column index in the receiver
+     * @param index the column index
+     * @return the row number and the column number that this area spanned
+     * in a Point structuer
+     * @throws org.eclipse.swt.SWTException
+     * <ul>
+     * <li>ERROR_WIDGET_DISPOSED - if the receiver has been disposed</li>
+     * <li>ERROR_THREAD_INVALID_ACCESS - if not called from the thread that
+     * created the receiver</li>
+     * </ul>
+     */
+    public Point getAreaSpan(int index){
+    	checkWidget();
+    	Point pt = (Point)areaSpans.get(index);
+    	if (pt == null)
+    	{
+    		return new Point(0,0);
+    	}
+    	return pt;
+    }
+    
     /**
      * Returns the font that the receiver will use to paint textual information
      * for this item.
@@ -1074,8 +1116,9 @@ public class GridItem extends Item
 
     /**
      * Sets the column spanning for the column at the given index to span the
-     * given number of subsequent columns.
-     *
+     * given number of subsequent columns.<br/>
+     * Note: if the parent grid has set the useExtensibleSpanMethod, this method
+     * can not be used now.
      * @param index column index that should span
      * @param span number of subsequent columns to span
      * @throws org.eclipse.swt.SWTException
@@ -1088,9 +1131,34 @@ public class GridItem extends Item
     public void setColumnSpan(int index, int span)
     {
         checkWidget();
+        if(parent.onlyUseExtensibleSpanMethod()) return;
         columnSpans.set(index, new Integer(span));
         parent.setHasSpanning(true);
         parent.redraw();
+    }
+    /**
+     * This method is an extensible method of setColumnSpan.AFAIK,setColumnSpan can
+     * only implement a column merging.In prior version of this Grid widget,we can
+     * not fulfill the merging of two rows,so I add this setAreaSpan method to support
+     * this requirement.<br/>
+     * Note: this method can be used only if the useExtensibleSpanMethod has been set.
+     * @param index the begin column index of this merged area
+     * @param column_span the height of this area spanned,i.e.,column number
+     * @param row_span the width of this area spanned,i.e.,row number
+     * @author higerinbeijing@gmail.com
+     * @throws org.eclipse.swt.SWTException
+     * <ul>
+     * <li>ERROR_WIDGET_DISPOSED - if the receiver has been disposed</li>
+     * <li>ERROR_THREAD_INVALID_ACCESS - if not called from the thread that
+     * created the receiver</li>
+     * </ul>
+     */
+    public void setAreaSpan(int index,int column_span,int row_span){
+    	checkWidget();
+    	if(!parent.onlyUseExtensibleSpanMethod()) return;
+    	areaSpans.set(index, new Point(column_span,row_span));
+    	parent.setHasSpanning(true);
+    	parent.redraw();
     }
 
     /**
@@ -1733,6 +1801,7 @@ public class GridItem extends Item
         parent.redraw();
     }
 
+	
     /**
      * Returns the checkable state at the given column index in the receiver.  If the column at
      * the given index is not checkable then this will return false regardless of the individual
@@ -1835,6 +1904,7 @@ public class GridItem extends Item
         ensureSize(images);
         ensureSize(texts);
         ensureSize(columnSpans);
+        ensureSize(areaSpans);
         ensureSize(tooltips);
     }
 
@@ -1854,6 +1924,7 @@ public class GridItem extends Item
         removeValue(index,images);
         removeValue(index,texts);
         removeValue(index,columnSpans);
+        removeValue(index,areaSpans);
         removeValue(index,tooltips);
     }
 
@@ -1868,6 +1939,7 @@ public class GridItem extends Item
         insertValue(index,images);
         insertValue(index,texts);
         insertValue(index,columnSpans);
+        insertValue(index,areaSpans);
         insertValue(index,tooltips);
         hasSetData = false;
     }
@@ -1933,6 +2005,7 @@ public class GridItem extends Item
     	checks.clear();
     	checkable.clear();
     	columnSpans.clear();
+    	areaSpans.clear();
     	fonts.clear();
     	foregrounds.clear();
     	grayeds.clear();
@@ -1959,4 +2032,6 @@ public class GridItem extends Item
 
     	init();
     }
+
+
 }
