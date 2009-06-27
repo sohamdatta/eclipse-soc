@@ -7,7 +7,9 @@ import org.mati.zest.layout.interfaces.EntityLayout;
 
 class AlgorithmHelper {
 
-	public final static int MIN_NODE_SIZE = 8;
+	public static int MIN_NODE_SIZE = 8;
+
+	public static double PADDING_PERCENT = 0.8;
 
 	public static void fitWithinBounds(EntityLayout[] entities, DisplayIndependentRectangle destinationBounds) {
 		DisplayIndependentRectangle startingBounds = getLayoutBounds(entities, true);
@@ -61,8 +63,9 @@ class AlgorithmHelper {
 	public static void maximizeSizes(EntityLayout[] entities) {
 		if (entities.length > 1) {
 			DisplayIndependentDimension minDistance = getMinimumDistance(entities);
-			double width = Math.max(minDistance.width, MIN_NODE_SIZE);
-			double height = Math.max(minDistance.height, MIN_NODE_SIZE);
+			double nodeSize = Math.max(minDistance.width, minDistance.height) * PADDING_PERCENT;
+			double width = nodeSize;
+			double height = nodeSize;
 			for (int i = 0; i < entities.length; i++) {
 				EntityLayout entity = entities[i];
 				if (entity.isResizable()) {
@@ -167,8 +170,8 @@ class AlgorithmHelper {
 
 				if (distance < minDistance) {
 					minDistance = distance;
-					horAndVertdistance.width = distanceX;
-					horAndVertdistance.height = distanceY;
+					horAndVertdistance.width = Math.abs(distanceX);
+					horAndVertdistance.height = Math.abs(distanceY);
 				}
 			}
 		}

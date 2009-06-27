@@ -24,23 +24,23 @@ public interface NodeLayout extends EntityLayout {
 
 	/**
 	 * Returns all nodes that are direct successors of this node. Nodes
-	 * connected with this node with a bidirectional connection are considered
+	 * connected with this node by a bidirectional connection are considered
 	 * both successors and predecessors. Any subsequent changes to the returned
 	 * array do not affect this node.
 	 * 
 	 * @return array of successors of this node
 	 */
-	public NodeLayout[] getDirectSuccessors();
+	public NodeLayout[] getSuccessingNodes();
 
 	/**
 	 * Returns all nodes that are direct predecessors of this node. Nodes
-	 * connected with this node with a bidirectional connection are considered
+	 * connected with this node by a bidirectional connection are considered
 	 * both successors and predecessors. Any subsequent changes to the returned
 	 * array do not affect this node.
 	 * 
 	 * @return array of predecessors of this node
 	 */
-	public NodeLayout[] getDirectPredecessors();
+	public NodeLayout[] getPredecessingNodes();
 
 	/**
 	 * Returns all connections that have this node as a target. All connections

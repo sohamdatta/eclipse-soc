@@ -1,7 +1,6 @@
 package org.mati.zest.core.widgets;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
@@ -761,12 +760,6 @@ public class GraphNode extends GraphItem {
 	private class InternalNodeLayout implements NodeLayout {
 		private DisplayIndependentPoint location;
 		private DisplayIndependentDimension size;
-		private ArrayList incomingConnections;
-		private ArrayList incomingUndirectedConnections;
-		private ArrayList outgoingConnections;
-		private ArrayList outgoingUndirectedConnections;
-		private HashSet predecessors;
-		private HashSet successors;
 
 		public DisplayIndependentPoint getLocation() {
 			if (location == null) {
@@ -803,7 +796,7 @@ public class GraphNode extends GraphItem {
 		}
 
 		public boolean isResizable() {
-			return (nodeStyle & ZestStyles.NODES_NO_LAYOUT_RESIZE) > 0;
+			return (nodeStyle & ZestStyles.NODES_NO_LAYOUT_RESIZE) == 0;
 		}
 
 		public void prune(SubgraphLayout subgraph) {
@@ -819,109 +812,64 @@ public class GraphNode extends GraphItem {
 			size = new DisplayIndependentDimension(width, height);
 		}
 
-		private void initConnections() {
-			if (incomingConnections == null) {
-				incomingConnections = new ArrayList();
-				incomingUndirectedConnections = new ArrayList();
-				for (Iterator iterator = targetConnections.iterator(); iterator.hasNext();) {
-					GraphConnection connection = (GraphConnection) iterator.next();
-					if (ZestStyles.checkStyle(connection.getConnectionStyle(), ZestStyles.CONNECTIONS_DIRECTED))
-						incomingConnections.add(connection);
-					else
-						incomingUndirectedConnections.add(connection);
-				}
-				outgoingConnections = new ArrayList();
-				outgoingUndirectedConnections = new ArrayList();
-				for (Iterator iterator = sourceConnections.iterator(); iterator.hasNext();) {
-					GraphConnection connection = (GraphConnection) iterator.next();
-					if (ZestStyles.checkStyle(connection.getConnectionStyle(), ZestStyles.CONNECTIONS_DIRECTED)) {
-						outgoingConnections.add(connection);
-					} else {
-						outgoingUndirectedConnections.add(connection);
-					}
-				}
+		public NodeLayout[] getPredecessingNodes() {
+			ConnectionLayout[] connections = getIncomingConnections();
+			NodeLayout[] result = new NodeLayout[connections.length];
+			for (int i = 0; i < connections.length; i++) {
+				result[i] = connections[i].getSource();
+				if (result[i] == this)
+					result[i] = connections[i].getTarget();
 			}
+			return result;
 		}
 
-		public NodeLayout[] getDirectPredecessors() {
-			if (predecessors == null) {
-				initConnections();
-				predecessors = new HashSet();
-				for (Iterator it = incomingConnections.iterator(); it.hasNext();) {
-					GraphConnection connection = (GraphConnection) it.next();
-					predecessors.add(connection.getSource().getLayout());
-				}
-				for (Iterator it = incomingUndirectedConnections.iterator(); it.hasNext();) {
-					GraphConnection connection = (GraphConnection) it.next();
-					predecessors.add(connection.getSource().getLayout());
-				}
-				for (Iterator it = outgoingUndirectedConnections.iterator(); it.hasNext();) {
-					GraphConnection connection = (GraphConnection) it.next();
-					predecessors.add(connection.getDestination().getLayout());
-				}
+		public NodeLayout[] getSuccessingNodes() {
+			ConnectionLayout[] connections = getOutgoingConnections();
+			NodeLayout[] result = new NodeLayout[connections.length];
+			for (int i = 0; i < connections.length; i++) {
+				result[i] = connections[i].getTarget();
+				if (result[i] == this)
+					result[i] = connections[i].getSource();
 			}
-			return (NodeLayout[]) predecessors.toArray();
+			return result;
 		}
 
-		public NodeLayout[] getDirectSuccessors() {
-			if (successors == null) {
-				initConnections();
-				successors = new HashSet();
-				for (Iterator it = outgoingConnections.iterator(); it.hasNext();) {
-					GraphConnection connection = (GraphConnection) it.next();
-					successors.add(connection.getDestination().getLayout());
-				}
-				for (Iterator it = outgoingUndirectedConnections.iterator(); it.hasNext();) {
-					GraphConnection connection = (GraphConnection) it.next();
-					successors.add(connection.getDestination().getLayout());
-				}
-				for (Iterator it = incomingUndirectedConnections.iterator(); it.hasNext();) {
-					GraphConnection connection = (GraphConnection) it.next();
-					successors.add(connection.getSource().getLayout());
-				}
-			}
-			return (NodeLayout[]) successors.toArray();
+		public NodeLayout[] getSuccessingEntities() {
+			// TODO Auto-generated method stub
+			return getSuccessingNodes();
+		}
+
+		public NodeLayout[] getPredecessingEntities() {
+			// TODO Auto-generated method stub
+			return getPredecessingNodes();
 		}
 
 		public ConnectionLayout[] getIncomingConnections() {
-			initConnections();
-			ConnectionLayout[] result = new ConnectionLayout[outgoingConnections.size() + outgoingUndirectedConnections.size()
-					+ incomingUndirectedConnections.size()];
-			initConnections();
-			int i = 0;
-			for (Iterator it = incomingConnections.iterator(); it.hasNext();) {
-				GraphConnection connection = (GraphConnection) it.next();
-				result[i++] = connection.getLayout();
+			ArrayList result = new ArrayList();
+			for (Iterator iterator = targetConnections.iterator(); iterator.hasNext();) {
+				GraphConnection connection = (GraphConnection) iterator.next();
+				result.add(connection.getLayout());
 			}
-			for (Iterator it = incomingUndirectedConnections.iterator(); it.hasNext();) {
-				GraphConnection connection = (GraphConnection) it.next();
-				result[i++] = connection.getLayout();
+			for (Iterator iterator = sourceConnections.iterator(); iterator.hasNext();) {
+				GraphConnection connection = (GraphConnection) iterator.next();
+				if (!connection.isDirected())
+					result.add(connection.getLayout());
 			}
-			for (Iterator it = outgoingUndirectedConnections.iterator(); it.hasNext();) {
-				GraphConnection connection = (GraphConnection) it.next();
-				result[i++] = connection.getLayout();
-			}
-			return result;
+			return (ConnectionLayout[]) result.toArray(new ConnectionLayout[result.size()]);
 		}
 
 		public ConnectionLayout[] getOutgoingConnections() {
-			initConnections();
-			ConnectionLayout[] result = new ConnectionLayout[outgoingConnections.size() + outgoingUndirectedConnections.size()
-					+ incomingUndirectedConnections.size()];
-			int i = 0;
-			for (Iterator it = outgoingConnections.iterator(); it.hasNext();) {
-				GraphConnection connection = (GraphConnection) it.next();
-				result[i++] = connection.getLayout();
+			ArrayList result = new ArrayList();
+			for (Iterator iterator = sourceConnections.iterator(); iterator.hasNext();) {
+				GraphConnection connection = (GraphConnection) iterator.next();
+				result.add(connection.getLayout());
 			}
-			for (Iterator it = outgoingUndirectedConnections.iterator(); it.hasNext();) {
-				GraphConnection connection = (GraphConnection) it.next();
-				result[i++] = connection.getLayout();
+			for (Iterator iterator = targetConnections.iterator(); iterator.hasNext();) {
+				GraphConnection connection = (GraphConnection) iterator.next();
+				if (!connection.isDirected())
+					result.add(connection.getLayout());
 			}
-			for (Iterator it = incomingUndirectedConnections.iterator(); it.hasNext();) {
-				GraphConnection connection = (GraphConnection) it.next();
-				result[i++] = connection.getLayout();
-			}
-			return result;
+			return (ConnectionLayout[]) result.toArray(new ConnectionLayout[result.size()]);
 		}
 
 		public double getPreferredAspectRatio() {
