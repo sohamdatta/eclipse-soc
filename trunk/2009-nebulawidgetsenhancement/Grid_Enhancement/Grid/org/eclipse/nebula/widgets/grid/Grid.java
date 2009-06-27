@@ -586,6 +586,11 @@ public class Grid extends Canvas
      * optimizatoin.
      */
     private boolean hasSpanning = false;
+    
+    /**
+     * use extensible span method <em>setAreaSpan</em> or not
+     */
+    private boolean useExtensibleSpanMethod = false;
 
     /**
      * Index of first visible item.  The value must never be read directly.  It is cached and
@@ -1252,7 +1257,7 @@ public class Grid extends Canvas
                     }
 
                     int colIndex = indexOf((GridColumn)displayOrderedColumns.get(i));
-                    int span = item.getColumnSpan(colIndex);
+                    int span = (onlyUseExtensibleSpanMethod()?item.getAreaSpan(colIndex).x:item.getColumnSpan(colIndex));
 
                     if (i + span >= displayColIndex)
                     {
@@ -5196,35 +5201,41 @@ public class Grid extends Canvas
 
                 // This variable is used to count how many columns are
                 // skipped because the previous column spanned over them
-                int skipBecauseSpanned = 0;
+                int skipColumnsBecauseSpanned = 0;
+                int skipRowsBecauseSpanned = 0;
 
                 int colIndex = 0;
 
                 // draw regular cells for each column
                 for (Iterator columnIterator = displayOrderedColumns.iterator(); columnIterator.hasNext(); )
                 {
-
+                	//TODO: add here,
                     GridColumn column = (GridColumn) columnIterator.next();
-
                     if (!column.isVisible())
                     {
                         colIndex++;
-                        if (skipBecauseSpanned > 0)
+                        if (skipColumnsBecauseSpanned > 0)
                         {
-                            skipBecauseSpanned--;
+                        	skipColumnsBecauseSpanned--;
                         }
                         continue;
                     }
 
-                    if (skipBecauseSpanned == 0)
+                    if (skipColumnsBecauseSpanned == 0)
                     {
-                        skipBecauseSpanned = item.getColumnSpan(indexOf(column));
+                        if(onlyUseExtensibleSpanMethod()){
+                        	skipColumnsBecauseSpanned = item.getAreaSpan(indexOf(column)).x;
+                        	skipRowsBecauseSpanned = item.getAreaSpan(indexOf(column)).y;
+                        }else{
+                        	skipColumnsBecauseSpanned = item.getColumnSpan(indexOf(column));
+                        	skipRowsBecauseSpanned = 0;
+                        }
 
                         int width = column.getWidth();
 
-                        if (skipBecauseSpanned > 0)
+                        if (skipColumnsBecauseSpanned > 0)
                         {
-                            for (int j = 0; j < skipBecauseSpanned; j++)
+                            for (int j = 0; j < skipColumnsBecauseSpanned; j++)
                             {
                                 if (getColumnCount() <= colIndex + j + 1)
                                 {
@@ -5236,11 +5247,26 @@ public class Grid extends Canvas
                                 }
                             }
                         }
+                        int rowIndex =  indexOf(item);
+                        int height = item.getHeight();
+                        if (skipRowsBecauseSpanned > 0)
+                        {
+                        	for (int j=0; j< skipRowsBecauseSpanned; j++)
+                        	{
+                        		if(getItemCount() <= rowIndex + j +1)
+                        		{
+                        			break;
+                        		}
+                        		if(getItem(rowIndex + j + 1).isVisible())
+                        		{
+                        			height += getItem(rowIndex + j + 1).getHeight();
+                        		}
+                        	}
+                        }
 
                     	if (x + width >= 0 && x < getClientArea().width )
                     	{
-
-	                        column.getCellRenderer().setBounds(x, y, width, item.getHeight());
+	                        column.getCellRenderer().setBounds(x, y, width, height);
 
 	                        e.gc.setClipping(new Rectangle(x -1,y -1,width +1,item.getHeight() + 2));
 
@@ -5313,7 +5339,7 @@ public class Grid extends Canvas
                     }
                     else
                     {
-                        skipBecauseSpanned--;
+                    	skipColumnsBecauseSpanned--;
                     }
                     colIndex++;
 
@@ -5426,8 +5452,7 @@ public class Grid extends Canvas
 
             row++;
         }
-
-        // draw drop point
+        // draw drop point,if the column can be moveable
         if (draggingColumn)
         {
             if ((dragDropAfterColumn != null || dragDropBeforeColumn != null)
@@ -5455,8 +5480,7 @@ public class Grid extends Canvas
                 dropPointRenderer.paint(e.gc, null);
             }
         }
-
-        // draw insertion mark
+        // draw insertion mark: the left-below corner
         if (insertMarkPosFound)
         {
             e.gc.setClipping(
@@ -7280,8 +7304,8 @@ public class Grid extends Canvas
 
                         int index = displayOrderedColumns.indexOf(impliedFocusColumn);
 
-                        int jumpAhead = impliedFocusItem.getColumnSpan(indexOf(impliedFocusColumn));
-
+                        int jumpAhead = (onlyUseExtensibleSpanMethod()?impliedFocusItem.getAreaSpan(indexOf(impliedFocusColumn)).x:
+                        	impliedFocusItem.getColumnSpan(indexOf(impliedFocusColumn)));
                         jumpAhead ++;
 
                         while (jumpAhead > 0)
@@ -8090,12 +8114,13 @@ public class Grid extends Canvas
      *
      * @param item new item
      * @param index index to insert the item at
+     * @param root true if this item is root
      * @return the index where the item was insert
      */
     int newItem(GridItem item, int index, boolean root)
     {
         int row = 0;
-
+        System.out.println(rootItems.size()+","+items.size()+","+root);
         if (!isTree)
         {
             if (item.getParentItem() != null)
@@ -8471,8 +8496,8 @@ public class Grid extends Canvas
             {
                 continue;
             }
-
-            if (item.getColumnSpan(indexOf(tempCol)) >= index - j)
+            int span = (onlyUseExtensibleSpanMethod()?item.getAreaSpan(indexOf(tempCol)).x:item.getColumnSpan(indexOf(tempCol)));
+            if (span >= index - j)
             {
                 prevCol = tempCol;
                 break;
@@ -8516,8 +8541,8 @@ public class Grid extends Canvas
 
             index --;
             GridColumn prevCol = (GridColumn)displayOrderedColumns.get(index);
-
-            if (item.getColumnSpan(indexOf(prevCol)) >= startIndex - index)
+            int span = (onlyUseExtensibleSpanMethod()?item.getAreaSpan(indexOf(prevCol)).x:item.getColumnSpan(indexOf(prevCol))); 
+            if (span >= startIndex - index)
             {
                 if (startIndex == displayOrderedColumns.size() - 1)
                 {
@@ -8958,16 +8983,15 @@ public class Grid extends Canvas
                 if (!nextCol.isVisible()) continue;
 
                 if (nextCol == col) break;
-
-                int span = item.getColumnSpan(indexOf(nextCol));
+                int span = (onlyUseExtensibleSpanMethod()?item.getAreaSpan(indexOf(nextCol)).x:item.getColumnSpan(indexOf(nextCol)));
 
                 if (position + span >= columnAtPosition){
                     spanned = true;
                     break;
                 }
             }
-
-            if (!spanned && item.getColumnSpan(colIndex) == 0)
+            int span = (onlyUseExtensibleSpanMethod()?item.getAreaSpan(colIndex).x:item.getColumnSpan(colIndex));
+            if (!spanned && span == 0)
             {
                 cells.add(new Point(colIndex,indexOf(item)));
             }
@@ -8993,9 +9017,8 @@ public class Grid extends Canvas
             }
 
             if (!nextCol.isVisible()) continue;
-
-            span = item.getColumnSpan(indexOf(nextCol));
-
+            span = (onlyUseExtensibleSpanMethod()?item.getAreaSpan(indexOf(nextCol)).x:item.getColumnSpan(indexOf(nextCol)));
+            
             cells.add(new Point(indexOf(nextCol),itemIndex));
         }
     }
@@ -9019,8 +9042,7 @@ public class Grid extends Canvas
             }
 
             if (!nextCol.isVisible()) continue;
-
-            span = item.getColumnSpan(indexOf(nextCol));
+            span = (onlyUseExtensibleSpanMethod()?item.getAreaSpan(indexOf(nextCol)).x:item.getColumnSpan(indexOf(nextCol)));
 
             cells.add(new Point(indexOf(nextCol),itemIndex));
         }
@@ -9171,7 +9193,8 @@ public class Grid extends Canvas
             else
             {
                 int index = indexOf(col);
-                span = item.getColumnSpan(index);
+                span = (onlyUseExtensibleSpanMethod()?item.getAreaSpan(index).x:item.getColumnSpan(index));
+                
                 if (span > 0) spanningColIndex = index;
 
                 if (col == toColumn && span > 0)
@@ -9217,7 +9240,7 @@ public class Grid extends Canvas
             else
             {
                 int index = indexOf(col);
-                span = item.getColumnSpan(index);
+                span = (onlyUseExtensibleSpanMethod()?item.getAreaSpan(index).x:item.getColumnSpan(index));
 
                 if (span > 0) spanningCol = col;
             }
@@ -9907,7 +9930,22 @@ public class Grid extends Canvas
     {
         this.hasSpanning = hasSpanning;
     }
-
+    /**
+     * This method can only be used before the spanning action;
+     * if not,this method can not work as expect.
+     * @param ext set the useExtensibleSpanMethod
+     */
+    public void setUseExtensibleSpanMethod(boolean ext){
+    	if(hasSpanning) return;//this means that some spanning action has been operated,so nothing will happen then.
+    	this.useExtensibleSpanMethod = ext;
+    }
+    /**
+     * @return Return ture if we can only use extensible span method;
+     * if not,false.
+     */
+    boolean onlyUseExtensibleSpanMethod(){
+    	return this.useExtensibleSpanMethod;
+    }
     /**
      * Returns the receiver's tool tip text, or null if it has
      * not been set.
