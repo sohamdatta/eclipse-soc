@@ -12,12 +12,16 @@ package org.mati.zest.layout.algorithms;
 
 import java.util.HashMap;
 
+import org.eclipse.draw2d.ColorConstants;
+import org.eclipse.swt.graphics.GC;
+import org.eclipse.swt.graphics.Region;
 import org.eclipse.zest.layouts.dataStructures.DisplayIndependentPoint;
 import org.eclipse.zest.layouts.dataStructures.DisplayIndependentRectangle;
 import org.mati.zest.layout.interfaces.ConnectionLayout;
 import org.mati.zest.layout.interfaces.EntityLayout;
 import org.mati.zest.layout.interfaces.LayoutAlgorithm;
 import org.mati.zest.layout.interfaces.LayoutContext;
+import org.mati.zest.layout.interfaces.NodeLayout;
 
 /**
  * The SpringLayoutAlgorithm has its own data repository and relation
@@ -150,6 +154,37 @@ public class SpringLayoutAlgorithm implements LayoutAlgorithm {
     
 	public void setLayoutContext(LayoutContext context) {
 		this.context = context;
+	}
+
+	public void performIteration() {
+		if (iteration == 0) {
+			entities = context.getEntities();
+			loadLocations();
+			initLayout();
+		}
+		computeOneIteration();
+		saveLocations();
+		context.flushChanges(false);
+	}
+
+	public void paint(GC gc) {
+		if (iteration > 0) {
+			gc.setClipping((Region) null);
+			gc.setForeground(ColorConstants.black);
+			gc.drawText(", it=" + iteration + ", bS=" + boundaryScale, 5, 5, true);
+			NodeLayout[] nodes = context.getNodes();
+			computeForces();
+			gc.setForeground(ColorConstants.red);
+			for (int i = 0; i < nodes.length; i++) {
+				DisplayIndependentPoint location = nodes[i].getLocation();
+				double distToCenterX = bounds.x + bounds.width / 2 - location.x;
+				double distToCenterY = bounds.y + bounds.height / 2 - location.y;
+				double distToCenter = Math.sqrt(distToCenterX * distToCenterX + distToCenterY * distToCenterY);
+				double forcesX = sprGravitation * distToCenterX / distToCenter;
+				double forcesY = sprGravitation * distToCenterY / distToCenter;
+				gc.drawLine((int) location.x, (int) location.y, (int) (location.x + forcesX * 20), (int) (location.y + forcesY * 20));
+			}
+		}
 	}
 
 	/**

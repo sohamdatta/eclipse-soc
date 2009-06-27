@@ -180,11 +180,12 @@ public class GraphConnection extends GraphItem {
 	 * @return String
 	 */
 	public String toString() {
-		String arrow = (isBidirectionalInLayout() ? " <--> " : " --> ");
-		String src = (sourceNode != null ? sourceNode.getText() : "null");
-		String dest = (destinationNode != null ? destinationNode.getText() : "null");
-		String weight = "  (weight=" + getWeightInLayout() + ")";
-		return ("GraphModelConnection: " + src + arrow + dest + weight);
+		StringBuffer buffer = new StringBuffer("GraphModelConnection: ");
+		buffer.append(sourceNode != null ? sourceNode.getText() : "null");
+		buffer.append(isDirected() ? " --> " : " --- ");
+		buffer.append(destinationNode != null ? destinationNode.getText() : "null");
+		buffer.append("  (weight=").append(getWeightInLayout()).append(")");
+		return buffer.toString();
 	}
 
 	/**
@@ -509,6 +510,17 @@ public class GraphConnection extends GraphItem {
 		}
 	}
 
+	public boolean isDirected() {
+		return ZestStyles.checkStyle(connectionStyle, ZestStyles.CONNECTIONS_DIRECTED);
+	}
+
+	public void setDirected(boolean directed) {
+		if (directed)
+			setConnectionStyle(connectionStyle | ZestStyles.CONNECTIONS_DIRECTED);
+		else
+			setConnectionStyle(connectionStyle & (-1 - ZestStyles.CONNECTIONS_DIRECTED));
+	}
+
 	PolylineConnection getSourceContainerConnectionFigure() {
 		return (PolylineConnection) sourceContainerConnectionFigure;
 	}
@@ -617,15 +629,6 @@ public class GraphConnection extends GraphItem {
 
 		doUpdateFigure(connectionFigure);
 		return connectionFigure;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.eclipse.mylar.zest.layouts.LayoutRelationship#isBidirectionalInLayout()
-	 */
-	private boolean isBidirectionalInLayout() {
-		return !ZestStyles.checkStyle(connectionStyle, ZestStyles.CONNECTIONS_DIRECTED);
 	}
 
 	IFigure getFigure() {

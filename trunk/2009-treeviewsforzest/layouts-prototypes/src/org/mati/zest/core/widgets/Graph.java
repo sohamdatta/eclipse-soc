@@ -465,12 +465,6 @@ public class Graph extends FigureCanvas {
 							node.setLocation(node.getLocation().x + delta.x, node.getLocation().y + delta.y);
 
 						}
-						/*
-						 * else if (item.getItemType() == GraphItem.CONTAINER) {
-						 * GraphContainer container = (GraphContainer) item;
-						 * container.setLocation(container.getLocation().x +
-						 * delta.x, container.getLocation().y + delta.y); }
-						 */
 					} else {
 						// There is no movement for connection
 					}
@@ -488,15 +482,9 @@ public class Graph extends FigureCanvas {
 					Point point = new Point(fisheyedFigure.getBounds().x + delta.x, fisheyedFigure.getBounds().y + delta.y);
 					fishEyeLayer.setConstraint(fisheyedFigure, new Rectangle(point, fisheyedFigure.getSize()));
 					fishEyeLayer.getUpdateManager().performUpdate();
-					// fisheyedFigure.setBounds(new Rectangle(point2,
-					// fisheyedFigure.getSize()));
-					// fisheyedFigure.setLocation(new
-					// Point(fisheyedFigure.getBounds().x + delta.x,
-					// fisheyedFigure.getBounds().y + delta.y));
 				}
 			}
 			lastLocation = tempPoint;
-			// oldLocation = mousePoint;
 		}
 
 		public void mouseEntered(org.eclipse.draw2d.MouseEvent me) {
@@ -806,56 +794,6 @@ public class Graph extends FigureCanvas {
 		}
 	}
 
-	// private void applyLayoutInternal() {
-
-		// if ((this.getNodes().size() == 0)) {
-		// return;
-		// }
-		//
-		// int layoutStyle = 0;
-		//
-		// if ((nodeStyle & ZestStyles.NODES_NO_LAYOUT_RESIZE) > 0) {
-		// layoutStyle = LayoutStyles.NO_LAYOUT_NODE_RESIZING;
-		// }
-		//
-		// if (layoutAlgorithm == null) {
-		// layoutAlgorithm = new TreeLayoutAlgorithm(layoutStyle);
-		// }
-		//
-		// layoutAlgorithm.setStyle(layoutAlgorithm.getStyle() | layoutStyle);
-		//
-		// // calculate the size for the layout algorithm
-		// Dimension d = this.getViewport().getSize();
-		// d.width = d.width - 10;
-		// d.height = d.height - 10;
-		//
-		// if (this.preferredSize.width >= 0) {
-		// d.width = preferredSize.width;
-		// }
-		// if (this.preferredSize.height >= 0) {
-		// d.height = preferredSize.height;
-		// }
-		//
-		// if (d.isEmpty()) {
-		// return;
-		// }
-		// LayoutRelationship[] connectionsToLayout =
-		// getConnectionsToLayout(nodes);
-		// LayoutEntity[] nodesToLayout = getNodesToLayout(getNodes());
-		//
-		// try {
-		// Animation.markBegin();
-		// layoutAlgorithm.applyLayout(nodesToLayout, connectionsToLayout, 0, 0,
-		// d.width, d.height, false, false);
-		// Animation.run(ANIMATION_TIME);
-		// getLightweightSystem().getUpdateManager().performUpdate();
-		//
-		// } catch (InvalidLayoutConfiguration e) {
-		// e.printStackTrace();
-		// }
-
-	// }
-
 	/**
 	 * Schedules a layout to be performed after the view is revealed (or
 	 * immediately, if the view is already revealed).
@@ -944,12 +882,8 @@ public class Graph extends FigureCanvas {
 		if (this.fishEyeLayer.getChildren().contains(oldFigure)) {
 			Rectangle bounds = oldFigure.getBounds();
 			newFigure.setBounds(bounds);
-			// this.fishEyeLayer.getChildren().remove(oldFigure);
 			this.fishEyeLayer.remove(oldFigure);
 			this.fishEyeLayer.add(newFigure);
-			// this.fishEyeLayer.getChildren().add(newFigure);
-			// this.fishEyeLayer.invalidate();
-			// this.fishEyeLayer.repaint();
 			this.fisheyedFigure = newFigure;
 			return true;
 		}
@@ -1055,9 +989,10 @@ public class Graph extends FigureCanvas {
 		}
 
 		public DisplayIndependentRectangle getBounds() {
+			final double MARGIN = 0.1;
 			Dimension d = getViewport().getSize();
-			d.width *= 0.8;
-			d.height *= 0.8;
+			d.width *= 1 - MARGIN;
+			d.height *= 1 - MARGIN;
 
 			if (preferredSize.width >= 0) {
 				d.width = preferredSize.width;
@@ -1065,7 +1000,7 @@ public class Graph extends FigureCanvas {
 			if (preferredSize.height >= 0) {
 				d.height = preferredSize.height;
 			}
-			return new DisplayIndependentRectangle(d.width * 0.1, d.width * 0.1, d.width, d.height);
+			return new DisplayIndependentRectangle(d.width * MARGIN / 2, d.width * MARGIN / 2, d.width, d.height);
 		}
 
 		public LayoutAlgorithm getMainLayoutAlgorithm() {
