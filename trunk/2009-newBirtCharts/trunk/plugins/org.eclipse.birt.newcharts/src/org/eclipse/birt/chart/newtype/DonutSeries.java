@@ -6,6 +6,7 @@ public interface DonutSeries extends Series{
 
 	
 	public void setText(String text);
+	public String getText();
 	
 	public void setRadius(double rad);
 	public double getRadius();
