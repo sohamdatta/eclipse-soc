@@ -11,11 +11,11 @@ class AlgorithmHelper {
 
 	public static double PADDING_PERCENT = 0.8;
 
-	public static void fitWithinBounds(EntityLayout[] entities, DisplayIndependentRectangle destinationBounds) {
+	public static void fitWithinBounds(EntityLayout[] entities, DisplayIndependentRectangle destinationBounds, boolean resize) {
 		DisplayIndependentRectangle startingBounds = getLayoutBounds(entities, true);
 		double sizeScale = Math.min(destinationBounds.width / startingBounds.width, destinationBounds.height / startingBounds.height);
 		if (entities.length == 1) {
-			fitSingleEntity(entities[0], destinationBounds);
+			fitSingleEntity(entities[0], destinationBounds, resize);
 			return;
 		}
 		for (int i = 0; i < entities.length; i++) {
@@ -30,25 +30,25 @@ class AlgorithmHelper {
 				location.y = destinationBounds.y + percentY * destinationBounds.height - size.height / 2;
 				entity.setLocation(location.x, location.y);
 			}
-			if (entity.isResizable()) {
+			if (resize && entity.isResizable()) {
 				entity.setSize(size.width * sizeScale, size.height * sizeScale);
 			}
 		}
 	}
 
-	private static void fitSingleEntity(EntityLayout entities, DisplayIndependentRectangle destinationBounds) {
-		if (entities.isMovable()) {
-			entities.setLocation(destinationBounds.x + destinationBounds.width / 2, destinationBounds.y + destinationBounds.height / 2);
+	private static void fitSingleEntity(EntityLayout entity, DisplayIndependentRectangle destinationBounds, boolean resize) {
+		if (entity.isMovable()) {
+			entity.setLocation(destinationBounds.x + destinationBounds.width / 2, destinationBounds.y + destinationBounds.height / 2);
 		}
-		if (entities.isResizable()) {
+		if (resize && entity.isResizable()) {
 			double width = destinationBounds.width;
 			double height = destinationBounds.height;
-			double preferredAspectRatio = entities.getPreferredAspectRatio();
+			double preferredAspectRatio = entity.getPreferredAspectRatio();
 			if (preferredAspectRatio > 0) {
 				DisplayIndependentDimension fixedSize = fixAspectRatio(width, height, preferredAspectRatio);
-				entities.setSize(fixedSize.width, fixedSize.height);
+				entity.setSize(fixedSize.width, fixedSize.height);
 			} else {
-				entities.setSize(width, height);
+				entity.setSize(width, height);
 			}
 		}
 	}
