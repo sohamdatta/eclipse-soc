@@ -264,6 +264,11 @@ public class Grid extends Canvas
      * List of the table columns in the order they are displayed.
      */
     private List displayOrderedColumns = new ArrayList();
+    
+    /**
+     * List of all merged areas.
+     */
+    private ArrayList areas = new ArrayList();
 
     private GridColumnGroup[] columnGroups = new GridColumnGroup[0];
 
@@ -591,6 +596,11 @@ public class Grid extends Canvas
      * use extensible span method <em>setAreaSpan</em> or not
      */
     private boolean useExtensibleSpanMethod = false;
+    
+    /**
+     * Tell if a point (column,row) is painted or not.
+     */
+    private boolean[][] hasBeenPainted = new boolean[0][0];
 
     /**
      * Index of first visible item.  The value must never be read directly.  It is cached and
@@ -1328,7 +1338,24 @@ public class Grid extends Canvas
         }
         return order;
     }
-
+    /**
+     * Append new added spanning area to the <em>areas</em> list.
+     * <p>
+     * Note: This method can only be used by a Grid object.
+     * </p>
+     * @param rect
+     */
+    void appendSpanArea(Rectangle rect)
+    {
+    	areas.add(rect);
+    }
+    /**
+     * @return All spanning areas in this table
+     */
+    public ArrayList getAllSpanAreas()
+    {
+    	return this.areas;
+    }
     /**
      * Returns the number of column groups contained in the receiver.
      *
@@ -5136,6 +5163,11 @@ public class Grid extends Canvas
             scrollValuesObsolete = false;
         }
 
+        hasBeenPainted = new boolean[getColumnCount()][getItemCount()];
+        for(int i=0;i<getColumnCount();i++)
+        	for(int j=0;j<getItemCount();j++)
+        		hasBeenPainted[i][j]=false;
+        
         int x = 0;
         int y = 0;
 
@@ -5160,7 +5192,7 @@ public class Grid extends Canvas
         firstVisibleIndex = getTopIndex();
 
         int row = firstVisibleIndex;
-
+        
         for (int i = 0; i < visibleRows; i++)
         {
 
@@ -5196,21 +5228,39 @@ public class Grid extends Canvas
                     // row header is actually painted later
                     x += rowHeaderWidth;
                 }
+                //if current row has been painted,skip to next non-painted cell
+                for (int k=0;k<this.getColumnCount();k++)
+                {
+                	if(hasBeenPainted[k][indexOf(item)])
+                	{
+                		if (((GridColumn)displayOrderedColumns.get(k)).isVisible())
+                			x += ((GridColumn)displayOrderedColumns.get(k)).getWidth();
+                	}
+                	else
+                	{
+                		break;
+                	}
+                }
 
                 int focusY = y;
+                
 
                 // This variable is used to count how many columns are
                 // skipped because the previous column spanned over them
                 int skipColumnsBecauseSpanned = 0;
+                // This variable is used to count how many rows are
+                // skipped because the previous column spanned over them
                 int skipRowsBecauseSpanned = 0;
 
                 int colIndex = 0;
+                int rowIndex =  indexOf(item);
 
                 // draw regular cells for each column
                 for (Iterator columnIterator = displayOrderedColumns.iterator(); columnIterator.hasNext(); )
                 {
                 	//TODO: add here,
-                    GridColumn column = (GridColumn) columnIterator.next();
+                	GridColumn column = (GridColumn) columnIterator.next();
+                	
                     if (!column.isVisible())
                     {
                         colIndex++;
@@ -5220,9 +5270,20 @@ public class Grid extends Canvas
                         }
                         continue;
                     }
+                    
+                    if(hasBeenPainted[indexOf(column)][indexOf(item)])
+                    {
+                    	colIndex++;
+                        if (skipColumnsBecauseSpanned > 0)
+                        {
+                        	skipColumnsBecauseSpanned--;
+                        }
+                    	continue;
+                    }
 
                     if (skipColumnsBecauseSpanned == 0)
                     {
+                    	System.out.println("column:"+column.getText());
                         if(onlyUseExtensibleSpanMethod()){
                         	skipColumnsBecauseSpanned = item.getAreaSpan(indexOf(column)).x;
                         	skipRowsBecauseSpanned = item.getAreaSpan(indexOf(column)).y;
@@ -5230,9 +5291,9 @@ public class Grid extends Canvas
                         	skipColumnsBecauseSpanned = item.getColumnSpan(indexOf(column));
                         	skipRowsBecauseSpanned = 0;
                         }
-
-                        int width = column.getWidth();
-
+                        
+                        int width = column.getWidth();//cell width
+                        
                         if (skipColumnsBecauseSpanned > 0)
                         {
                             for (int j = 0; j < skipColumnsBecauseSpanned; j++)
@@ -5247,7 +5308,7 @@ public class Grid extends Canvas
                                 }
                             }
                         }
-                        int rowIndex =  indexOf(item);
+                        
                         int height = item.getHeight();
                         if (skipRowsBecauseSpanned > 0)
                         {
@@ -5263,12 +5324,13 @@ public class Grid extends Canvas
                         		}
                         	}
                         }
-
-                    	if (x + width >= 0 && x < getClientArea().width )
+                        
+                        //System.out.println(item.getText()+":"+column.getWidth()+","+width+","+item.getHeight()+","+height);
+                    	if (x + width >= 0 && x < getClientArea().width && y + height>=0 && y < getClientArea().height)
                     	{
 	                        column.getCellRenderer().setBounds(x, y, width, height);
-
-	                        e.gc.setClipping(new Rectangle(x -1,y -1,width +1,item.getHeight() + 2));
+	                        
+	                        e.gc.setClipping(new Rectangle(x -1,y -1,width +1,height + 2));
 
 	                        column.getCellRenderer().setRow(i + 1);
 
@@ -5298,7 +5360,7 @@ public class Grid extends Canvas
 	                        {
 	                            column.getCellRenderer().setHoverDetail("");
 	                        }
-
+	                        
 	                        column.getCellRenderer().paint(e.gc, item);
 
 	                        e.gc.setClipping((Rectangle)null);
@@ -5332,8 +5394,15 @@ public class Grid extends Canvas
 	                            insertMarkPosFound = true;
 	                        }
                     	}
-
-
+                    	//set the painted cell;actually,this action is only needed here
+                    	//for row spanning.
+                    	for(int k=0;k<=skipColumnsBecauseSpanned;k++)
+                    		for(int j=0;j<=skipRowsBecauseSpanned;j++)
+                    		{
+                    			hasBeenPainted[indexOf(column)+k][indexOf(item)+j]=true;
+                    			System.out.println("set:"+(indexOf(column)+k)+","+(indexOf(item)+j));
+                    		}
+                    	//System.out.println("x:"+x+",width:"+width+",column width:"+column.getWidth()+",column name:"+column.getText());
                         x += width;
 
                     }
