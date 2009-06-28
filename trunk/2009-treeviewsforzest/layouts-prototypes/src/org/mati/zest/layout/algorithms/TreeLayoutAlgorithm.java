@@ -22,6 +22,8 @@ import org.mati.zest.layout.interfaces.LayoutAlgorithm;
 import org.mati.zest.layout.interfaces.LayoutContext;
 import org.mati.zest.layout.interfaces.NodeLayout;
 
+import sun.misc.Queue;
+
 /**
  * The TreeLayoutAlgorithm class implements a simple algorithm to arrange graph
  * nodes in a layered tree-like layout.
@@ -64,17 +66,31 @@ public class TreeLayoutAlgorithm implements LayoutAlgorithm {
 
 		public void addChild(EntityInfo child) {
 			children.add(child);
-			numOfLeaves += child.numOfLeaves;
-			this.height = Math.max(this.height, child.height + 1);
+		}
+
+		public void precomputeTree() {
+			if (children.isEmpty()) {
+				numOfLeaves = 1;
+			} else
+			for (Iterator iterator = children.iterator(); iterator.hasNext();) {
+				EntityInfo child = (EntityInfo) iterator.next();
+					child.depth = this.depth + 1;
+				child.precomputeTree();
+				this.numOfLeaves += child.numOfLeaves;
+				this.height = Math.max(this.height, child.height + 1);
+			}
 		}
 
 		final public EntityLayout entity;
 		public int height = 0;
+		public int depth = -1;
 		public int numOfLeaves = 0;
 		public final List children = new ArrayList();
 	}
 
 	private int direction = TOP_DOWN;
+
+	private boolean resize = false;
 
 	private LayoutContext context;
 
@@ -102,20 +118,33 @@ public class TreeLayoutAlgorithm implements LayoutAlgorithm {
 			throw new RuntimeException("Invalid direction: " + direction);
 	}
 
+	/**
+	 * 
+	 * @return true if this algorithm is set to resize elements
+	 */
+	public boolean isResizing() {
+		return resize;
+	}
+
+	/**
+	 * 
+	 * @param resizing
+	 *            true if this algorithm should resize elements (default is
+	 *            false)
+	 */
+	public void setResizing(boolean resizing) {
+		resize = resizing;
+	}
+
 	public void setLayoutContext(LayoutContext context) {
 		this.context = context;
 	}
 
 	public void applyLayout() {
 		superRoot = new EntityInfo(null);
-
-		HashSet alreadyVisited = new HashSet();
 		EntityLayout[] entities = context.getEntities();
-		for (int i = 0; i < entities.length; i++) {
-			EntityLayout root = findRoot(entities[i], alreadyVisited);
-			if (root != null)
-				superRoot.addChild(generateTreeRecursively(root, alreadyVisited));
-		}
+
+		createTrees(entities);
 
 		bounds = context.getBounds();
 		if (direction == TOP_DOWN || direction == BOTTOM_UP) {
@@ -134,8 +163,48 @@ public class TreeLayoutAlgorithm implements LayoutAlgorithm {
 
 		superRoot = null;
 
-		AlgorithmHelper.maximizeSizes(entities);
-		AlgorithmHelper.fitWithinBounds(entities, bounds);
+		if (resize)
+			AlgorithmHelper.maximizeSizes(entities);
+		AlgorithmHelper.fitWithinBounds(entities, bounds, resize);
+	}
+
+	/**
+	 * Builds a tree structure using BFS method. Created trees are children of
+	 * {@link #superRoot}.
+	 * 
+	 * @param entities
+	 */
+	private void createTrees(EntityLayout[] entities) {
+		HashSet alreadyVisited = new HashSet();
+		Queue nodesToAdd = new Queue();
+		for (int i = 0; i < entities.length; i++) {
+			EntityLayout root = findRoot(entities[i], alreadyVisited);
+			if (root != null) {
+				alreadyVisited.add(root);
+				nodesToAdd.enqueue(new Object[] { root, superRoot });
+			}
+		}
+		while (!nodesToAdd.isEmpty()) {
+			EntityLayout entity;
+			EntityInfo parentEntityInfo;
+			try {
+				Object[] dequeued = (Object[]) nodesToAdd.dequeue();
+				entity = (EntityLayout) dequeued[0];
+				parentEntityInfo = (EntityInfo) dequeued[1];
+			} catch (InterruptedException e) {
+				throw new RuntimeException("This should never happen");
+			}
+			EntityInfo currentEntityInfo = new EntityInfo(entity);
+			parentEntityInfo.addChild(currentEntityInfo);
+			NodeLayout[] children = entity.getSuccessingEntities();
+			for (int i = 0; i < children.length; i++) {
+				if (!alreadyVisited.contains(children[i])) {
+					alreadyVisited.add(children[i]);
+					nodesToAdd.enqueue(new Object[] { children[i], currentEntityInfo });
+				}
+			}
+		}
+		superRoot.precomputeTree();
 	}
 
 	/**
@@ -169,38 +238,25 @@ public class TreeLayoutAlgorithm implements LayoutAlgorithm {
 		}
 	}
 
-	private EntityInfo generateTreeRecursively(EntityLayout entity, HashSet alreadyVisited) {
-		alreadyVisited.add(entity);
-		EntityInfo result = new EntityInfo(entity);
-		NodeLayout[] children = entity.getSuccessingEntities();
-		for (int i = 0; i < children.length; i++) {
-			if (!alreadyVisited.contains(children[i]))
-				result.addChild(generateTreeRecursively(children[i], alreadyVisited));
-		}
-		if (result.children.size() == 0)
-			result.numOfLeaves = 1; // this entity is a leaf
-		return result;
-	}
-
 	/**
 	 * Computes positions recursively until the leaf nodes are reached.
 	 */
 	private void computePositionRecursively(EntityInfo entityInfo, int relativePosition) {
 		double breadthPosition = relativePosition + entityInfo.numOfLeaves / 2.0;
-		double depthPosition = (entityInfo.height + 0.5);
+		double depthPosition = (entityInfo.depth + 0.5);
 
 		switch (direction) {
 		case TOP_DOWN:
-			entityInfo.entity.setLocation(breadthPosition * leafSize, bounds.height - depthPosition * layerSize);
-			break;
-		case BOTTOM_UP:
 			entityInfo.entity.setLocation(breadthPosition * leafSize, depthPosition * layerSize);
 			break;
+		case BOTTOM_UP:
+			entityInfo.entity.setLocation(breadthPosition * leafSize, bounds.height - depthPosition * layerSize);
+			break;
 		case LEFT_RIGHT:
-			entityInfo.entity.setLocation(depthPosition * layerSize, breadthPosition * leafSize);
+			entityInfo.entity.setLocation(bounds.width - depthPosition * layerSize, breadthPosition * leafSize);
 			break;
 		case RIGHT_LEFT:
-			entityInfo.entity.setLocation(bounds.width - depthPosition * layerSize, breadthPosition * leafSize);
+			entityInfo.entity.setLocation(depthPosition * layerSize, breadthPosition * leafSize);
 			break;
 		}
 

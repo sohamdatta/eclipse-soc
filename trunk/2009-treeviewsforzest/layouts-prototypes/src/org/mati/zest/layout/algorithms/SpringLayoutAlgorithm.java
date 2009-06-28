@@ -12,16 +12,13 @@ package org.mati.zest.layout.algorithms;
 
 import java.util.HashMap;
 
-import org.eclipse.draw2d.ColorConstants;
-import org.eclipse.swt.graphics.GC;
-import org.eclipse.swt.graphics.Region;
+import org.eclipse.zest.layouts.dataStructures.DisplayIndependentDimension;
 import org.eclipse.zest.layouts.dataStructures.DisplayIndependentPoint;
 import org.eclipse.zest.layouts.dataStructures.DisplayIndependentRectangle;
 import org.mati.zest.layout.interfaces.ConnectionLayout;
 import org.mati.zest.layout.interfaces.EntityLayout;
 import org.mati.zest.layout.interfaces.LayoutAlgorithm;
 import org.mati.zest.layout.interfaces.LayoutContext;
-import org.mati.zest.layout.interfaces.NodeLayout;
 
 /**
  * The SpringLayoutAlgorithm has its own data repository and relation
@@ -126,6 +123,11 @@ public class SpringLayoutAlgorithm implements LayoutAlgorithm {
      */
 	private double sprGravitation = DEFAULT_SPRING_GRAVITATION;
 
+	/**
+	 * Variable indicating whether the algorithm should resize elements.
+	 */
+	private boolean resize = false;
+
     private int iteration;
 
 	private double[][] srcDestToSumOfWeights;
@@ -136,9 +138,11 @@ public class SpringLayoutAlgorithm implements LayoutAlgorithm {
 
 	private double[] locationsX, locationsY;
 
+	private double[] sizeW, sizeH;
+
 	private DisplayIndependentRectangle bounds;
 
-	private double boundaryScale = 1.0;
+	private double boundsScale = 0.2;
 
 	private LayoutContext context;
 
@@ -148,43 +152,43 @@ public class SpringLayoutAlgorithm implements LayoutAlgorithm {
 			computeOneIteration();
 		}
 		saveLocations();
-		AlgorithmHelper.maximizeSizes(entities);
-		AlgorithmHelper.fitWithinBounds(entities, bounds);
+		if (resize)
+			AlgorithmHelper.maximizeSizes(entities);
+		AlgorithmHelper.fitWithinBounds(entities, bounds, resize);
 	}
     
 	public void setLayoutContext(LayoutContext context) {
 		this.context = context;
 	}
 
-	public void performIteration() {
+	public void performOneIteration() {
 		if (iteration == 0) {
 			entities = context.getEntities();
 			loadLocations();
 			initLayout();
 		}
+		bounds = context.getBounds();
 		computeOneIteration();
 		saveLocations();
 		context.flushChanges(false);
 	}
 
-	public void paint(GC gc) {
-		if (iteration > 0) {
-			gc.setClipping((Region) null);
-			gc.setForeground(ColorConstants.black);
-			gc.drawText(", it=" + iteration + ", bS=" + boundaryScale, 5, 5, true);
-			NodeLayout[] nodes = context.getNodes();
-			computeForces();
-			gc.setForeground(ColorConstants.red);
-			for (int i = 0; i < nodes.length; i++) {
-				DisplayIndependentPoint location = nodes[i].getLocation();
-				double distToCenterX = bounds.x + bounds.width / 2 - location.x;
-				double distToCenterY = bounds.y + bounds.height / 2 - location.y;
-				double distToCenter = Math.sqrt(distToCenterX * distToCenterX + distToCenterY * distToCenterY);
-				double forcesX = sprGravitation * distToCenterX / distToCenter;
-				double forcesY = sprGravitation * distToCenterY / distToCenter;
-				gc.drawLine((int) location.x, (int) location.y, (int) (location.x + forcesX * 20), (int) (location.y + forcesY * 20));
-			}
-		}
+	/**
+	 * 
+	 * @return true if this algorithm is set to resize elements
+	 */
+	public boolean isResizing() {
+		return resize;
+	}
+
+	/**
+	 * 
+	 * @param resizing
+	 *            true if this algorithm should resize elements (default is
+	 *            false)
+	 */
+	public void setResizing(boolean resizing) {
+		resize = resizing;
 	}
 
 	/**
@@ -357,23 +361,27 @@ public class SpringLayoutAlgorithm implements LayoutAlgorithm {
 
     private void loadLocations() {
 		if (locationsX == null || locationsX.length != entities.length) {
-			locationsX = new double[entities.length];
-			locationsY = new double[entities.length];
-		}
-		if (forcesX == null || forcesX.length != entities.length) {
-			forcesX = new double[entities.length];
-			forcesY = new double[entities.length];
+			int length = entities.length;
+			locationsX = new double[length];
+			locationsY = new double[length];
+			sizeW = new double[length];
+			sizeH = new double[length];
+			forcesX = new double[length];
+			forcesY = new double[length];
 		}
 		for (int i = 0; i < entities.length; i++) {
 			DisplayIndependentPoint location = entities[i].getLocation();
 			locationsX[i] = location.x;
 			locationsY[i] = location.y;
+			DisplayIndependentDimension size = entities[i].getSize();
+			sizeW[i] = size.width;
+			sizeH[i] = size.height;
 		}
 	}
 
 	private void saveLocations() {
 		for (int i = 0; i < entities.length; i++) {
-			entities[i].setLocation(locationsX[i], locationsY[i]);
+			entities[i].setLocation(locationsX[i] - sizeW[i] / 2, locationsY[i] - sizeH[i] / 2);
 		}
 	}
 
@@ -410,8 +418,9 @@ public class SpringLayoutAlgorithm implements LayoutAlgorithm {
 	protected void computeOneIteration() {
 		computeForces();
 		computePositions();
-		improveBoundary();
-		moveToCenter();
+		DisplayIndependentRectangle currentBounds = getLayoutBounds();
+		improveBoundsScale(currentBounds);
+		moveToCenter(currentBounds);
         iteration++;
     }
         
@@ -456,8 +465,8 @@ public class SpringLayoutAlgorithm implements LayoutAlgorithm {
 		for (int i = 0; i < locationsX.length; i++) {
 
 			for (int j = i + 1; j < locationsX.length; j++) {
-				double dx = (locationsX[i] - locationsX[j]) / bounds.width / boundaryScale;
-				double dy = (locationsY[i] - locationsY[j]) / bounds.height / boundaryScale;
+				double dx = (locationsX[i] - locationsX[j]) / bounds.width / boundsScale;
+				double dy = (locationsY[i] - locationsY[j]) / bounds.height / boundsScale;
 					double distance_sq = dx * dx + dy * dy;
 					// make sure distance and distance squared not too small
 					distance_sq = Math.max(MIN_DISTANCE * MIN_DISTANCE, distance_sq);
@@ -509,43 +518,40 @@ public class SpringLayoutAlgorithm implements LayoutAlgorithm {
 					deltaY *= maxMovement / dist;
 				}
 
-				locationsX[i] += deltaX * bounds.width * boundaryScale;
-				locationsY[i] += deltaY * bounds.height * boundaryScale;
+				locationsX[i] += deltaX * bounds.width * boundsScale;
+				locationsY[i] += deltaY * bounds.height * boundsScale;
             }
         }
 	}
 
-	private void improveBoundary() {
+	private DisplayIndependentRectangle getLayoutBounds() {
 		double minX, maxX, minY, maxY;
 		minX = minY = Double.POSITIVE_INFINITY;
 		maxX = maxY = Double.NEGATIVE_INFINITY;
 
 		for (int i = 0; i < locationsX.length; i++) {
-			maxX = Math.max(maxX, locationsX[i]);
-			minX = Math.min(minX, locationsX[i]);
-			maxY = Math.max(maxY, locationsY[i]);
-			minY = Math.min(minY, locationsY[i]);
+			maxX = Math.max(maxX, locationsX[i] + sizeW[i] / 2);
+			minX = Math.min(minX, locationsX[i] - sizeW[i] / 2);
+			maxY = Math.max(maxY, locationsY[i] + sizeH[i] / 2);
+			minY = Math.min(minY, locationsY[i] - sizeH[i] / 2);
 		}
-
-		double boundaryProportion = Math.max((maxX - minX) / bounds.width, (maxY - minY) / bounds.height);
-		if (boundaryProportion < 0.9)
-			boundaryScale *= 1.01;
-		if (boundaryProportion > 1)
-			boundaryScale *= 0.99;
+		return new DisplayIndependentRectangle(minX, minY, maxX - minX, maxY - minY);
 	}
 
-	private void moveToCenter() {
-		double sumX, sumY;
-		sumX = sumY = 0;
+	private void improveBoundsScale(DisplayIndependentRectangle currentBounds) {
+		double boundaryProportion = Math.max(currentBounds.width / bounds.width, currentBounds.height / bounds.height);
+		if (boundaryProportion < 0.9)
+			boundsScale *= 1.01;
+		if (boundaryProportion > 1)
+			boundsScale /= 1.01;
+	}
+
+	private void moveToCenter(DisplayIndependentRectangle currentBounds) {
+		double moveX = (currentBounds.x + currentBounds.width / 2) - (bounds.x + bounds.width / 2);
+		double moveY = (currentBounds.y + currentBounds.height / 2) - (bounds.y + bounds.height / 2);
 		for (int i = 0; i < locationsX.length; i++) {
-			sumX += locationsX[i];
-			sumY += locationsY[i];
-		}
-		double avgX = sumX / locationsX.length - (bounds.x + bounds.width / 2);
-		double avgY = sumY / locationsX.length - (bounds.y + bounds.height / 2);
-		for (int i = 0; i < locationsX.length; i++) {
-			locationsX[i] -= avgX;
-			locationsY[i] -= avgY;
+			locationsX[i] -= moveX;
+			locationsY[i] -= moveY;
 		}
 	}
 }

@@ -2,7 +2,6 @@ package org.mati.zest.core.widgets;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
@@ -38,17 +37,8 @@ import org.eclipse.swt.widgets.Item;
 import org.eclipse.zest.core.widgets.ZestStyles;
 import org.eclipse.zest.core.widgets.internal.ContainerFigure;
 import org.eclipse.zest.core.widgets.internal.ZestRootLayer;
-import org.eclipse.zest.layouts.dataStructures.DisplayIndependentRectangle;
-import org.mati.zest.layout.interfaces.ConnectionLayout;
-import org.mati.zest.layout.interfaces.ContextListener;
-import org.mati.zest.layout.interfaces.EntityLayout;
-import org.mati.zest.layout.interfaces.GraphStructureListener;
+import org.mati.zest.layout.interfaces.Filter;
 import org.mati.zest.layout.interfaces.LayoutAlgorithm;
-import org.mati.zest.layout.interfaces.LayoutContext;
-import org.mati.zest.layout.interfaces.LayoutListener;
-import org.mati.zest.layout.interfaces.NodeLayout;
-import org.mati.zest.layout.interfaces.PruningListener;
-import org.mati.zest.layout.interfaces.SubgraphLayout;
 
 public class Graph extends FigureCanvas {
 
@@ -72,7 +62,7 @@ public class Graph extends FigureCanvas {
 	 * These are all the children of this graph. These lists contains all nodes
 	 * and connections that have added themselves to this graph.
 	 */
-	private final List nodes;
+	private List nodes;
 	protected List connections;
 	private List selectedItems = null;
 	IFigure fisheyedFigure = null;
@@ -84,8 +74,8 @@ public class Graph extends FigureCanvas {
 	private int connectionStyle;
 	private int nodeStyle;
 	private ScalableFreeformLayeredPane fishEyeLayer = null;
-	LayoutAlgorithm layoutAlgorithm = null;
-	LayoutContext layoutContext = null;
+	private LayoutAlgorithm layoutAlgorithm = null;
+	private GraphLayoutContext layoutContext = null;
 	private volatile boolean isLayoutScheduled;
 	private Dimension preferredSize = null;
 	int style = 0;
@@ -361,6 +351,22 @@ public class Graph extends FigureCanvas {
 	}
 
 	/**
+	 * 
+	 * @return the preferred size of the layout area. Size of (-1, -1) uses the
+	 *         current canvas size
+	 */
+	public Dimension getPreferredSize() {
+		return preferredSize;
+	}
+
+	GraphLayoutContext getLayoutContext() {
+		if (layoutContext == null) {
+			layoutContext = new GraphLayoutContext(this);
+		}
+		return layoutContext;
+	}
+
+	/**
 	 * @param algorithm
 	 */
 	public void setLayoutAlgorithm(LayoutAlgorithm algorithm, boolean applyLayout) {
@@ -368,10 +374,7 @@ public class Graph extends FigureCanvas {
 			this.layoutAlgorithm.setLayoutContext(null);
 		}
 		this.layoutAlgorithm = algorithm;
-		if (layoutContext == null) {
-			layoutContext = new GraphLayoutContext();
-		}
-		this.layoutAlgorithm.setLayoutContext(layoutContext);
+		this.layoutAlgorithm.setLayoutContext(getLayoutContext());
 		if (applyLayout) {
 			applyLayout();
 		}
@@ -379,6 +382,31 @@ public class Graph extends FigureCanvas {
 
 	public LayoutAlgorithm getLayoutAlgorithm() {
 		return this.layoutAlgorithm;
+	}
+
+	/**
+	 * Adds a filter used for hiding elements from layout algorithm.
+	 * 
+	 * NOTE: If a node or subgraph if filtered out, all connections adjacent to
+	 * it should also be filtered out. Otherwise layout algorithm may behave in
+	 * an unexpected way.
+	 * 
+	 * @param filter
+	 *            filter to add
+	 */
+	public void addLayoutFilter(Filter filter) {
+		getLayoutContext().addFilter(filter);
+	}
+
+	/**
+	 * Removes given layout filter. If it had not been added to this graph, this
+	 * method does nothing.
+	 * 
+	 * @param filter
+	 *            filter to remove
+	 */
+	public void removeLayoutFilter(Filter filter) {
+		getLayoutContext().removeFilter(filter);
 	}
 
 	/**
@@ -939,145 +967,5 @@ public class Graph extends FigureCanvas {
 
 	GraphItem getGraphItem(IFigure figure) {
 		return (GraphItem) figure2ItemMap.get(figure);
-	}
-
-	private class GraphLayoutContext implements LayoutContext {
-		private List contextListeners = new ArrayList();
-		private List graphStructureListeners = new ArrayList();
-		private List layoutListeners = new ArrayList();
-		private List pruningListeners = new ArrayList();
-		private LayoutAlgorithm mainAlgorithm;
-
-		private List nodes;
-		private List subgraphs = new ArrayList();
-
-		public GraphLayoutContext() {
-			nodes = new ArrayList();
-			for (Iterator iterator = Graph.this.nodes.iterator(); iterator.hasNext();) {
-				GraphNode node = (GraphNode) iterator.next();
-				nodes.add(node.getLayout());
-			}
-		}
-
-		public void addContextListener(ContextListener listener) {
-			contextListeners.add(listener);
-		}
-
-		public void addGraphStructureListener(GraphStructureListener listener) {
-			graphStructureListeners.add(listener);
-		}
-
-		public void addLayoutListener(LayoutListener listener) {
-			layoutListeners.add(listener);
-		}
-
-		public void addPruningListener(PruningListener listener) {
-			pruningListeners.add(listener);
-		}
-
-		public SubgraphLayout addSubgraph(NodeLayout[] nodes) {
-			// TODO Auto-generated method stub
-			return null;
-		}
-
-		public void flushChanges(boolean animationHint) {
-			// TODO Auto-generated method stub
-			for (Iterator iterator = Graph.this.nodes.iterator(); iterator.hasNext();) {
-				GraphNode node = (GraphNode) iterator.next();
-				node.applyLayout();
-			}
-		}
-
-		public DisplayIndependentRectangle getBounds() {
-			final double MARGIN = 0.1;
-			Dimension d = getViewport().getSize();
-			d.width *= 1 - MARGIN;
-			d.height *= 1 - MARGIN;
-
-			if (preferredSize.width >= 0) {
-				d.width = preferredSize.width;
-			}
-			if (preferredSize.height >= 0) {
-				d.height = preferredSize.height;
-			}
-			return new DisplayIndependentRectangle(d.width * MARGIN / 2, d.width * MARGIN / 2, d.width, d.height);
-		}
-
-		public LayoutAlgorithm getMainLayoutAlgorithm() {
-			return mainAlgorithm;
-		}
-
-		public NodeLayout[] getNodes() {
-			return (NodeLayout[]) nodes.toArray(new NodeLayout[nodes.size()]);
-		}
-
-		public EntityLayout[] getEntities() {
-			// TODO Auto-generated method stub
-			return getNodes();
-		}
-
-		public SubgraphLayout[] getSubgraphs() {
-			return (SubgraphLayout[]) subgraphs.toArray(new SubgraphLayout[subgraphs.size()]);
-		}
-
-		public boolean isBoundsExpandable() {
-			return false;
-		}
-
-		public boolean isContinuousLayoutEnabled() {
-			return false;
-		}
-
-		public boolean isPruningEnabled() {
-			return false;
-		}
-
-		public void removeContextListener(ContextListener listener) {
-			contextListeners.remove(listener);
-		}
-
-		public void removeGraphStructureListener(GraphStructureListener listener) {
-			graphStructureListeners.remove(listener);
-		}
-
-		public void removeLayoutListener(LayoutListener listener) {
-			layoutListeners.remove(listener);
-		}
-
-		public void removePruningListener(PruningListener listener) {
-			pruningListeners.remove(listener);
-		}
-
-		public void setMainLayoutAlgorithm(LayoutAlgorithm algorithm) {
-			mainAlgorithm = algorithm;
-		}
-
-		public ConnectionLayout[] getConnections() {
-			List connections = Graph.this.getConnections();
-			ConnectionLayout[] result = new ConnectionLayout[connections.size()];
-			int i = 0;
-			for (Iterator iterator = connections.iterator(); iterator.hasNext();) {
-				GraphConnection connection = (GraphConnection) iterator.next();
-				result[i++] = connection.getLayout();
-			}
-			return result;
-		}
-
-		public ConnectionLayout[] getConnections(EntityLayout source, EntityLayout target) {
-			// TODO should we store the result?
-			HashSet result = new HashSet();
-			// TODO add support for subgraphs
-			if (source instanceof NodeLayout && target instanceof NodeLayout) {
-				ConnectionLayout[] outgoingConnections = ((NodeLayout) source).getOutgoingConnections();
-				for (int i = 0; i < outgoingConnections.length; i++) {
-					ConnectionLayout connection = outgoingConnections[i];
-					if ((connection.getTarget() == target && connection.getSource() == source)
-							|| (connection.getTarget() == source && connection.getSource() == target))
-						result.add(connection);
-				}
-			}
-			return (ConnectionLayout[]) result.toArray(new ConnectionLayout[result.size()]);
-		}
-
 	}
 }

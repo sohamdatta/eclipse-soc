@@ -20,9 +20,6 @@ import org.eclipse.zest.core.widgets.ZestStyles;
 import org.eclipse.zest.core.widgets.internal.GraphLabel;
 import org.eclipse.zest.layouts.dataStructures.DisplayIndependentDimension;
 import org.eclipse.zest.layouts.dataStructures.DisplayIndependentPoint;
-import org.mati.zest.layout.interfaces.ConnectionLayout;
-import org.mati.zest.layout.interfaces.NodeLayout;
-import org.mati.zest.layout.interfaces.SubgraphLayout;
 
 /**
  * Simple node class which has the following properties: color, size, location,
@@ -742,7 +739,7 @@ public class GraphNode extends GraphItem {
 
 	InternalNodeLayout getLayout() {
 		if (layout == null) {
-			layout = new InternalNodeLayout();
+			layout = new InternalNodeLayout(this);
 		}
 		return layout;
 	}
@@ -757,123 +754,5 @@ public class GraphNode extends GraphItem {
 		}
 	}
 
-	private class InternalNodeLayout implements NodeLayout {
-		private DisplayIndependentPoint location;
-		private DisplayIndependentDimension size;
 
-		public DisplayIndependentPoint getLocation() {
-			if (location == null) {
-				location = new DisplayIndependentPoint(currentLocation.x, currentLocation.y);
-			}
-			return new DisplayIndependentPoint(location);
-		}
-
-		public DisplayIndependentDimension getSize() {
-			if (size == null) {
-				Dimension size2 = GraphNode.this.getSize();
-				size = new DisplayIndependentDimension(size2.width, size2.height);
-			}
-			return new DisplayIndependentDimension(size);
-		}
-
-		public SubgraphLayout getSubgraph() {
-			// TODO Auto-generated method stub
-			return null;
-		}
-
-		public boolean isMovable() {
-			return true;
-		}
-
-		public boolean isPrunable() {
-			// TODO Auto-generated method stub
-			return false;
-		}
-
-		public boolean isPruned() {
-			// TODO Auto-generated method stub
-			return false;
-		}
-
-		public boolean isResizable() {
-			return (nodeStyle & ZestStyles.NODES_NO_LAYOUT_RESIZE) == 0;
-		}
-
-		public void prune(SubgraphLayout subgraph) {
-			// TODO Auto-generated method stub
-
-		}
-
-		public void setLocation(double x, double y) {
-			location = new DisplayIndependentPoint(x, y);
-		}
-
-		public void setSize(double width, double height) {
-			size = new DisplayIndependentDimension(width, height);
-		}
-
-		public NodeLayout[] getPredecessingNodes() {
-			ConnectionLayout[] connections = getIncomingConnections();
-			NodeLayout[] result = new NodeLayout[connections.length];
-			for (int i = 0; i < connections.length; i++) {
-				result[i] = connections[i].getSource();
-				if (result[i] == this)
-					result[i] = connections[i].getTarget();
-			}
-			return result;
-		}
-
-		public NodeLayout[] getSuccessingNodes() {
-			ConnectionLayout[] connections = getOutgoingConnections();
-			NodeLayout[] result = new NodeLayout[connections.length];
-			for (int i = 0; i < connections.length; i++) {
-				result[i] = connections[i].getTarget();
-				if (result[i] == this)
-					result[i] = connections[i].getSource();
-			}
-			return result;
-		}
-
-		public NodeLayout[] getSuccessingEntities() {
-			// TODO Auto-generated method stub
-			return getSuccessingNodes();
-		}
-
-		public NodeLayout[] getPredecessingEntities() {
-			// TODO Auto-generated method stub
-			return getPredecessingNodes();
-		}
-
-		public ConnectionLayout[] getIncomingConnections() {
-			ArrayList result = new ArrayList();
-			for (Iterator iterator = targetConnections.iterator(); iterator.hasNext();) {
-				GraphConnection connection = (GraphConnection) iterator.next();
-				result.add(connection.getLayout());
-			}
-			for (Iterator iterator = sourceConnections.iterator(); iterator.hasNext();) {
-				GraphConnection connection = (GraphConnection) iterator.next();
-				if (!connection.isDirected())
-					result.add(connection.getLayout());
-			}
-			return (ConnectionLayout[]) result.toArray(new ConnectionLayout[result.size()]);
-		}
-
-		public ConnectionLayout[] getOutgoingConnections() {
-			ArrayList result = new ArrayList();
-			for (Iterator iterator = sourceConnections.iterator(); iterator.hasNext();) {
-				GraphConnection connection = (GraphConnection) iterator.next();
-				result.add(connection.getLayout());
-			}
-			for (Iterator iterator = targetConnections.iterator(); iterator.hasNext();) {
-				GraphConnection connection = (GraphConnection) iterator.next();
-				if (!connection.isDirected())
-					result.add(connection.getLayout());
-			}
-			return (ConnectionLayout[]) result.toArray(new ConnectionLayout[result.size()]);
-		}
-
-		public double getPreferredAspectRatio() {
-			return 0;
-		}
-	}
 }

@@ -28,11 +28,13 @@ public class GridLayoutAlgorithm implements LayoutAlgorithm {
 
 	protected double aspectRatio = 1.0;
 	protected int rowPadding = 0;
+	private boolean resize = false;
 	protected int rows, cols, numChildren;
 	protected double colWidth, rowHeight, offsetX, offsetY;
 	protected double childrenHeight, childrenWidth;
 
 	private LayoutContext context;
+
 
 	public void setLayoutContext(LayoutContext context) {
 		this.context = context;
@@ -92,7 +94,7 @@ public class GridLayoutAlgorithm implements LayoutAlgorithm {
 					EntityLayout node = entitiesToLayout[index++];
 					if (node.isMovable())
 						node.setLocation(xmove, ymove);
-					if (node.isResizable())
+					if (resize && node.isResizable())
 						node.setSize(Math.max(childrenWidth, MIN_ENTITY_SIZE), Math.max(childrenHeight, MIN_ENTITY_SIZE));
 				}
 			}
@@ -194,6 +196,24 @@ public class GridLayoutAlgorithm implements LayoutAlgorithm {
 		if (aspectRatio > 0) {
 			this.aspectRatio = aspectRatio;
 		}
+	}
+
+	/**
+	 * 
+	 * @return true if this algorithm is set to resize elements
+	 */
+	public boolean isResizing() {
+		return resize;
+	}
+
+	/**
+	 * 
+	 * @param resizing
+	 *            true if this algorithm should resize elements (default is
+	 *            false)
+	 */
+	public void setResizing(boolean resizing) {
+		resize = resizing;
 	}
 
 }
