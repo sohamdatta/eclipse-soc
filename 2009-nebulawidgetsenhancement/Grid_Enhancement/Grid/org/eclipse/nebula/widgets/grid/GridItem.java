@@ -1133,6 +1133,7 @@ public class GridItem extends Item
         checkWidget();
         if(parent.onlyUseExtensibleSpanMethod()) return;
         columnSpans.set(index, new Integer(span));
+        parent.appendSpanArea(new Rectangle(index,parent.indexOf(this),span+1,0));
         parent.setHasSpanning(true);
         parent.redraw();
     }
@@ -1157,6 +1158,7 @@ public class GridItem extends Item
     	checkWidget();
     	if(!parent.onlyUseExtensibleSpanMethod()) return;
     	areaSpans.set(index, new Point(column_span,row_span));
+    	parent.appendSpanArea(new Rectangle(index,parent.indexOf(this),column_span+1,row_span+1));
     	parent.setHasSpanning(true);
     	parent.redraw();
     }
