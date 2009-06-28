@@ -65,9 +65,10 @@ class GraphLayoutContext implements LayoutContext {
 
 	public void flushChanges(boolean animationHint) {
 		// TODO Auto-generated method stub
+		// TODO probably OK for nodes, need to add subgraphs
 		for (Iterator iterator = graph.getNodes().iterator(); iterator.hasNext();) {
 			GraphNode node = (GraphNode) iterator.next();
-			node.applyLayout();
+			node.applyLayoutChanges();
 		}
 	}
 

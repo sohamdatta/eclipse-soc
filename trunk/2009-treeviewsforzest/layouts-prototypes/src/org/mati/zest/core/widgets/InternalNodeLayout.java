@@ -25,7 +25,7 @@ class InternalNodeLayout implements NodeLayout {
 	public DisplayIndependentPoint getLocation() {
 		if (location == null) {
 			Point location2 = node.getLocation();
-			location = new DisplayIndependentPoint(location2.x, location2.y);
+			location = new DisplayIndependentPoint(location2.x + getSize().width / 2, location2.y + size.height / 2);
 		}
 		return new DisplayIndependentPoint(location);
 	}
@@ -138,5 +138,12 @@ class InternalNodeLayout implements NodeLayout {
 
 	public double getPreferredAspectRatio() {
 		return 0;
+	}
+
+	void applyLayout() {
+		if (size != null)
+			node.setSize(size.width, size.height);
+		if (location != null)
+			node.setLocation(location.x - getSize().width / 2, location.y - size.height / 2);
 	}
 }

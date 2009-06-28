@@ -10,6 +10,7 @@
  *******************************************************************************/
 package org.mati.zest.layout.algorithms;
 
+import org.eclipse.zest.layouts.dataStructures.DisplayIndependentDimension;
 import org.eclipse.zest.layouts.dataStructures.DisplayIndependentRectangle;
 import org.mati.zest.layout.interfaces.EntityLayout;
 import org.mati.zest.layout.interfaces.LayoutAlgorithm;
@@ -88,14 +89,14 @@ public class GridLayoutAlgorithm implements LayoutAlgorithm {
 		for( int i = 0; i < rows; i++ ) {
 			for( int j = 0; j < cols; j++ ) {
 				if( (i*cols + j) < numChildren ) {
-					// find new position for child
-					double xmove = bounds.x + j * colWidth + offsetX;
-					double ymove = bounds.y + i * rowHeight + offsetY;
 					EntityLayout node = entitiesToLayout[index++];
-					if (node.isMovable())
-						node.setLocation(xmove, ymove);
 					if (resize && node.isResizable())
 						node.setSize(Math.max(childrenWidth, MIN_ENTITY_SIZE), Math.max(childrenHeight, MIN_ENTITY_SIZE));
+					DisplayIndependentDimension size = node.getSize();
+					double xmove = bounds.x + j * colWidth + offsetX + size.width / 2;
+					double ymove = bounds.y + i * rowHeight + offsetY + size.height / 2;
+					if (node.isMovable())
+						node.setLocation(xmove, ymove);
 				}
 			}
 		}
