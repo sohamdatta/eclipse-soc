@@ -1,12 +1,3 @@
-/*******************************************************************************
- * Copyright 2005-2007, CHISEL Group, University of Victoria, Victoria, BC,
- * Canada. All rights reserved. This program and the accompanying materials are
- * made available under the terms of the Eclipse Public License v1.0 which
- * accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
- * 
- * Contributors: The Chisel Group, University of Victoria
- ******************************************************************************/
 package org.mati.zest.examples;
 
 import org.eclipse.swt.SWT;
@@ -16,20 +7,10 @@ import org.eclipse.swt.widgets.Shell;
 import org.mati.zest.core.widgets.Graph;
 import org.mati.zest.core.widgets.GraphConnection;
 import org.mati.zest.core.widgets.GraphNode;
-import org.mati.zest.layout.algorithms.SpringLayoutAlgorithm;
+import org.mati.zest.layout.algorithms.RadialLayoutAlgorithm;
+import org.mati.zest.layout.interfaces.LayoutAlgorithm;
 
-/**
- * This snippet shows how to use the findFigureAt to get the figure under the
- * mouse
- * 
- * @author Ian Bull
- * 
- */
-public class LayoutExample {
-
-	/**
-	 * @param args
-	 */
+public class RadialLayoutExample {
 	public static void main(String[] args) {
 		// Create the shell
 		Display d = new Display();
@@ -50,9 +31,9 @@ public class LayoutExample {
 			new GraphConnection(g, SWT.NONE, root, n);
 		}
 
-		final SpringLayoutAlgorithm springLayoutAlgorithm = new SpringLayoutAlgorithm();
+		final LayoutAlgorithm layoutAlgorithm = new RadialLayoutAlgorithm();
 
-		g.setLayoutAlgorithm(springLayoutAlgorithm, true);
+		g.setLayoutAlgorithm(layoutAlgorithm, true);
 		shell.open();
 		while (!shell.isDisposed()) {
 			while (!d.readAndDispatch()) {
@@ -60,5 +41,4 @@ public class LayoutExample {
 			}
 		}
 	}
-
 }

@@ -74,6 +74,14 @@ public class TreeLayoutExample {
 		buttonBottomUp.addSelectionListener(buttonListener);
 		buttonLeftRight.addSelectionListener(buttonListener);
 		buttonRightLeft.addSelectionListener(buttonListener);
+		
+		final Button resizeButton = new Button(shell, SWT.CHECK);
+		resizeButton.setText("Resize");
+		resizeButton.addSelectionListener(new SelectionAdapter() {
+			public void widgetSelected(SelectionEvent e) {
+				algorithm.setResizing(resizeButton.getSelection());
+			}
+		});
 
 		shell.open();
 		while (!shell.isDisposed()) {

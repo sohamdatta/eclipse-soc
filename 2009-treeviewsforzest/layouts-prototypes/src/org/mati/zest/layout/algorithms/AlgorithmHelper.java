@@ -11,6 +11,14 @@ class AlgorithmHelper {
 
 	public static double PADDING_PERCENT = 0.8;
 
+	/**
+	 * Fits given entities within given bounds, preserving their relative
+	 * locations.
+	 * 
+	 * @param entities
+	 * @param destinationBounds
+	 * @param resize
+	 */
 	public static void fitWithinBounds(EntityLayout[] entities, DisplayIndependentRectangle destinationBounds, boolean resize) {
 		DisplayIndependentRectangle startingBounds = getLayoutBounds(entities, true);
 		double sizeScale = Math.min(destinationBounds.width / startingBounds.width, destinationBounds.height / startingBounds.height);
@@ -23,13 +31,19 @@ class AlgorithmHelper {
 			DisplayIndependentDimension size = entity.getSize();
 			if (entity.isMovable()) {
 				DisplayIndependentPoint location = entity.getLocation();
-				double percentX = (location.x - startingBounds.x) / startingBounds.width;
-				location.x = destinationBounds.x + percentX * destinationBounds.width - size.width / 2;
+				double percentX = (location.x - startingBounds.x - size.width / 2) / (startingBounds.width - size.width);
+				double percentY = (location.y - startingBounds.y - size.height / 2) / (startingBounds.height - size.height);
 
-				double percentY = (location.y - startingBounds.y) / startingBounds.height;
-				location.y = destinationBounds.y + percentY * destinationBounds.height - size.height / 2;
+				if (resize && entity.isResizable()) {
+					size.width *= sizeScale;
+					size.height *= sizeScale;
+					entity.setSize(size.width, size.height);
+				}
+
+				location.x = destinationBounds.x + size.width / 2 + percentX * (destinationBounds.width - size.width);
+				location.y = destinationBounds.y + size.height / 2 + percentY * (destinationBounds.height - size.height);
 				entity.setLocation(location.x, location.y);
-			}
+			} else
 			if (resize && entity.isResizable()) {
 				entity.setSize(size.width * sizeScale, size.height * sizeScale);
 			}
@@ -108,10 +122,10 @@ class AlgorithmHelper {
 	 * only be guaranteed to include the center of each node.
 	 */
 	public static DisplayIndependentRectangle getLayoutBounds(EntityLayout[] entities, boolean includeNodeSize) {
-		double rightSide = Double.MIN_VALUE;
-		double bottomSide = Double.MIN_VALUE;
-		double leftSide = Double.MAX_VALUE;
-		double topSide = Double.MAX_VALUE;
+		double rightSide = Double.NEGATIVE_INFINITY;
+		double bottomSide = Double.NEGATIVE_INFINITY;
+		double leftSide = Double.POSITIVE_INFINITY;
+		double topSide = Double.POSITIVE_INFINITY;
 		for (int i = 0; i < entities.length; i++) {
 			EntityLayout entity = entities[i];
 			DisplayIndependentPoint location = entity.getLocation();

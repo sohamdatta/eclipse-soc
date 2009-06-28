@@ -6,11 +6,17 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 
+import org.eclipse.zest.layouts.dataStructures.DisplayIndependentDimension;
 import org.eclipse.zest.layouts.dataStructures.DisplayIndependentRectangle;
 import org.mati.zest.layout.interfaces.EntityLayout;
 import org.mati.zest.layout.interfaces.LayoutAlgorithm;
 import org.mati.zest.layout.interfaces.LayoutContext;
 
+/**
+ * This layout shifts overlapping nodes to the right.
+ * 
+ * @author Ian Bull
+ */
 public class HorizontalShiftAlgorithm implements LayoutAlgorithm {
 
 	private static final double DELTA = 10;
@@ -55,8 +61,9 @@ public class HorizontalShiftAlgorithm implements LayoutAlgorithm {
 			heightSoFar += ((EntityLayout) currentRow.get(0)).getSize().height + VSPACING;
 			for (Iterator iterator2 = currentRow.iterator(); iterator2.hasNext();) {
 				EntityLayout entity = (EntityLayout) iterator2.next();
-				entity.setLocation(width + 10 * ++i, heightSoFar);
-				width += entity.getSize().width;
+				DisplayIndependentDimension size = entity.getSize();
+				entity.setLocation(width + 10 * ++i + size.width / 2, heightSoFar + size.height / 2);
+				width += size.width;
 			}
 		}
 	}

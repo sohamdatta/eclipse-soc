@@ -596,9 +596,6 @@ public class GraphContainer extends GraphNode {
 		return CONTAINER;
 	}
 
-	/**
-	 * 
-	 */
 	public void setLayoutAlgorithm(LayoutAlgorithm algorithm, boolean applyLayout) {
 		this.layoutAlgorithm = algorithm;
 		if (applyLayout) {

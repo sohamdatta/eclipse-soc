@@ -18,8 +18,6 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.zest.core.widgets.ZestStyles;
 import org.eclipse.zest.core.widgets.internal.GraphLabel;
-import org.eclipse.zest.layouts.dataStructures.DisplayIndependentDimension;
-import org.eclipse.zest.layouts.dataStructures.DisplayIndependentPoint;
 
 /**
  * Simple node class which has the following properties: color, size, location,
@@ -744,15 +742,8 @@ public class GraphNode extends GraphItem {
 		return layout;
 	}
 
-	void applyLayout() {
-		if (layout != null) {
-			DisplayIndependentPoint newLocation = layout.getLocation();
-			setLocation(newLocation.x, newLocation.y);
-
-			DisplayIndependentDimension newSize = layout.getSize();
-			setSize(newSize.width, newSize.height);
-		}
+	void applyLayoutChanges() {
+		if (layout != null)
+			layout.applyLayout();
 	}
-
-
 }
