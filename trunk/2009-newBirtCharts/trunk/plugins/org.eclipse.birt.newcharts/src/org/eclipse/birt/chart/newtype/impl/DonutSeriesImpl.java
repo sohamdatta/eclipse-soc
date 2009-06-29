@@ -8,9 +8,15 @@ import org.eclipse.birt.chart.newtype.DonutSeries;
 public class DonutSeriesImpl extends SeriesImpl implements DonutSeries{
 
 	
-	private static final double _RADIUS_DEFAULT = 1.0;
+	private static final int _EXPLOSION_DEFAULT = 0;
+	private static final int _ROTATION_DEFAULT = 0;
+	private static final int _THICKNESS_DEFAULT = 0;
 	private String _text;
-	private double _radius = _RADIUS_DEFAULT;
+	private int _explosion;
+	private int _rotation;
+	private int _thickness;
+	private boolean _isExploded = false;
+	private boolean _isRotated = false;
 	
 	@Override
 	public void setText(String text) {
@@ -36,13 +42,62 @@ public class DonutSeriesImpl extends SeriesImpl implements DonutSeries{
 	}
 
 	@Override
-	public double getRadius() {
-		return _radius;
+	public int getExplosion() {
+		return _explosion;
 	}
 
 	@Override
-	public void setRadius(double rad) {
-		_radius = rad;
+	public int getRotation() {
+		return _rotation;
+	}
+
+	@Override
+	public int getThickness() {
+		return _thickness;
+	}
+
+	@Override
+	public boolean isRotatet() {
+		return _isRotated;
+	}
+
+	@Override
+	public boolean isSetExplosion() {
+		return _isExploded;
+	}
+
+	@Override
+	public void setExplosion(int pExplosion) {
+		_explosion = pExplosion;
+		_isExploded = true;
+	}
+
+	@Override
+	public void setRotation(int pRotationInDegree) {
+		_rotation = pRotationInDegree;
+		_isRotated = true;
+	}
+
+	@Override
+	public void setThickness(int pThickness) {
+		_thickness = pThickness;
+	}
+
+	@Override
+	public void unsetExplosion() {
+		_explosion = _EXPLOSION_DEFAULT;
+		_isExploded = false;
+	}
+
+	@Override
+	public void unsetRotation() {
+		_rotation = _ROTATION_DEFAULT;
+		_isRotated = false;
+	}
+
+	@Override
+	public void unsetThickness() {
+		_thickness = _THICKNESS_DEFAULT;
 	}
 
 }
