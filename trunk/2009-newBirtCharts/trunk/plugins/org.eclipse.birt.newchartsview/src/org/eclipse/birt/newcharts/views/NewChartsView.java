@@ -37,7 +37,7 @@ import org.eclipse.ui.part.ViewPart;
 
 public class NewChartsView extends ViewPart {
 
-  public static final String ID = "org.eclipse.rap.birt.charts.view";
+  public static final String ID = "org.eclipse.birt.newcharts.views.newchartsview";
   private TabFolder tabFolder;
 
   public void createPartControl( Composite parent ) {
@@ -76,9 +76,9 @@ public class NewChartsView extends ViewPart {
     legend.setVisible( true );
     adjustFont( legend.getText().getFont() );
     TextDataSet categoryValues = TextDataSetImpl.create( new String[]{
-      "category1", "category2", "category3"} );//$NON-NLS-1$ //$NON-NLS-2$
+      "category1", "category2", "category3", "category4"} );//$NON-NLS-1$ //$NON-NLS-2$
     NumberDataSet seriesOneValues = NumberDataSetImpl.create( new double[]{
-      30, 20, 50
+      50, 50, 50, 50
     } );
     // Base Series
     Series seCategory = SeriesImpl.create();
@@ -91,7 +91,8 @@ public class NewChartsView extends ViewPart {
     final Fill[] fiaBase = {
       ColorDefinitionImpl.BLUE(),
       ColorDefinitionImpl.GREY(),
-      ColorDefinitionImpl.GREEN()
+      ColorDefinitionImpl.GREEN(),
+      ColorDefinitionImpl.BLACK()
     };
     sd.getSeriesPalette().getEntries().clear();
     for( int i = 0; i < fiaBase.length; i++ ) {
@@ -99,8 +100,14 @@ public class NewChartsView extends ViewPart {
     }
     // Add new Donut Series
     DonutSeries seDonut = ( DonutSeries )DonutSeriesImpl.create();
+    seDonut.setText( "Teststring" );
     seDonut.setDataSet( seriesOneValues );
     seDonut.getLabel().setVisible( false );
+    // Test properties
+    seDonut.setRotation( 20 );
+    seDonut.setExplosion( 40 );
+    seDonut.setThickness( 30 );
+    
     SeriesDefinition sdCity = SeriesDefinitionImpl.create();
     sd.getSeriesDefinitions().add( sdCity );
     sdCity.getSeries().add( seDonut );
