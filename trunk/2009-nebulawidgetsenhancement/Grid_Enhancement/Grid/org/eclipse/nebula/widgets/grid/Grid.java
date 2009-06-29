@@ -5271,19 +5271,16 @@ public class Grid extends Canvas
                         continue;
                     }
                     
-                    if(hasBeenPainted[indexOf(column)][indexOf(item)])
+                    if(skipColumnsBecauseSpanned==0&&hasBeenPainted[colIndex][rowIndex])//be in pre spanning area
                     {
+                    	//System.out.println("skip :"+column.getText()+"@row:"+indexOf(item));
                     	colIndex++;
-                        if (skipColumnsBecauseSpanned > 0)
-                        {
-                        	skipColumnsBecauseSpanned--;
-                        }
+                        x += column.getWidth();
                     	continue;
                     }
 
                     if (skipColumnsBecauseSpanned == 0)
                     {
-                    	System.out.println("column:"+column.getText());
                         if(onlyUseExtensibleSpanMethod()){
                         	skipColumnsBecauseSpanned = item.getAreaSpan(indexOf(column)).x;
                         	skipRowsBecauseSpanned = item.getAreaSpan(indexOf(column)).y;
@@ -5321,13 +5318,15 @@ public class Grid extends Canvas
                         		if(getItem(rowIndex + j + 1).isVisible())
                         		{
                         			height += getItem(rowIndex + j + 1).getHeight();
+                        			height ++;//a line pixel width
                         		}
                         	}
                         }
-                        
+                        //System.out.println("count:"+x+","+y+","+width+","+height);
                         //System.out.println(item.getText()+":"+column.getWidth()+","+width+","+item.getHeight()+","+height);
                     	if (x + width >= 0 && x < getClientArea().width && y + height>=0 && y < getClientArea().height)
                     	{
+                    		//System.out.println("paint:"+x+","+y+","+width+","+height);
 	                        column.getCellRenderer().setBounds(x, y, width, height);
 	                        
 	                        e.gc.setClipping(new Rectangle(x -1,y -1,width +1,height + 2));
@@ -5400,7 +5399,7 @@ public class Grid extends Canvas
                     		for(int j=0;j<=skipRowsBecauseSpanned;j++)
                     		{
                     			hasBeenPainted[indexOf(column)+k][indexOf(item)+j]=true;
-                    			System.out.println("set:"+(indexOf(column)+k)+","+(indexOf(item)+j));
+                    			//System.out.println("set:"+(indexOf(column)+k)+","+(indexOf(item)+j));
                     		}
                     	//System.out.println("x:"+x+",width:"+width+",column width:"+column.getWidth()+",column name:"+column.getText());
                         x += width;
