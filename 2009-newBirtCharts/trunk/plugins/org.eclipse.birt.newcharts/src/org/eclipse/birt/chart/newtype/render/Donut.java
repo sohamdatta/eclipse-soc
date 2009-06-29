@@ -91,12 +91,21 @@ public class Donut extends BaseRenderer {
 		final Bounds boCB = getCellBounds();
 		final SeriesDefinition seriesdefinition = getSeriesDefinition();
 
-		Palette bla = seriesdefinition.getSeriesPalette();
-
-		double width = 500;
-		double height = 300;
-		double x = width / 2;
-		double y = height / 2;
+		Fill bgcolor = p.getClientArea().getBackground() != null ? p
+				.getClientArea().getBackground() : ColorDefinitionImpl.WHITE();
+		
+		double plotwidth = p.getBounds().getWidth();
+		double plotheight = p.getBounds().getHeight();
+		
+		//TODO RELATIVE WIDTH FOR DONUT
+		double donutwidth = 300;
+		
+		double x = plotwidth-donutwidth*0.75;
+		double y = plotheight-donutwidth*0.75;
+		
+		int rotation = donutseries.getRotation();
+		int explosion = donutseries.getExplosion();
+		int thickness = donutseries.getThickness();
 
 		DataPointHints[] datapointhints = srh.getDataPoints();
 		double[] primitiveDataPoints = srh.asPrimitiveDoubleValues();
@@ -105,41 +114,58 @@ public class Donut extends BaseRenderer {
 			sum += primitiveDataPoints[i];
 		}
 
-		double lastAngle = 0;
+//		// 50x50 Rectangle for testcases
+//		RectangleRenderEvent rec = (RectangleRenderEvent) ((EventObjectCache) idr)
+//		.getEventObject(WrappedStructureSource.createSeries(
+//				donutseries), RectangleRenderEvent.class);
+//		rec.setBounds(BoundsImpl.create(x, y, donutwidth, donutwidth));
+//		rec.setBackground(ColorDefinitionImpl.ORANGE());
+//		idr.fillRectangle(rec);
+		
+		Palette categoryColors = seriesdefinition.getSeriesPalette();
+		IGObjectFactory goFactory = GObjectFactory.instance();
+		Location loc = goFactory.createLocation(x, y);
+		
+		double lastAngle = rotation;
 		for (int i = 0; i < primitiveDataPoints.length; i++) {
 
 			// oBaseValue = category1
 			// oOrthogonalValue = 30 -> absoluter Wert, der eingegebn wurde
 			// oOrhtogonalPercentile = 0.3
 			DataPointHints dph = datapointhints[i];
-			ArcRenderEvent are = new ArcRenderEvent(WrappedStructureSource
-					.createSeriesDataPoint(donutseries, dph));
-			Fill fPaletteEntry = bla.getEntries().get(i);
-			are.setBackground(fPaletteEntry);
+			ArcRenderEvent coloredarc = new ArcRenderEvent(
+					WrappedStructureSource.createSeriesDataPoint(donutseries,
+							dph));
+			Fill fPaletteEntry = categoryColors.getEntries().get(i);
+			coloredarc.setBackground(fPaletteEntry);
+			coloredarc.setStartAngle(lastAngle);
+			//TODO Check pixel
 			double deltaAngle = (360d / sum) * primitiveDataPoints[i];
-			are.setStartAngle(lastAngle);
-			are.setAngleExtent(deltaAngle);
-			IGObjectFactory goFactory = GObjectFactory.instance();
-			are.setTopLeft(goFactory.createLocation(x, y));
-			are.setWidth(x);
-			are.setHeight(x);
-			are.setStyle(ArcRenderEvent.SECTOR);
-			idr.fillArc(are);
+			coloredarc.setAngleExtent(deltaAngle);
+			coloredarc.setTopLeft(loc);
+			coloredarc.setWidth(donutwidth);
+			coloredarc.setHeight(donutwidth);
+//			coloredarc.setStyle(ArcRenderEvent.SECTOR);
+			coloredarc.setStyle(ArcRenderEvent.SECTOR);
+			idr.fillArc(coloredarc);
 
-//			are = new ArcRenderEvent(WrappedStructureSource
-//					.createSeriesDataPoint(donutseries, dph));
-//			are.setBackground(ColorDefinitionImpl.RED());
-//			are.setStartAngle(lastAngle);
-//			are.setAngleExtent(deltaAngle);
-//			are.setTopLeft(goFactory.createLocation(x, y));
-//			are.setWidth(x - 50);
-//			are.setHeight(x - 50);
-//			are.setStyle(ArcRenderEvent.SECTOR);
-//			idr.fillArc(are);
+			// Apply Thickness
+			ArcRenderEvent negativarc = new ArcRenderEvent(
+					WrappedStructureSource.createSeriesDataPoint(donutseries,
+							dph));
+			negativarc.setBackground(bgcolor);
+			negativarc.setStartAngle(lastAngle);
+			negativarc.setAngleExtent(deltaAngle);
+			negativarc.setTopLeft(goFactory.createLocation(x+thickness, y + thickness));
+//			negativarc.setTopLeft((int)loc.getX()-thickness,(int)loc.getY()-thickness);
+
+			negativarc.setWidth(donutwidth - 2*thickness);
+			negativarc.setHeight(donutwidth - 2*thickness);
+			negativarc.setStyle(ArcRenderEvent.SECTOR);
+			idr.fillArc(negativarc);
 
 			lastAngle = lastAngle + deltaAngle;
 		}
-
 
 		Label laText = LabelImpl.create();
 
