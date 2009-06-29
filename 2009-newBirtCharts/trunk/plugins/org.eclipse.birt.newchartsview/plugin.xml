@@ -7,7 +7,7 @@
       <perspective
             name="Perspective"
             class="org.eclipse.birt.newcharts.views.Perspective"
-            id="org.eclipse.rap.birt.charts.perspective">
+            id="org.eclipse.birt.newcharts.views.perspective">
       </perspective>
    </extension>
    <extension
@@ -15,7 +15,7 @@
       <view
             name="View"
             class="org.eclipse.birt.newcharts.views.NewChartsView"
-            id="org.eclipse.rap.birt.charts.view">
+            id="org.eclipse.birt.newcharts.views.newchartsview">
       </view>
    </extension>
    <extension
