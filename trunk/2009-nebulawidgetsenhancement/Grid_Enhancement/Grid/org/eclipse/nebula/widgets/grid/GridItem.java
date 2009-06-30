@@ -508,13 +508,9 @@ public class GridItem extends Item
         int width = 0,height=0;
         int column_span = 0,row_span = 0;
         
-        if(parent.onlyUseExtensibleSpanMethod()){
-        	column_span = getAreaSpan(columnIndex).x;
-        	row_span = getAreaSpan(columnIndex).y;
-        }else{
-        	column_span = getColumnSpan(columnIndex);
-        	row_span = 0;
-        }
+      
+        column_span = getAreaSpan(columnIndex).x;
+        row_span = getAreaSpan(columnIndex).y;
 
         for (int i = 0; i <= column_span; i++)
         {
@@ -1131,8 +1127,8 @@ public class GridItem extends Item
     public void setColumnSpan(int index, int span)
     {
         checkWidget();
-        if(parent.onlyUseExtensibleSpanMethod()) return;
         columnSpans.set(index, new Integer(span));
+        areaSpans.set(index, new Point(span,0));//for compatibility
         parent.appendSpanArea(new Rectangle(index,parent.indexOf(this),span+1,0));
         parent.setHasSpanning(true);
         parent.redraw();
@@ -1156,7 +1152,6 @@ public class GridItem extends Item
      */
     public void setAreaSpan(int index,int column_span,int row_span){
     	checkWidget();
-    	if(!parent.onlyUseExtensibleSpanMethod()) return;
     	areaSpans.set(index, new Point(column_span,row_span));
     	parent.appendSpanArea(new Rectangle(index,parent.indexOf(this),column_span+1,row_span+1));
     	parent.setHasSpanning(true);
