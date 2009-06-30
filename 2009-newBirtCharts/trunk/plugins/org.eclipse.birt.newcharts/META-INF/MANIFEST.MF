@@ -4,13 +4,8 @@ Bundle-Name: BIRT Newcharts Plug-in
 Bundle-SymbolicName: org.eclipse.birt.newcharts; singleton:=true
 Bundle-Version: 1.0.0
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
-Require-Bundle: org.eclipse.birt.chart.engine,
- org.eclipse.swt;bundle-version="3.4.2",
- org.eclipse.ui.views;bundle-version="3.3.1",
- org.eclipse.ui.views.properties.tabbed;bundle-version="3.4.2",
- org.eclipse.birt.chart.engine.extension;bundle-version="2.5.1"
-Import-Package: junit.framework,
- org.eclipse.ui.part
+Require-Bundle: org.eclipse.birt.chart.engine;bundle-version="2.5.0",
+ org.eclipse.birt.chart.engine.extension;bundle-version="2.5.0"
 Export-Package: org.eclipse.birt.chart.newtype,
  org.eclipse.birt.chart.newtype.impl,
  org.eclipse.birt.chart.newtype.render

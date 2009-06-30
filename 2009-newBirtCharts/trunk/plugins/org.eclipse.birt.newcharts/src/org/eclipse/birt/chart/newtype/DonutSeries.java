@@ -16,7 +16,7 @@ public interface DonutSeries extends Series {
 	int getRotation();
 	void setRotation(int pRotationInDegree);
 	void unsetRotation();
-	boolean isRotatet();
+	boolean isRotated();
 
 	int getThickness();
 	void setThickness(int pThickness);

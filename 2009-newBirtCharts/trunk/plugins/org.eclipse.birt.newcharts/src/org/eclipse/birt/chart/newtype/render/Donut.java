@@ -38,6 +38,7 @@ import org.eclipse.birt.chart.newtype.DonutSeries;
 import org.eclipse.birt.chart.plugin.ChartEngineExtensionPlugin;
 import org.eclipse.birt.chart.render.BaseRenderer;
 import org.eclipse.birt.chart.render.ISeriesRenderingHints;
+import org.eclipse.birt.chart.render.PieRenderer;
 import org.eclipse.birt.chart.util.FillUtil;
 import org.eclipse.emf.common.notify.Adapter;
 import org.eclipse.emf.common.notify.Notification;
@@ -51,6 +52,8 @@ import org.eclipse.emf.ecore.resource.Resource;
 
 public class Donut extends BaseRenderer {
 
+	private DonutRenderer donutRenderer;
+
 	public Donut() {
 		super();
 	}
@@ -61,7 +64,6 @@ public class Donut extends BaseRenderer {
 
 		// p = Ploat Area -> Space for drawing
 
-		// Maybe a link for datasets
 		final SeriesRenderingHints srh = (SeriesRenderingHints) isrh;
 
 		// VALIDATE CONSISTENT DATASET COUNT BETWEEN BASE AND ORTHOGONAL
@@ -71,6 +73,23 @@ public class Donut extends BaseRenderer {
 			throw new ChartException(ChartEngineExtensionPlugin.ID,
 					ChartException.GENERATION, vex);
 		}
+
+		// SCALE VALIDATION
+		final ChartWithoutAxes cwoa = (ChartWithoutAxes) getModel();
+		final SeriesDefinition sd = getSeriesDefinition();
+		final Bounds boCB = getCellBounds();
+		try {
+			donutRenderer = new DonutRenderer(cwoa, this, srh.getDataPoints(),
+					srh.asPrimitiveDoubleValues(), sd.getSeriesPalette());
+			// donutRenderer.computeInsets( boCB );
+			donutRenderer.computeFrame(p);
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			throw new ChartException(ChartEngineExtensionPlugin.ID,
+					ChartException.GENERATION, ex);
+		}
+		// new DonutRenderer
+		// getDeviceScale() -> BASERENDERER
 	}
 
 	@Override
@@ -84,94 +103,15 @@ public class Donut extends BaseRenderer {
 	public void renderSeries(IPrimitiveRenderer ipr, Plot p,
 			ISeriesRenderingHints isrh) throws ChartException {
 
-		final SeriesRenderingHints srh = (SeriesRenderingHints) isrh;
 		IDeviceRenderer idr = getDevice();
-		final DonutSeries donutseries = (DonutSeries) getSeries();
-		ChartWithoutAxes cwoa = (ChartWithoutAxes) getModel();
-		final Bounds boCB = getCellBounds();
-		final SeriesDefinition seriesdefinition = getSeriesDefinition();
-
 		Fill bgcolor = p.getClientArea().getBackground() != null ? p
 				.getClientArea().getBackground() : ColorDefinitionImpl.WHITE();
+				
+		donutRenderer.render(idr,bgcolor);
 		
-		double plotwidth = p.getBounds().getWidth();
-		double plotheight = p.getBounds().getHeight();
-		
-		//TODO RELATIVE WIDTH FOR DONUT
-		double donutwidth = 300;
-		
-		double x = plotwidth-donutwidth*0.75;
-		double y = plotheight-donutwidth*0.75;
-		
-		int rotation = donutseries.getRotation();
-		int explosion = donutseries.getExplosion();
-		int thickness = donutseries.getThickness();
-
-		DataPointHints[] datapointhints = srh.getDataPoints();
-		double[] primitiveDataPoints = srh.asPrimitiveDoubleValues();
-		double sum = 0;
-		for (int i = 0; i < primitiveDataPoints.length; i++) {
-			sum += primitiveDataPoints[i];
-		}
-
-//		// 50x50 Rectangle for testcases
-//		RectangleRenderEvent rec = (RectangleRenderEvent) ((EventObjectCache) idr)
-//		.getEventObject(WrappedStructureSource.createSeries(
-//				donutseries), RectangleRenderEvent.class);
-//		rec.setBounds(BoundsImpl.create(x, y, donutwidth, donutwidth));
-//		rec.setBackground(ColorDefinitionImpl.ORANGE());
-//		idr.fillRectangle(rec);
-		
-		Palette categoryColors = seriesdefinition.getSeriesPalette();
-		IGObjectFactory goFactory = GObjectFactory.instance();
-		Location loc = goFactory.createLocation(x, y);
-		
-		double lastAngle = rotation;
-		for (int i = 0; i < primitiveDataPoints.length; i++) {
-
-			// oBaseValue = category1
-			// oOrthogonalValue = 30 -> absoluter Wert, der eingegebn wurde
-			// oOrhtogonalPercentile = 0.3
-			DataPointHints dph = datapointhints[i];
-			ArcRenderEvent coloredarc = new ArcRenderEvent(
-					WrappedStructureSource.createSeriesDataPoint(donutseries,
-							dph));
-			Fill fPaletteEntry = categoryColors.getEntries().get(i);
-			coloredarc.setBackground(fPaletteEntry);
-			coloredarc.setStartAngle(lastAngle);
-			//TODO Check pixel
-			double deltaAngle = (360d / sum) * primitiveDataPoints[i];
-			coloredarc.setAngleExtent(deltaAngle);
-			coloredarc.setTopLeft(loc);
-			coloredarc.setWidth(donutwidth);
-			coloredarc.setHeight(donutwidth);
-//			coloredarc.setStyle(ArcRenderEvent.SECTOR);
-			coloredarc.setStyle(ArcRenderEvent.SECTOR);
-			idr.fillArc(coloredarc);
-
-			// Apply Thickness
-			ArcRenderEvent negativarc = new ArcRenderEvent(
-					WrappedStructureSource.createSeriesDataPoint(donutseries,
-							dph));
-			negativarc.setBackground(bgcolor);
-			negativarc.setStartAngle(lastAngle);
-			negativarc.setAngleExtent(deltaAngle);
-			negativarc.setTopLeft(goFactory.createLocation(x+thickness, y + thickness));
-//			negativarc.setTopLeft((int)loc.getX()-thickness,(int)loc.getY()-thickness);
-
-			negativarc.setWidth(donutwidth - 2*thickness);
-			negativarc.setHeight(donutwidth - 2*thickness);
-			negativarc.setStyle(ArcRenderEvent.SECTOR);
-			idr.fillArc(negativarc);
-
-			lastAngle = lastAngle + deltaAngle;
-		}
-
 		Label laText = LabelImpl.create();
 
-		System.out.println("Amount of categories slices to draw: "
-				+ datapointhints.length);
-
+		DonutSeries donutseries = (DonutSeries) getSeries();
 		// GET CONNECTION TO THE SERIESIMPL (DONUTSERIESIMPL)
 		Text txt = TextImpl.create(donutseries.getText());
 		txt.setColor(ColorDefinitionImpl.create(255, 0, 0));

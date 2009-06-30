@@ -57,7 +57,7 @@ public class DonutSeriesImpl extends SeriesImpl implements DonutSeries{
 	}
 
 	@Override
-	public boolean isRotatet() {
+	public boolean isRotated() {
 		return _isRotated;
 	}
 
