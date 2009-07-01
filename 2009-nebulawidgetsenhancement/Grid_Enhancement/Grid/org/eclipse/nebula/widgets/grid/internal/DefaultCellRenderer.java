@@ -63,6 +63,7 @@ public class DefaultCellRenderer extends GridCellRenderer
     public void paint(GC gc, Object value)
     {
         GridItem item = (GridItem)value;
+        
 
         gc.setFont(item.getFont(getColumn()));
         
@@ -260,7 +261,7 @@ public class DefaultCellRenderer extends GridCellRenderer
         
         if (isCellFocus())
         {
-            Rectangle focusRect = new Rectangle(getBounds().x -1, getBounds().y - 1, getBounds().width,
+            Rectangle focusRect = new Rectangle(getBounds().x , getBounds().y - 1, getBounds().width-1,
                                                 getBounds().height + 1);
             
             gc.setForeground(getDisplay().getSystemColor(SWT.COLOR_LIST_FOREGROUND));
