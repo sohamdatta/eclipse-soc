@@ -3,30 +3,16 @@
 <plugin>
 
    <extension
-         point="org.eclipse.ui.views">
-      <category
-            name="Sample Category"
-            id="org.eclipse.birt.newcharts">
-      </category>
-      <view
-            name="Sample View"
-            icon="icons/sample.gif"
-            category="org.eclipse.birt.newcharts"
-            class="org.eclipse.birt.newcharts.views.NewChartView"
-            id="org.eclipse.birt.newcharts.views.SampleView">
-      </view>
-   </extension>
-   <extension
          point="org.eclipse.birt.chart.engine.modelrenderers">
       <modelRenderer
-            renderer="org.eclipse.birt.chart.newtype.render.Donut"
-            series="org.eclipse.birt.chart.newtype.impl.DonutSeriesImpl"></modelRenderer>
+            renderer="org.eclipse.birt.chart.model.newtype.render.Donut"
+            series="org.eclipse.birt.chart.model.newtype.impl.DonutSeriesImpl"></modelRenderer>
    </extension>
    <extension
          point="org.eclipse.birt.chart.engine.datasetprocessors">
       <datasetProcessor
             processor="org.eclipse.birt.chart.datafeed.DataSetProcessorImpl"
-            series="org.eclipse.birt.chart.newtype.impl.DonutSeriesImpl">
+            series="org.eclipse.birt.chart.model.newtype.impl.DonutSeriesImpl">
       </datasetProcessor>
    </extension>
 
