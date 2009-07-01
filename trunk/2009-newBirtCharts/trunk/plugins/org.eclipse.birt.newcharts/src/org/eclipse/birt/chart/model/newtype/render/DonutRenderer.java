@@ -1,5 +1,7 @@
 package org.eclipse.birt.chart.model.newtype.render;
 
+import java.text.MessageFormat;
+
 import org.eclipse.birt.chart.computation.BoundingBox;
 import org.eclipse.birt.chart.computation.DataPointHints;
 import org.eclipse.birt.chart.computation.GObjectFactory;
@@ -307,6 +309,59 @@ public class DonutRenderer {
 				chartContainer = goFactory.createInsets( hh, ww, hh, ww );
 			}
 			else{
+				
+				if ( labelPos == Position.OUTSIDE_LITERAL )
+				{
+					if ( donutseries.getLabel( ).isVisible( ) ) // FILTERED FOR PERFORMANCE
+														// GAIN
+					{
+						// ADJUST THE BOUNDS TO ACCOMODATE THE DATA POINT LABELS +
+						// LEADER LINES RENDERED OUTSIDE
+						// Bounds boBeforeAdjusted = BoundsImpl.copyInstance( bo );
+						Bounds boAdjusted = goFactory.copyOf( cellBounds );
+						Insets insTrim = goFactory.createInsets( 0, 0, 0, 0 );
+						do
+						{
+							// TODO
+							adjust( donutseries, boAdjusted, insTrim );
+							boAdjusted.adjust( insTrim );
+						} while ( !insTrim.areLessThan( 0.5 )
+								&& boAdjusted.getWidth( ) > 0
+								&& boAdjusted.getHeight( ) > 0 );
+						cellBounds = boAdjusted;
+					}
+				}
+				else if ( labelPos == Position.INSIDE_LITERAL )
+				{
+					if ( donutseries.getLabel( ).isVisible( ) ) // FILTERED FOR PERFORMANCE
+														// GAIN
+					{
+						computeLabelBounds( cellBounds, false );
+					}
+				}
+				else
+				{
+//					throw new IllegalArgumentException( MessageFormat.format( Messages.getResourceBundle( pie.getRunTimeContext( )
+//							.getULocale( ) )
+//							.getString( "exception.invalid.datapoint.position.pie" ), //$NON-NLS-1$
+//							new Object[]{
+//								lpDataPoint
+//							} )
+//
+//					);
+				}
+//				chartContainer = goFactory.createInsets( cellBounds.getTop( )
+//						- boSetDuringComputation.getTop( ),
+//						bo.getLeft( ) - boSetDuringComputation.getLeft( ),
+//						boSetDuringComputation.getTop( )
+//								+ boSetDuringComputation.getHeight( )
+//								- ( bo.getTop( ) + bo.getHeight( ) ),
+//						boSetDuringComputation.getLeft( )
+//								+ boSetDuringComputation.getWidth( )
+//								- ( bo.getLeft( ) + bo.getWidth( ) ) );
+//			}
+//
+//			bBoundsAdjustedForInsets = false;
 			}
 		}
 
@@ -323,6 +378,16 @@ public class DonutRenderer {
 //
 //		IGObjectFactory goFactory = GObjectFactory.instance();
 //		loc = goFactory.createLocation(x, y);
+	}
+
+	private void adjust(Object donutseries2, Object boAdjusted, Object insTrim) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	private void computeLabelBounds(Object cellBounds, boolean b) {
+		// TODO Auto-generated method stub
+		
 	}
 
 }

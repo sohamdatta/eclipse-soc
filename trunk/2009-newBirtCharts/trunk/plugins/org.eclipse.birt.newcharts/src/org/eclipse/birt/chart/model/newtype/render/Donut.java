@@ -56,7 +56,6 @@ public class Donut extends BaseRenderer {
 		final Bounds boCB = getCellBounds();
 		
 		if (boCB == bo){
-			//WEnn hier gleiche Werte dann ist die getCellBounds fürn Arsch
 			int a =1+1;
 		}
 		
