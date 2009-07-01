@@ -26,8 +26,8 @@ import org.eclipse.birt.chart.model.type.BarSeries;
 import org.eclipse.birt.chart.model.type.PieSeries;
 import org.eclipse.birt.chart.model.type.impl.BarSeriesImpl;
 import org.eclipse.birt.chart.model.type.impl.PieSeriesImpl;
-import org.eclipse.birt.chart.newtype.DonutSeries;
-import org.eclipse.birt.chart.newtype.impl.DonutSeriesImpl;
+import org.eclipse.birt.chart.model.newtype.DonutSeries;
+import org.eclipse.birt.chart.model.newtype.impl.DonutSeriesImpl;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -100,9 +100,9 @@ public class NewChartsView extends ViewPart {
     }
     // Add new Donut Series
     DonutSeries seDonut = ( DonutSeries )DonutSeriesImpl.create();
-    seDonut.setText( "Teststring" );
     seDonut.setDataSet( seriesOneValues );
     seDonut.getLabel().setVisible( false );
+    
     // Test properties
     seDonut.setRotation( 20 );
     seDonut.setExplosion( 40 );
