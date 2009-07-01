@@ -1129,7 +1129,7 @@ public class GridItem extends Item
         checkWidget();
         columnSpans.set(index, new Integer(span));
         areaSpans.set(index, new Point(span,0));//for compatibility
-        parent.appendSpanArea(new Rectangle(index,parent.indexOf(this),span+1,0));
+        parent.appendSpanArea(new Rectangle(index,parent.indexOf(this),span+1,1));
         parent.setHasSpanning(true);
         parent.redraw();
     }
