@@ -5254,19 +5254,6 @@ public class Grid extends Canvas
                     // row header is actually painted later
                     x += rowHeaderWidth;
                 }
-                //if current row has been painted,skip to next non-painted cell
-                for (int k=0;k<this.getColumnCount();k++)
-                {
-                	if(hasBeenPainted[k][indexOf(item)])
-                	{
-                		if (((GridColumn)displayOrderedColumns.get(k)).isVisible())
-                			x += ((GridColumn)displayOrderedColumns.get(k)).getWidth();
-                	}
-                	else
-                	{
-                		break;
-                	}
-                }
 
                 int focusY = y;
                 
@@ -5282,11 +5269,12 @@ public class Grid extends Canvas
                 int rowIndex =  indexOf(item);
 
                 // draw regular cells for each column
+                //System.out.println("rowIndex:"+rowIndex+";x:"+x);
                 for (Iterator columnIterator = displayOrderedColumns.iterator(); columnIterator.hasNext(); )
                 {
                 	//TODO: add here,
                 	GridColumn column = (GridColumn) columnIterator.next();
-                	
+                	//System.out.println(item.getText()+","+column.getText());
                     if (!column.isVisible())
                     {
                         colIndex++;
@@ -5299,7 +5287,7 @@ public class Grid extends Canvas
                     
                     if(skipColumnsBecauseSpanned==0&&hasBeenPainted[colIndex][rowIndex])//be in pre spanning area
                     {
-                    	//System.out.println("skip :"+column.getText()+"@row:"+indexOf(item));
+                    	//System.out.println("skip :"+column.getText()+"@row:"+indexOf(item)+";column width:"+column.getWidth());
                     	colIndex++;
                         x += column.getWidth();
                     	continue;
@@ -5307,6 +5295,7 @@ public class Grid extends Canvas
 
                     if (skipColumnsBecauseSpanned == 0)
                     {
+                    	//System.out.println("in skip span"+column.getText());
                         skipColumnsBecauseSpanned = item.getAreaSpan(indexOf(column)).x;
                         skipRowsBecauseSpanned = item.getAreaSpan(indexOf(column)).y;
                         
