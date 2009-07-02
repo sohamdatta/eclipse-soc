@@ -7,6 +7,8 @@ import org.eclipse.birt.chart.model.attribute.ChartDimension;
 import org.eclipse.birt.chart.model.attribute.Fill;
 import org.eclipse.birt.chart.model.attribute.FontDefinition;
 import org.eclipse.birt.chart.model.attribute.LegendItemType;
+import org.eclipse.birt.chart.model.attribute.LineStyle;
+import org.eclipse.birt.chart.model.attribute.Position;
 import org.eclipse.birt.chart.model.attribute.Text;
 import org.eclipse.birt.chart.model.attribute.impl.ColorDefinitionImpl;
 import org.eclipse.birt.chart.model.component.Axis;
@@ -47,17 +49,16 @@ public class NewChartsView extends ViewPart {
 
   private void createChartFolder( Composite parent ) {
     tabFolder = new TabFolder( parent, SWT.TOP );
-    // ChartCanvas pieChart = new ChartCanvas( tabFolder, SWT.NONE );
-    // pieChart.setChart( createPieChart() );
+    ChartCanvas pieChart = new ChartCanvas( tabFolder, SWT.NONE );
+    pieChart.setChart( createPieChart() );
+    TabItem pieTabItem = new TabItem( tabFolder, SWT.NONE );
+    pieTabItem.setText( "Pie Chart" );
+    pieTabItem.setControl( pieChart );
     // ChartCanvas barChart = new ChartCanvas( tabFolder, SWT.NONE );
     // barChart.setChart( createBarChart() );
-    // TabItem pieTabItem = new TabItem( tabFolder, SWT.NONE );
-    // pieTabItem.setText( "Pie Chart" );
-    // pieTabItem.setControl( pieChart );
     // TabItem barTabItem = new TabItem( tabFolder, SWT.NONE );
     // barTabItem.setText( "Bar Chart" );
     // barTabItem.setControl( barChart );
-    //    
     ChartCanvas donutChart = new ChartCanvas( tabFolder, SWT.NONE );
     donutChart.setChart( createDonutChart() );
     TabItem donutTabItem = new TabItem( tabFolder, SWT.NONE );
@@ -102,11 +103,11 @@ public class NewChartsView extends ViewPart {
     DonutSeries seDonut = ( DonutSeries )DonutSeriesImpl.create();
     seDonut.setDataSet( seriesOneValues );
     seDonut.getLabel().setVisible( false );
-    
     // Test properties
     seDonut.setRotation( 20 );
     seDonut.setExplosion( 40 );
     seDonut.setThickness( 30 );
+    seDonut.getLeaderLineAttributes().setVisible( true );
     
     SeriesDefinition sdCity = SeriesDefinitionImpl.create();
     sd.getSeriesDefinitions().add( sdCity );
@@ -116,7 +117,7 @@ public class NewChartsView extends ViewPart {
 
   private Chart createPieChart() {
     ChartWithoutAxes chart = ChartWithoutAxesImpl.create();
-    chart.setDimension( ChartDimension.TWO_DIMENSIONAL_LITERAL );
+    chart.setDimension( ChartDimension.TWO_DIMENSIONAL_WITH_DEPTH_LITERAL );
     Text caption = chart.getTitle().getLabel().getCaption();
     caption.setValue( "Percentage of charts looking like Pac-man" );
     adjustFont( caption.getFont() );
@@ -129,10 +130,11 @@ public class NewChartsView extends ViewPart {
     NumberDataSet seriesOneValues = NumberDataSetImpl.create( new double[]{
       80, 20
     } );
-    // Base Series
+    // 1) SeriesDefinition
+    SeriesDefinition sd = SeriesDefinitionImpl.create();
+    // 2) Base Series
     Series seCategory = SeriesImpl.create();
     seCategory.setDataSet( categoryValues );
-    SeriesDefinition sd = SeriesDefinitionImpl.create();
     chart.getSeriesDefinitions().add( sd );
     sd.getSeriesPalette().shift( 0 );
     sd.getSeries().add( seCategory );
@@ -144,12 +146,20 @@ public class NewChartsView extends ViewPart {
     for( int i = 0; i < fiaBase.length; i++ ) {
       sd.getSeriesPalette().getEntries().add( fiaBase[ i ] );
     }
-    // Orthogonal Series
+    // 3) Orthogonal Series
     PieSeries sePie = ( PieSeries )PieSeriesImpl.create();
     sePie.setDataSet( seriesOneValues );
     sePie.setExplosion( 5 );
     sePie.setRotation( 40 );
-    sePie.getLabel().setVisible( false );
+    sePie.getLabel().setVisible( true );
+    sePie.getLabel().getCaption().setValue( "LABEL" );
+    sePie.setLabelPosition( Position.OUTSIDE_LITERAL );
+    sePie.getLeaderLineAttributes().setVisible( true );
+    sePie.getLeaderLineAttributes().setThickness( 3 );
+    sePie.getLeaderLineAttributes().setColor( ColorDefinitionImpl.CYAN() );
+    sePie.getLeaderLineAttributes().setStyle( LineStyle.DOTTED_LITERAL );
+    
+    System.out.println( sePie.getLeaderLineLength() );
     SeriesDefinition sdCity = SeriesDefinitionImpl.create();
     sd.getSeriesDefinitions().add( sdCity );
     sdCity.getSeries().add( sePie );
