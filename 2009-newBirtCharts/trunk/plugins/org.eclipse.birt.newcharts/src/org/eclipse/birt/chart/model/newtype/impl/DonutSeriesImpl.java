@@ -927,9 +927,9 @@ public class DonutSeriesImpl extends SeriesImpl implements DonutSeries {
 		super.initialize( );
 		setExplosion( 20 );
 		setLabelPosition( Position.OUTSIDE_LITERAL );
-//		setLeaderLineAttributes( LineAttributesImpl.create( ColorDefinitionImpl.BLACK( ),
-//				LineStyle.SOLID_LITERAL,
-//				1 ) );
+		setLeaderLineAttributes( LineAttributesImpl.create( ColorDefinitionImpl.BLACK( ),
+				LineStyle.SOLID_LITERAL,
+				1 ) );
 		setLeaderLineLength( 40 );
 		setLeaderLineStyle( LeaderLineStyle.STRETCH_TO_SIDE_LITERAL );
 		// setSliceOutline(ColorDefinitionImpl.BLACK()); // UNDEFINED SUGGESTS
@@ -972,11 +972,11 @@ public class DonutSeriesImpl extends SeriesImpl implements DonutSeries {
 			setTitle( src.getTitle( ).copyInstance( ) );
 		}
 
-//		if ( src.getLeaderLineAttributes( ) != null )
-//		{
-//			setLeaderLineAttributes( src.getLeaderLineAttributes( )
-//					.copyInstance( ) );
-//		}
+		if ( src.getLeaderLineAttributes( ) != null )
+		{
+			setLeaderLineAttributes( src.getLeaderLineAttributes( )
+					.copyInstance( ) );
+		}
 
 //		if ( src.getSliceOutline( ) != null )
 //		{
@@ -996,6 +996,10 @@ public class DonutSeriesImpl extends SeriesImpl implements DonutSeries {
 //		ratioESet = src.isSetRatio( );
 		rotation = src.getRotation( );
 		rotationESet = src.isSetRotation( );
+		
+		thickness = src.getThickness();
+		if (thickness != 0)
+			thicknessESet = true;
 	}
 
 	public static DonutSeries create( EObject parent, EReference ref )
