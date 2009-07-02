@@ -1218,11 +1218,15 @@ public class Grid extends Canvas
     	if(columnIndex==-1||columnIndex==-3) return null;
     	else
     	{
-    		GridColumn column = (GridColumn)columns.get(columnIndex);
+    		GridColumn column = (GridColumn)displayOrderedColumns.get(columnIndex);
     		int rowIndex = onWhichCell(point).y;
     		if(rowIndex == -1)
     		{
     			return column;
+    		}
+    		if(rowIndex == -3)
+    		{
+    			return null;
     		}
     		if(hasSpanning)
     		{
@@ -1232,7 +1236,8 @@ public class Grid extends Canvas
     				Rectangle area = (Rectangle)rect;
     				if ( area.contains(columnIndex,rowIndex))//click in a valid cell
     				{
-    					column = (GridColumn)columns.get(area.x);
+    					if(!getDisplayPixelBlock(area).contains(point)) break; 
+    					column = (GridColumn)displayOrderedColumns.get(area.x);
     					break;
     				}
     			}
@@ -1768,19 +1773,26 @@ public class Grid extends Canvas
         else
         {
         	GridItem item = (GridItem)items.get(rowIndex);
-        	int colIndex = onWhichCell(point).x;
+        	int colIndex = onWhichCell(point).x;//display order index
         	if(colIndex == -1)//in column line
         	{
         		return item;
         	}
+        	if(colIndex == -3 )
+        	{
+        		return null;
+        	}
         	if(hasSpanning)
         	{
+        		GridColumn column = (GridColumn)displayOrderedColumns.get(colIndex);
+        		int oldColIndex = columns.indexOf(column);//the original index of this column when being created.
         		// track back all previous spanning areas and check their spanning
                 for (Object rect:this.getAllSpanAreas())
                 {
                 	Rectangle area = (Rectangle)rect;
-                	if ( area.contains(colIndex,rowIndex))//click in a valid cell
+                	if ( area.contains(oldColIndex,rowIndex))//click in a valid cell
                 	{
+                		if(!getDisplayPixelBlock(area).contains(point)) break;
                 		item = (GridItem)items.get(area.y);
                 		break;
                 	}
@@ -1788,6 +1800,80 @@ public class Grid extends Canvas
         	}
         	return item;
         }
+    }
+    /**
+     * Get a spanning area with given column index and row index in spanning area list.
+     * @param colIndex column index in <em>columns</em>
+     * @param rowIndex row index in <em>items</em>
+     * @return if not found in <em>areas</em> return null;else return its spanning area.
+     * @see getAllSpanAreas()
+     */
+    private Rectangle getASpanningArea(int colIndex,int rowIndex)
+    {
+    	for (Object rect:this.getAllSpanAreas())
+    	{
+    		Rectangle area = (Rectangle)rect;
+    		if( area.contains(colIndex,rowIndex))
+    		{
+    			return area;
+    		}
+    	}
+    	return null;
+    }
+    /**
+     * This method is used to transfer a cell spanning area to current display block
+     * in the format of pixel rectangle.<p>
+     * Note: if there is another column which also has spanning area(for the same row),
+     * ahead of current column,we should consider its block rectangle carefully,because
+     * this block rectangle may be hidden.
+     * @param cellSpans cell spanning area
+     * @return display block rectangle
+     */
+    private Rectangle getDisplayPixelBlock(Rectangle cellSpans)
+    {
+    	Rectangle rect = new Rectangle(0,0,0,0);
+    	GridColumn column = (GridColumn)columns.get(cellSpans.x);
+    	GridItem item = (GridItem) items.get(cellSpans.y);
+    	rect.x = column.getBounds().x;
+    	rect.y = column.getBounds().y + column.getBounds().height;
+    	int displayOrderIndex = displayOrderedColumns.indexOf(column);
+    	boolean hidden = false;//this block may be covered by ahead columns
+    	if(displayOrderIndex>0)
+    	{
+    		for(int i=0;i<displayOrderIndex;i++)
+    		{
+    			GridColumn aheadColumn = (GridColumn)displayOrderedColumns.get(displayOrderIndex-1);
+    			Rectangle aheadSpanning = getASpanningArea(columns.indexOf(aheadColumn), items.indexOf(item));
+        		if(aheadSpanning!=null)
+        		{
+        			if(aheadSpanning.x+aheadSpanning.width>displayOrderIndex)
+        			{
+        				hidden = true;
+        				break;
+        			}
+        		}
+    		}
+    	}
+    	int width = 0;
+    	if(!hidden)//if not hidden,then count its spanning area's width
+    	{
+    		for(int i=displayOrderIndex,j=0;i<getColumnCount()&&j<cellSpans.width;i++,j++)
+        	{
+        		if (((GridColumn)displayOrderedColumns.get(i)).isVisible())
+        			width += ((GridColumn)displayOrderedColumns.get(i)).getWidth();
+        	}
+    	}
+    	rect.width = width;
+    	int rowIndex = indexOf(item);
+    	int height = 0;
+    	for(int i=rowIndex,j=0;i<getItemCount()&&j<cellSpans.height;i++,j++)
+    	{
+    		if(((GridItem)items.get(i)).isVisible())
+    			height +=  ((GridItem)items.get(i)).getHeight();
+    	}
+    	rect.height = height;
+    	
+    	return rect;
     }
     /**
      * This method is just used to map a pixel position to a cell position(which column and which row).
@@ -1884,7 +1970,7 @@ public class Grid extends Canvas
         	}
         	else
         	{
-        		colIndex = indexOf(overThis);
+        		colIndex = displayOrderedColumns.indexOf(overThis);//display order index
         	}
         }
         
