@@ -5230,6 +5230,12 @@ public class Grid extends Canvas
             y += headerHeight;
         }
         
+//        for (Iterator columnIterator = displayOrderedColumns.iterator(); columnIterator.hasNext(); )
+//        {
+//        	GridColumn column = (GridColumn) columnIterator.next();
+//        	System.out.println(column.getText());
+//        }
+        
         int firstVisibleIndex = 0;
         int availableHeight = getClientArea().height-y;
         int visibleRows = availableHeight / getItemHeight() + 1;
@@ -5300,6 +5306,7 @@ public class Grid extends Canvas
                 for (Iterator columnIterator = displayOrderedColumns.iterator(); columnIterator.hasNext(); )
                 {
                 	GridColumn column = (GridColumn) columnIterator.next();
+                	//System.out.println("index: col "+colIndex+",row "+rowIndex+","+skipColumnsBecauseSpanned);
                 	//System.out.println(item.getText()+","+column.getText());
                     if (!column.isVisible())
                     {
@@ -5324,6 +5331,7 @@ public class Grid extends Canvas
                     {
                     	//System.out.println("in skip span"+column.getText());
                         skipColumnsBecauseSpanned = item.getAreaSpan(indexOf(column)).x;
+                        //System.out.println("column:"+column.getText()+",span:"+skipColumnsBecauseSpanned);
                         skipRowsBecauseSpanned = item.getAreaSpan(indexOf(column)).y;
                         
                         int width = column.getWidth();//cell width
@@ -5435,7 +5443,8 @@ public class Grid extends Canvas
                     	for(int k=0;k<=skipColumnsBecauseSpanned;k++)
                     		for(int j=0;j<=skipRowsBecauseSpanned;j++)
                     		{
-                    			hasBeenPainted[colIndex+k][rowIndex+j]=true;
+                    			if((colIndex+k)<getColumnCount()&&(rowIndex+j)<getItemCount())
+                    				hasBeenPainted[colIndex+k][rowIndex+j]=true;
                     			//System.out.println("set:"+(indexOf(column)+k)+","+(indexOf(item)+j));
                     		}
                     	//System.out.println("x:"+x+",width:"+width+",column width:"+column.getWidth()+",column name:"+column.getText());
