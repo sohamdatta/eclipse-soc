@@ -5229,7 +5229,7 @@ public class Grid extends Canvas
             paintHeader(e.gc);
             y += headerHeight;
         }
-
+        
         int firstVisibleIndex = 0;
         int availableHeight = getClientArea().height-y;
         int visibleRows = availableHeight / getItemHeight() + 1;
@@ -5299,7 +5299,6 @@ public class Grid extends Canvas
                 //System.out.println("rowIndex:"+rowIndex+";x:"+x);
                 for (Iterator columnIterator = displayOrderedColumns.iterator(); columnIterator.hasNext(); )
                 {
-                	//TODO: add here,
                 	GridColumn column = (GridColumn) columnIterator.next();
                 	//System.out.println(item.getText()+","+column.getText());
                     if (!column.isVisible())
@@ -5314,6 +5313,7 @@ public class Grid extends Canvas
                     
                     if(skipColumnsBecauseSpanned==0&&hasBeenPainted[colIndex][rowIndex])//be in pre spanning area
                     {
+                    	//System.out.println("index: col "+colIndex+",row "+rowIndex);
                     	//System.out.println("skip :"+column.getText()+"@row:"+indexOf(item)+";column width:"+column.getWidth());
                     	colIndex++;
                         x += column.getWidth();
@@ -5435,7 +5435,7 @@ public class Grid extends Canvas
                     	for(int k=0;k<=skipColumnsBecauseSpanned;k++)
                     		for(int j=0;j<=skipRowsBecauseSpanned;j++)
                     		{
-                    			hasBeenPainted[indexOf(column)+k][indexOf(item)+j]=true;
+                    			hasBeenPainted[colIndex+k][rowIndex+j]=true;
                     			//System.out.println("set:"+(indexOf(column)+k)+","+(indexOf(item)+j));
                     		}
                     	//System.out.println("x:"+x+",width:"+width+",column width:"+column.getWidth()+",column name:"+column.getText());
@@ -5825,7 +5825,6 @@ public class Grid extends Canvas
 
         if (draggingColumn)
         {
-
             gc.setAlpha(COLUMN_DRAG_ALPHA);
 
             columnBeingPushed.getHeaderRenderer().setSelected(false);
@@ -5842,7 +5841,7 @@ public class Grid extends Canvas
                 height = headerHeight;
                 y = 0;
             }
-
+            //draw the shadow when dragging
             columnBeingPushed.getHeaderRenderer()
                 .setBounds(
                            getColumnHeaderXPosition(columnBeingPushed)
