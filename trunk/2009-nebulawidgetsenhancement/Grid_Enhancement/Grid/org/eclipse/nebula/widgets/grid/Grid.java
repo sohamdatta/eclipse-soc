@@ -1205,33 +1205,40 @@ public class Grid extends Canvas
      */
     public GridColumn getColumn(Point point)
     {
-        checkWidget();
-        if (point == null)
-        {
-            SWT.error(SWT.ERROR_NULL_ARGUMENT);
-        }
+    	checkWidget();
+    	if (point == null)
+    	{
+    		SWT.error(SWT.ERROR_NULL_ARGUMENT);
+    	}
+    	
+    	if (point.y < 0 || point.y > getClientArea().height) return null;
+    	
+    	int columnIndex = onWhichCell(point).x;
 
-        int columnIndex = onWhichCell(point).x;
-        
-        if(columnIndex==-1) return null;
-        else
-        {
-        	GridColumn column = (GridColumn)columns.get(columnIndex);
-        	if(hasSpanning)
-        	{
-        		// track back all previous spanning areas and check their spanning
-                for (Object rect:this.getAllSpanAreas())
-                {
-                	Rectangle area = (Rectangle)rect;
-                	if ( area.contains(onWhichCell(point)))
-                	{
-                		column = (GridColumn)columns.get(area.x);
-                		break;
-                	}
-                }
-        	}
-        	return column;
-        }
+    	if(columnIndex==-1||columnIndex==-3) return null;
+    	else
+    	{
+    		GridColumn column = (GridColumn)columns.get(columnIndex);
+    		int rowIndex = onWhichCell(point).y;
+    		if(rowIndex == -1)
+    		{
+    			return column;
+    		}
+    		if(hasSpanning)
+    		{
+    			// track back all previous spanning areas and check their spanning
+    			for (Object rect:this.getAllSpanAreas())
+    			{
+    				Rectangle area = (Rectangle)rect;
+    				if ( area.contains(columnIndex,rowIndex))//click in a valid cell
+    				{
+    					column = (GridColumn)columns.get(area.x);
+    					break;
+    				}
+    			}
+    		}
+    		return column;
+    	}
     }
 
     /**
@@ -1757,17 +1764,22 @@ public class Grid extends Canvas
 
         int rowIndex = onWhichCell(point).y;
         
-        if(rowIndex==-1) return null;
+        if(rowIndex==-1||rowIndex == -3) return null;
         else
         {
         	GridItem item = (GridItem)items.get(rowIndex);
+        	int colIndex = onWhichCell(point).x;
+        	if(colIndex == -1)//in column line
+        	{
+        		return item;
+        	}
         	if(hasSpanning)
         	{
         		// track back all previous spanning areas and check their spanning
                 for (Object rect:this.getAllSpanAreas())
                 {
                 	Rectangle area = (Rectangle)rect;
-                	if ( area.contains(onWhichCell(point)))
+                	if ( area.contains(colIndex,rowIndex))//click in a valid cell
                 	{
                 		item = (GridItem)items.get(area.y);
                 		break;
@@ -1792,6 +1804,8 @@ public class Grid extends Canvas
      */
     private Point onWhichCell(Point point)
     {
+    	int rowIndex = -2 , colIndex = -2;
+    	
     	Point p = new Point(point.x, point.y);
 
         int y2=0;
@@ -1800,31 +1814,35 @@ public class Grid extends Canvas
         {
             if (p.y <= headerHeight)
             {
-                return new Point(-1,-1);
+                rowIndex = -1;//in the column line
             }
             y2 += headerHeight;
         }
-
-    	int row=getTopIndex();
-        while(row<items.size() && y2<=getClientArea().height)
+        if ( rowIndex == -2)//not yet been set,so in cells
         {
-            GridItem currItem = (GridItem)items.get(row);
-            if (currItem.isVisible())
+        	int row=getTopIndex();
+            while(row<items.size() && y2<=getClientArea().height)
             {
-                int currItemHeight = currItem.getHeight();
-
-                if (p.y >= y2 && p.y < y2+currItemHeight+1)
+                GridItem currItem = (GridItem)items.get(row);
+                if (currItem.isVisible())
                 {
-                    break;
-                }
+                    int currItemHeight = currItem.getHeight();
 
-                y2 += currItemHeight +1;
+                    if (p.y >= y2 && p.y < y2+currItemHeight+1)
+                    {
+                    	rowIndex = row;
+                        break;
+                    }
+
+                    y2 += currItemHeight +1;
+                }
+                row++;
             }
-            row++;
+            if ( row==items.size() )//not click in valid cells
+            {
+            	rowIndex = -3;
+            }
         }
-        int rowIndex = (row==items.size())?-1:row;
-        
-        GridColumn overThis = null;
 
         int x2 = 0;
 
@@ -1832,35 +1850,45 @@ public class Grid extends Canvas
         {
             if (point.x <= rowHeaderWidth)
             {
-            	return new Point(-1,-1);
+            	colIndex = -1;//in the vertical item line
             }
 
             x2 += rowHeaderWidth;
         }
 
         x2 -= getHScrollSelectionInPixels();
-
-        for (Iterator columnIterator = displayOrderedColumns.iterator(); columnIterator.hasNext(); )
+        
+        if( colIndex == -2 )//not yet been set,so in cells
         {
-            GridColumn column = (GridColumn) columnIterator.next();
-
-            if (!column.isVisible())
+        	GridColumn overThis = null;
+        	for (Iterator columnIterator = displayOrderedColumns.iterator(); columnIterator.hasNext(); )
             {
-                continue;
-            }
+                GridColumn column = (GridColumn) columnIterator.next();
 
-            if (point.x >= x2 && point.x < x2 + column.getWidth())
-            {
-                overThis = column;
-                break;
-            }
+                if (!column.isVisible())
+                {
+                    continue;
+                }
 
-            x2 += column.getWidth();
+                if (point.x >= x2 && point.x < x2 + column.getWidth())
+                {
+                    overThis = column;
+                    break;
+                }
+
+                x2 += column.getWidth();
+            }
+        	if (overThis==null)
+        	{
+        		colIndex = -3;//not click in valid cells
+        	}
+        	else
+        	{
+        		colIndex = indexOf(overThis);
+        	}
         }
         
-        int columnIndex = (overThis==null)?-1:indexOf(overThis);
-        
-    	return new Point(columnIndex,rowIndex);
+    	return new Point(colIndex,rowIndex);
     }
     /**
      * Returns the number of items contained in the receiver.
@@ -4855,7 +4883,6 @@ public class Grid extends Canvas
         }
 
         GridColumn overThis = overColumnHeader(x, y);
-
         if (overThis == null)
         {
             return false;
