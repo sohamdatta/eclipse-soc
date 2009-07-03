@@ -55,16 +55,12 @@ public class Donut extends BaseRenderer {
 		final SeriesDefinition sd = getSeriesDefinition();
 		final Bounds boCB = getCellBounds();
 		
-		if (boCB == bo){
-			int a =1+1;
-		}
-		
 		try {
 			donutRenderer = new DonutRenderer(cwoa, this, srh.getDataPoints(),
 					srh.asPrimitiveDoubleValues(), sd.getSeriesPalette());
 			// donutRenderer.computeInsets( boCB );
-			donutRenderer.computeFrame(boCB);
-			donutRenderer.computeSlices(srh.asPrimitiveDoubleValues(), srh.getDataPoints(), cwoa);
+			donutRenderer.initSlices(srh.asPrimitiveDoubleValues(), srh.getDataPoints(), cwoa);
+			donutRenderer.computeBounds(boCB);
 		} catch (Exception ex) {
 			ex.printStackTrace();
 			throw new ChartException(ChartEngineExtensionPlugin.ID,

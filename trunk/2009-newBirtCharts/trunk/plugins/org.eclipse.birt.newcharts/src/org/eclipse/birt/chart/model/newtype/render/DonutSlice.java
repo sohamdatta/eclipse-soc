@@ -1,8 +1,11 @@
 package org.eclipse.birt.chart.model.newtype.render;
 
+import org.eclipse.birt.chart.computation.BoundingBox;
 import org.eclipse.birt.chart.computation.DataPointHints;
+import org.eclipse.birt.chart.exception.ChartException;
 import org.eclipse.birt.chart.model.attribute.Bounds;
 import org.eclipse.birt.chart.model.attribute.Fill;
+import org.eclipse.birt.chart.model.attribute.LeaderLineStyle;
 
 public class DonutSlice {
 
@@ -10,34 +13,35 @@ public class DonutSlice {
 	private Fill fillColor;
 	private double angleExtent;
 	private double startAngle;
-	private int exploration;
+	private int explosion;
 	private Bounds bounds;
 	private double width;
-	private double thickness;
+	private double sliceDepth;
 	private double height;
 	private double xc;
 	private double yc;
+	private BoundingBox labelBounds;
 
 	public DonutSlice(double startAngle, double angleExtent, Fill fillColor,
-			DataPointHints dph, double thickness) {
+			DataPointHints dph, double sliceDepth, double frameThickness) {
 
 		this.setStartAngle(startAngle);
 		this.setAngleExtent(angleExtent);
 		this.setFillColor(fillColor);
 		this.setDataPoint(dph);
-		this.setThickness(thickness);
+		this.setSliceDepth(sliceDepth);
 	}
 
-	private void setThickness(double thickness) {
-		this.thickness = thickness;
+	private void setSliceDepth(double depth) {
+		this.sliceDepth = depth;
 	}
 
 	public double getThickness() {
-		return thickness;
+		return sliceDepth;
 	}
 
-	public void setExploded(int exploration) {
-		this.exploration = exploration;
+	public void setExplosion(int explosion) {
+		this.explosion = explosion;
 	}
 
 	public void setDataPoint(DataPointHints dataPoint) {
@@ -73,12 +77,38 @@ public class DonutSlice {
 	}
 
 	public void setBounds(Bounds cellBounds) {
-		bounds = cellBounds;
-		setWidth(bounds.getWidth() / 2 - exploration);
-		setHeight(bounds.getHeight() / 2 - exploration - thickness / 2);
-		setXc(bounds.getLeft() + getWidth() + exploration);
-		setYc(bounds.getTop() + getHeight() + exploration + thickness / 2);
+		this.bounds = cellBounds;
+		bounds.setHeight(cellBounds.getHeight());
 
+		if (cellBounds.getHeight() < cellBounds.getWidth()) {
+			// SET RADIUS
+			// IF 3D HEIGHT != WIDTH
+			if (sliceDepth != 0)
+				setHeight(bounds.getHeight() - sliceDepth);
+			else
+				setHeight(bounds.getHeight());
+			setWidth(getHeight());
+
+			// SETS THE FIX POINT TO THE TOP & LEFT OF THE DONUT
+			setXc(bounds.getLeft()+(bounds.getWidth()-getWidth())/2);
+			setYc(bounds.getTop() + sliceDepth+40);
+		} else {
+			// SET RADIUS
+			// IF 3D HEIGHT != WIDTH
+			setWidth(bounds.getWidth());
+			if (sliceDepth != 0)
+				setHeight(bounds.getWidth() - sliceDepth);
+			else
+				setHeight(bounds.getWidth());
+
+			// SETS THE FIX POINT TO THE TOP & LEFT OF THE DONUT
+			setXc(bounds.getLeft());
+			setYc(bounds.getTop()+ (bounds.getHeight()-getHeight())/2 + sliceDepth);
+		}
+
+//		// SETS THE FIX POINT TO THE TOP & LEFT OF THE DONUT
+//		setXc(bounds.getLeft()+(bounds.getWidth()-getWidth())/2);
+//		setYc(bounds.getTop() + sliceDepth);
 		// if ( ratio > 0 && width > 0 )
 		// {
 		// if ( height / width > ratio )
@@ -95,10 +125,6 @@ public class DonutSlice {
 		if (getWidth() <= 0 || getHeight() <= 0) {
 			setWidth(setHeight(1));
 		}
-	}
-
-	public void computeLabelBoundInside() {
-//		TODO
 	}
 
 	public void setXc(double xc) {
@@ -132,5 +158,24 @@ public class DonutSlice {
 
 	public double getHeight() {
 		return height;
+	}
+
+	public BoundingBox getLabelBound() {
+		return labelBounds;
+	}
+
+	public void setLabelBound(BoundingBox labelBound) {
+		this.labelBounds = labelBound;
+	}
+
+	public <OutsideLabelBoundCache> void computeLabelBoundOutside(
+			LeaderLineStyle leaderLineStyle, double leaderLinesLength,
+			OutsideLabelBoundCache bbCache) throws ChartException {
+		// TODO Auto-generated method stub
+
+	}
+
+	public void computeLabelBoundInside() {
+		// TODO
 	}
 }
