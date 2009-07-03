@@ -8,6 +8,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
+import org.eclipse.zest.core.widgets.ZestStyles;
 import org.eclipse.zest.layouts.dataStructures.DisplayIndependentRectangle;
 import org.mati.zest.layout.interfaces.ConnectionLayout;
 import org.mati.zest.layout.interfaces.ContextListener;
@@ -40,14 +41,17 @@ class InternalLayoutContext implements LayoutContext {
 		this.container = NodeContainerAdapter.get(graph);
 
 		addFilter(new Filter() {
-			// filter out connections connecting nodes lying inside containers
-			// with outside nodes
 			public boolean isObjectFiltered(GraphItem item) {
 				if (item instanceof GraphConnection) {
+					// filter out connections connecting nodes lying inside
+					// containers with outside nodes
 					GraphConnection connection = (GraphConnection) item;
 					if (connection.getSource().parent != connection.getDestination().parent)
 						return true;
 				}
+				// filter out invisible elements
+				if (ZestStyles.checkStyle(container.getGraph().getStyle(), ZestStyles.IGNORE_INVISIBLE_LAYOUT) && !item.isVisible())
+					return true;
 				return false;
 			}
 		});
