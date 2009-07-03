@@ -25,8 +25,8 @@ public class RadialLayoutAlgorithm implements LayoutAlgorithm {
 	private TreeLayoutAlgorithm treeLayout = new TreeLayoutAlgorithm();
 	
 	public void applyLayout() {
-		treeLayout.applyLayout();
 		EntityLayout[] entities = context.getEntities();
+		treeLayout.internalApplyLayout(entities);
 		DisplayIndependentRectangle bounds = context.getBounds();
 		computeRadialPositions(entities, bounds);
 		if (resize)
@@ -35,10 +35,13 @@ public class RadialLayoutAlgorithm implements LayoutAlgorithm {
 	}
 
 	private void computeRadialPositions(EntityLayout[] entities, DisplayIndependentRectangle bounds) {
+		DisplayIndependentRectangle layoutBounds = AlgorithmHelper.getLayoutBounds(entities, false);
+		layoutBounds.x = bounds.x;
+		layoutBounds.width = bounds.width;
 		for (int i = 0; i < entities.length; i++) {
 			DisplayIndependentPoint location = entities[i].getLocation();
-			double percenttheta = (location.x - bounds.x) / bounds.width;
-			double distance = (location.y - bounds.y) / bounds.height;
+			double percenttheta = (location.x - layoutBounds.x) / layoutBounds.width;
+			double distance = (location.y - layoutBounds.y) / layoutBounds.height;
 			double theta = startDegree + Math.abs(endDegree - startDegree) * percenttheta;
 			location.x = distance * Math.cos(theta);
 			location.y = distance * Math.sin(theta);

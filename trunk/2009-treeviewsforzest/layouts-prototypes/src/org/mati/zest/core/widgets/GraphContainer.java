@@ -35,7 +35,9 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.zest.core.widgets.internal.AspectRatioFreeformLayer;
 import org.eclipse.zest.core.widgets.internal.ContainerFigure;
 import org.eclipse.zest.core.widgets.internal.ZestRootLayer;
-import org.eclipse.zest.layouts.LayoutAlgorithm;
+import org.eclipse.zest.layouts.dataStructures.DisplayIndependentRectangle;
+import org.mati.zest.layout.algorithms.TreeLayoutAlgorithm;
+import org.mati.zest.layout.interfaces.LayoutAlgorithm;
 
 /**
  * A Container that can be added to a Graph. Nodes can be added to this
@@ -155,16 +157,17 @@ public class GraphContainer extends GraphNode {
 			this.setLayoutManager(layout);
 			this.add(this.expander);
 			this.add(this.label);
-
-			this.darkerBackground = createDarkerColor(getBackgroundColor());
-
 		}
 
-		private Color createDarkerColor(Color baseColor) {
-			int blue = (int) (baseColor.getBlue() * 0.8 + 0.5);
-			int red = (int) (baseColor.getRed() * 0.8 + 0.5);
-			int green = (int) (baseColor.getGreen() * 0.8 + 0.5);
-			return new Color(Display.getCurrent(), new RGB(red, green, blue));
+		private Color getDarkerBackgroundColor() {
+			if (darkerBackground == null) {
+				Color baseColor = getBackgroundColor();
+				int blue = (int) (baseColor.getBlue() * 0.8 + 0.5);
+				int red = (int) (baseColor.getRed() * 0.8 + 0.5);
+				int green = (int) (baseColor.getGreen() * 0.8 + 0.5);
+				darkerBackground = new Color(Display.getCurrent(), new RGB(red, green, blue));
+			}
+			return darkerBackground;
 		}
 
 		/*
@@ -175,7 +178,7 @@ public class GraphContainer extends GraphNode {
 		 */
 		public void paint(Graphics graphics) {
 
-			graphics.setForegroundColor(darkerBackground);
+			graphics.setForegroundColor(getDarkerBackgroundColor());
 			graphics.setBackgroundColor(getBackgroundColor());
 
 			graphics.pushState();
@@ -212,8 +215,9 @@ public class GraphContainer extends GraphNode {
 
 		public void setBackgroundColor(Color bg) {
 			super.setBackgroundColor(bg);
-			darkerBackground.dispose();
-			darkerBackground = createDarkerColor(bg);
+			if (darkerBackground != null)
+				darkerBackground.dispose();
+			darkerBackground = null;
 		}
 
 		public void setTextT(String string) {
@@ -240,8 +244,8 @@ public class GraphContainer extends GraphNode {
 
 	}
 
-	private static final double SCALED_WIDTH = 300;
-	private static final double SCALED_HEIGHT = 200;
+	static final double SCALED_WIDTH = 300;
+	static final double SCALED_HEIGHT = 200;
 	private static final int CONTAINER_HEIGHT = 200;
 	private static final int MIN_WIDTH = 250;
 	private static final int MIN_HEIGHT = 30;
@@ -260,6 +264,7 @@ public class GraphContainer extends GraphNode {
 	private LayoutAlgorithm layoutAlgorithm;
 	private boolean isExpanded = false;
 	private AspectRatioFreeformLayer scalledLayer;
+	private InternalLayoutContext layoutContext;
 
 	/**
 	 * Creates a new GraphContainer.  A GraphContainer may contain nodes,
@@ -276,7 +281,7 @@ public class GraphContainer extends GraphNode {
 	}
 
 	public GraphContainer(Graph graph, int style, String text, Image image) {
-		this(NodeContainerAdapter.create(graph), style, text, image);
+		this(NodeContainerAdapter.get(graph), style, text, image);
 	}
 
 	public GraphContainer(GraphContainer graph, int style) {
@@ -288,7 +293,7 @@ public class GraphContainer extends GraphNode {
 	}
 
 	public GraphContainer(GraphContainer graph, int style, String text, Image image) {
-		this(NodeContainerAdapter.create(graph), style, text, image);
+		this(NodeContainerAdapter.get(graph), style, text, image);
 	}
 
 	public GraphContainer(NodeContainerAdapter graph, int style, String text, Image image) {
@@ -597,11 +602,38 @@ public class GraphContainer extends GraphNode {
 	}
 
 	public void setLayoutAlgorithm(LayoutAlgorithm algorithm, boolean applyLayout) {
+		if (this.layoutAlgorithm != null)
+			this.layoutAlgorithm.setLayoutContext(null);
+
 		this.layoutAlgorithm = algorithm;
+		this.layoutAlgorithm.setLayoutContext(getLayoutContext());
 		if (applyLayout) {
 			applyLayout();
 		}
+	}
 
+	InternalLayoutContext getLayoutContext() {
+		if (layoutContext == null) {
+			layoutContext = new InternalLayoutContext(this);
+		}
+		return layoutContext;
+	}
+
+	DisplayIndependentRectangle getLayoutBounds() {
+		double width = GraphContainer.SCALED_WIDTH - 10;
+		double height = GraphContainer.SCALED_HEIGHT - 10;
+		return new DisplayIndependentRectangle(25, 25, width - 50, height - 50);
+	}
+
+	public void applyLayout() {
+		if (layoutAlgorithm == null) {
+			layoutAlgorithm = new TreeLayoutAlgorithm();
+		}
+		Animation.markBegin();
+		layoutAlgorithm.applyLayout();
+		layoutContext.flushChanges(false);
+		Animation.run(ANIMATION_TIME);
+		getFigure().getUpdateManager().performUpdate();
 	}
 
 	/**
@@ -832,22 +864,18 @@ public class GraphContainer extends GraphNode {
 
 	void addConnectionFigure(PolylineConnection connection) {
 		nodeFigure.add(connection);
-		//zestLayer.addConnection(connection);
 	}
 
 	void addNode(GraphNode node) {
 		zestLayer.addNode(node.getNodeFigure());
 		this.childNodes.add(node);
-		//container.add(node.getNodeFigure());
-		//graph.registerItem(node);
 	}
 
 	void addNode(GraphContainer container) {
-		// Containers cannot be added to other containers (yet)
+		throw new RuntimeException("Containers cannot be added to other containers (yet)");
 	}
 
 	public List getNodes() {
 		return this.childNodes;
 	}
-
 }

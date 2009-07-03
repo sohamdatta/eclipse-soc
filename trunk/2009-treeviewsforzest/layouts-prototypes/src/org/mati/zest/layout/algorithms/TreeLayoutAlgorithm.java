@@ -141,9 +141,17 @@ public class TreeLayoutAlgorithm implements LayoutAlgorithm {
 	}
 
 	public void applyLayout() {
-		superRoot = new EntityInfo(null);
 		EntityLayout[] entities = context.getEntities();
 
+		internalApplyLayout(entities);
+
+		if (resize)
+			AlgorithmHelper.maximizeSizes(entities);
+		AlgorithmHelper.fitWithinBounds(entities, bounds, resize);
+	}
+
+	void internalApplyLayout(EntityLayout[] entities) {
+		superRoot = new EntityInfo(null);
 		createTrees(entities);
 
 		bounds = context.getBounds();
@@ -162,10 +170,6 @@ public class TreeLayoutAlgorithm implements LayoutAlgorithm {
 		}
 
 		superRoot = null;
-
-		if (resize)
-			AlgorithmHelper.maximizeSizes(entities);
-		AlgorithmHelper.fitWithinBounds(entities, bounds, resize);
 	}
 
 	/**
