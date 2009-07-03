@@ -20,7 +20,7 @@ class AlgorithmHelper {
 	 * @param resize
 	 */
 	public static void fitWithinBounds(EntityLayout[] entities, DisplayIndependentRectangle destinationBounds, boolean resize) {
-		DisplayIndependentRectangle startingBounds = getLayoutBounds(entities, true);
+		DisplayIndependentRectangle startingBounds = getLayoutBounds(entities, false);
 		double sizeScale = Math.min(destinationBounds.width / startingBounds.width, destinationBounds.height / startingBounds.height);
 		if (entities.length == 1) {
 			fitSingleEntity(entities[0], destinationBounds, resize);
@@ -31,8 +31,8 @@ class AlgorithmHelper {
 			DisplayIndependentDimension size = entity.getSize();
 			if (entity.isMovable()) {
 				DisplayIndependentPoint location = entity.getLocation();
-				double percentX = (location.x - startingBounds.x - size.width / 2) / (startingBounds.width - size.width);
-				double percentY = (location.y - startingBounds.y - size.height / 2) / (startingBounds.height - size.height);
+				double percentX = (location.x - startingBounds.x) / (startingBounds.width);
+				double percentY = (location.y - startingBounds.y) / (startingBounds.height);
 
 				if (resize && entity.isResizable()) {
 					size.width *= sizeScale;

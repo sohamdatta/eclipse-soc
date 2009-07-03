@@ -5,6 +5,7 @@ import java.util.Iterator;
 
 import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.draw2d.geometry.Point;
+import org.eclipse.zest.core.widgets.ZestStyles;
 import org.eclipse.zest.layouts.dataStructures.DisplayIndependentDimension;
 import org.eclipse.zest.layouts.dataStructures.DisplayIndependentPoint;
 import org.mati.zest.layout.interfaces.ConnectionLayout;
@@ -15,7 +16,7 @@ class InternalNodeLayout implements NodeLayout {
 	private DisplayIndependentPoint location;
 	private DisplayIndependentDimension size;
 	private final GraphNode node;
-	private final GraphLayoutContext rootLayoutContext;
+	private final InternalLayoutContext rootLayoutContext;
 
 	public InternalNodeLayout(GraphNode graphNode) {
 		this.node = graphNode;
@@ -58,7 +59,7 @@ class InternalNodeLayout implements NodeLayout {
 	}
 
 	public boolean isResizable() {
-		return true;
+		return (node.parent.getAdaptee().getStyle() & ZestStyles.NODES_NO_LAYOUT_RESIZE) == 0;
 	}
 
 	public void prune(SubgraphLayout subgraph) {

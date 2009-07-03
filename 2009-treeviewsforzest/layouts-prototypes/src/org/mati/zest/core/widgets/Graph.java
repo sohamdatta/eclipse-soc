@@ -75,7 +75,7 @@ public class Graph extends FigureCanvas {
 	private int nodeStyle;
 	private ScalableFreeformLayeredPane fishEyeLayer = null;
 	private LayoutAlgorithm layoutAlgorithm = null;
-	private GraphLayoutContext layoutContext = null;
+	private InternalLayoutContext layoutContext = null;
 	private volatile boolean isLayoutScheduled;
 	private Dimension preferredSize = null;
 	int style = 0;
@@ -133,7 +133,7 @@ public class Graph extends FigureCanvas {
 		});
 
 		this.setContents(createLayers());
-		DragSupport dragSupport = new DragSupport(this);
+		DragSupport dragSupport = new DragSupport();
 		this.getLightweightSystem().getRootFigure().addMouseListener(dragSupport);
 		this.getLightweightSystem().getRootFigure().addMouseMotionListener(dragSupport);
 
@@ -352,16 +352,19 @@ public class Graph extends FigureCanvas {
 
 	/**
 	 * 
-	 * @return the preferred size of the layout area. Size of (-1, -1) uses the
-	 *         current canvas size
+	 * @return the preferred size of the layout area.
 	 */
 	public Dimension getPreferredSize() {
+		if (preferredSize.width < 0 || preferredSize.height < 0) {
+			org.eclipse.swt.graphics.Point size = getSize();
+			return new Dimension(size.x, size.y);
+		}
 		return preferredSize;
 	}
 
-	GraphLayoutContext getLayoutContext() {
+	InternalLayoutContext getLayoutContext() {
 		if (layoutContext == null) {
-			layoutContext = new GraphLayoutContext(this);
+			layoutContext = new InternalLayoutContext(this);
 		}
 		return layoutContext;
 	}
@@ -453,18 +456,11 @@ public class Graph extends FigureCanvas {
 
 	}
 
-	class DragSupport implements MouseMotionListener, org.eclipse.draw2d.MouseListener {
-		/**
-		 * 
-		 */
-		Graph graph = null;
+	private class DragSupport implements MouseMotionListener, org.eclipse.draw2d.MouseListener {
+
 		Point lastLocation = null;
 		GraphItem fisheyedItem = null;
 		boolean isDragging = false;
-
-		DragSupport(Graph graph) {
-			this.graph = graph;
-		}
 
 		public void mouseDragged(org.eclipse.draw2d.MouseEvent me) {
 			if (!isDragging) {
@@ -610,7 +606,7 @@ public class Graph extends FigureCanvas {
 				// If the figure under the mouse is the canvas, and CTRL is not
 				// being held down, then select
 				// nothing
-				if (figureUnderMouse == null || figureUnderMouse == graph) {
+				if (figureUnderMouse == null || figureUnderMouse == Graph.this) {
 					if (me.getState() != org.eclipse.draw2d.MouseEvent.CONTROL) {
 						clearSelection();
 						if (hasSelection) {

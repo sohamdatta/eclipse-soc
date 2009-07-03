@@ -8,8 +8,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
-import org.eclipse.draw2d.geometry.Dimension;
-import org.eclipse.swt.graphics.Point;
 import org.eclipse.zest.layouts.dataStructures.DisplayIndependentRectangle;
 import org.mati.zest.layout.interfaces.ConnectionLayout;
 import org.mati.zest.layout.interfaces.ContextListener;
@@ -23,9 +21,9 @@ import org.mati.zest.layout.interfaces.NodeLayout;
 import org.mati.zest.layout.interfaces.PruningListener;
 import org.mati.zest.layout.interfaces.SubgraphLayout;
 
-class GraphLayoutContext implements LayoutContext {
+class InternalLayoutContext implements LayoutContext {
 
-	private final Graph graph;
+	private final NodeContainerAdapter container;
 	private List filters = new ArrayList();
 	private List contextListeners = new ArrayList();
 	private List graphStructureListeners = new ArrayList();
@@ -38,8 +36,25 @@ class GraphLayoutContext implements LayoutContext {
 	 * @param graph
 	 *            the graph owning this context
 	 */
-	GraphLayoutContext(Graph graph) {
-		this.graph = graph;
+	InternalLayoutContext(Graph graph) {
+		this.container = NodeContainerAdapter.get(graph);
+
+		addFilter(new Filter() {
+			// filter out connections connecting nodes lying inside containers
+			// with outside nodes
+			public boolean isObjectFiltered(GraphItem item) {
+				if (item instanceof GraphConnection) {
+					GraphConnection connection = (GraphConnection) item;
+					if (connection.getSource().parent != connection.getDestination().parent)
+						return true;
+				}
+				return false;
+			}
+		});
+	}
+
+	InternalLayoutContext(GraphContainer container) {
+		this.container = NodeContainerAdapter.get(container);
 	}
 
 	public void addContextListener(ContextListener listener) {
@@ -66,19 +81,15 @@ class GraphLayoutContext implements LayoutContext {
 	public void flushChanges(boolean animationHint) {
 		// TODO Auto-generated method stub
 		// TODO probably OK for nodes, need to add subgraphs
-		for (Iterator iterator = graph.getNodes().iterator(); iterator.hasNext();) {
+		// TODO respect animation hint
+		for (Iterator iterator = container.getNodes().iterator(); iterator.hasNext();) {
 			GraphNode node = (GraphNode) iterator.next();
 			node.applyLayoutChanges();
 		}
 	}
 
 	public DisplayIndependentRectangle getBounds() {
-		Dimension preferredSize = graph.getPreferredSize();
-		if (preferredSize.width < 0 || preferredSize.height < 0) {
-			Point size = graph.getSize();
-			return new DisplayIndependentRectangle(0, 0, size.x, size.y);
-		}
-		return new DisplayIndependentRectangle(0, 0, preferredSize.width, preferredSize.height);
+		return container.getLayoutBounds();
 	}
 
 	public LayoutAlgorithm getMainLayoutAlgorithm() {
@@ -87,7 +98,7 @@ class GraphLayoutContext implements LayoutContext {
 
 	public NodeLayout[] getNodes() {
 		ArrayList result = new ArrayList();
-		for (Iterator iterator = this.graph.getNodes().iterator(); iterator.hasNext();) {
+		for (Iterator iterator = this.container.getNodes().iterator(); iterator.hasNext();) {
 			GraphNode node = (GraphNode) iterator.next();
 			if (!isLayoutItemFiltered(node))
 				result.add(node.getLayout());
@@ -138,7 +149,7 @@ class GraphLayoutContext implements LayoutContext {
 	}
 
 	public ConnectionLayout[] getConnections() {
-		List connections = this.graph.getConnections();
+		List connections = container.getConnections();
 		ConnectionLayout[] result = new ConnectionLayout[connections.size()];
 		int i = 0;
 		for (Iterator iterator = connections.iterator(); iterator.hasNext();) {
@@ -180,6 +191,11 @@ class GraphLayoutContext implements LayoutContext {
 		for (Iterator it = filters.iterator(); it.hasNext();) {
 			Filter filter = (Filter) it.next();
 			if (filter.isObjectFiltered(item))
+				return true;
+		}
+		if (container.getItemType() == GraphItem.CONTAINER) {
+			InternalLayoutContext parentLayout = container.getGraph().getLayoutContext();
+			if (parentLayout.isLayoutItemFiltered(item))
 				return true;
 		}
 		return false;
