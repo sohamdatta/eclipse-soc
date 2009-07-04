@@ -9,6 +9,7 @@ import org.eclipse.birt.chart.computation.IGObjectFactory;
 import org.eclipse.birt.chart.device.IDeviceRenderer;
 import org.eclipse.birt.chart.device.IDisplayServer;
 import org.eclipse.birt.chart.device.IStructureDefinitionListener;
+import org.eclipse.birt.chart.event.Arc3DRenderEvent;
 import org.eclipse.birt.chart.event.ArcRenderEvent;
 import org.eclipse.birt.chart.event.WrappedStructureSource;
 import org.eclipse.birt.chart.exception.ChartException;
@@ -23,6 +24,7 @@ import org.eclipse.birt.chart.model.attribute.LeaderLineStyle;
 import org.eclipse.birt.chart.model.attribute.LineAttributes;
 import org.eclipse.birt.chart.model.attribute.LineStyle;
 import org.eclipse.birt.chart.model.attribute.Location;
+import org.eclipse.birt.chart.model.attribute.Location3D;
 import org.eclipse.birt.chart.model.attribute.Palette;
 import org.eclipse.birt.chart.model.attribute.Position;
 import org.eclipse.birt.chart.model.attribute.impl.ColorDefinitionImpl;
@@ -244,6 +246,9 @@ public class DonutRenderer {
 
 			coloredarc.setWidth(slice.getWidth());
 			coloredarc.setHeight(slice.getHeight());
+			coloredarc.setOuterRadius(coloredarc.getWidth()/2);
+			
+			coloredarc.setInnerRadius(coloredarc.getOuterRadius()-slice.getFrameThickness());
 			
 			coloredarc.setOutline(LineAttributesImpl.create(ColorDefinitionImpl
 					.ORANGE(), LineStyle.SOLID_LITERAL, 500));
@@ -251,32 +256,9 @@ public class DonutRenderer {
 			coloredarc.setStyle(ArcRenderEvent.SECTOR);
 			idr.fillArc(coloredarc);
 
-			// Apply Thickness
-			ArcRenderEvent negativarc = new ArcRenderEvent(
-					WrappedStructureSource.createSeriesDataPoint(donutseries,
-							dph));
-
-			negativarc.setOutline(LineAttributesImpl.create(ColorDefinitionImpl
-					.WHITE(), LineStyle.DASHED_LITERAL, 0));
-			negativarc.getOutline().setVisible(false);
-
-			negativarc.setBackground(bgcolor);
-
-			negativarc.setStartAngle(slice.getStartAngle()-5);
-			negativarc.setAngleExtent(slice.getAngleExtent()+10);
-
-			double x = sliceLocation.getX();
-			double y = sliceLocation.getY();
-			Location negativeLoc = sliceLocation;
-			negativeLoc.set(x + frameThickness, y + frameThickness);
-			negativarc.setTopLeft(negativeLoc);
-
-			negativarc.setWidth(slice.getWidth() - 2 * frameThickness);
-			negativarc.setHeight(slice.getHeight() - 2 * frameThickness);
-			negativarc.setStyle(ArcRenderEvent.SECTOR);
-			idr.fillArc(negativarc);
-
 		}
+		
+		
 
 	}
 
