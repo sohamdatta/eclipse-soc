@@ -21,6 +21,7 @@ public class DonutSlice {
 	private double xc;
 	private double yc;
 	private BoundingBox labelBounds;
+	private double frameThickness;
 
 	public DonutSlice(double startAngle, double angleExtent, Fill fillColor,
 			DataPointHints dph, double sliceDepth, double frameThickness) {
@@ -30,13 +31,14 @@ public class DonutSlice {
 		this.setFillColor(fillColor);
 		this.setDataPoint(dph);
 		this.setSliceDepth(sliceDepth);
+		this.setFrameThickness(frameThickness);
 	}
 
 	private void setSliceDepth(double depth) {
 		this.sliceDepth = depth;
 	}
 
-	public double getThickness() {
+	public double getDepth() {
 		return sliceDepth;
 	}
 
@@ -90,8 +92,8 @@ public class DonutSlice {
 			setWidth(getHeight());
 
 			// SETS THE FIX POINT TO THE TOP & LEFT OF THE DONUT
-			setXc(bounds.getLeft()+(bounds.getWidth()-getWidth())/2);
-			setYc(bounds.getTop() + sliceDepth+40);
+			setXc(bounds.getLeft() + (bounds.getWidth() - getWidth()) / 2);
+			setYc(bounds.getTop() + sliceDepth + 40);
 		} else {
 			// SET RADIUS
 			// IF 3D HEIGHT != WIDTH
@@ -103,12 +105,13 @@ public class DonutSlice {
 
 			// SETS THE FIX POINT TO THE TOP & LEFT OF THE DONUT
 			setXc(bounds.getLeft());
-			setYc(bounds.getTop()+ (bounds.getHeight()-getHeight())/2 + sliceDepth);
+			setYc(bounds.getTop() + (bounds.getHeight() - getHeight()) / 2
+					+ sliceDepth);
 		}
 
-//		// SETS THE FIX POINT TO THE TOP & LEFT OF THE DONUT
-//		setXc(bounds.getLeft()+(bounds.getWidth()-getWidth())/2);
-//		setYc(bounds.getTop() + sliceDepth);
+		// // SETS THE FIX POINT TO THE TOP & LEFT OF THE DONUT
+		// setXc(bounds.getLeft()+(bounds.getWidth()-getWidth())/2);
+		// setYc(bounds.getTop() + sliceDepth);
 		// if ( ratio > 0 && width > 0 )
 		// {
 		// if ( height / width > ratio )
@@ -177,5 +180,21 @@ public class DonutSlice {
 
 	public void computeLabelBoundInside() {
 		// TODO
+	}
+
+	public void setFrameThickness(double frameThickness) {
+		if (frameThickness < 0) {
+			this.frameThickness = 0;
+		} else {
+			this.frameThickness = frameThickness;
+		}
+	}
+
+	public double getFrameThickness() {
+		if (frameThickness > width/2) {
+			return width/2 - 40;
+		} else {
+			return frameThickness;
+		}
 	}
 }
