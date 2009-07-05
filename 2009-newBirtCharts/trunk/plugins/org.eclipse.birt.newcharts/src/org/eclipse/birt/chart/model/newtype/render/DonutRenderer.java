@@ -11,6 +11,9 @@ import org.eclipse.birt.chart.device.IDisplayServer;
 import org.eclipse.birt.chart.device.IStructureDefinitionListener;
 import org.eclipse.birt.chart.event.Arc3DRenderEvent;
 import org.eclipse.birt.chart.event.ArcRenderEvent;
+import org.eclipse.birt.chart.event.EventObjectCache;
+import org.eclipse.birt.chart.event.LineRenderEvent;
+import org.eclipse.birt.chart.event.TextRenderEvent;
 import org.eclipse.birt.chart.event.WrappedStructureSource;
 import org.eclipse.birt.chart.exception.ChartException;
 import org.eclipse.birt.chart.factory.RunTimeContext.StateKey;
@@ -27,9 +30,15 @@ import org.eclipse.birt.chart.model.attribute.Location;
 import org.eclipse.birt.chart.model.attribute.Location3D;
 import org.eclipse.birt.chart.model.attribute.Palette;
 import org.eclipse.birt.chart.model.attribute.Position;
+import org.eclipse.birt.chart.model.attribute.Text;
+import org.eclipse.birt.chart.model.attribute.impl.BoundsImpl;
 import org.eclipse.birt.chart.model.attribute.impl.ColorDefinitionImpl;
+import org.eclipse.birt.chart.model.attribute.impl.FontDefinitionImpl;
 import org.eclipse.birt.chart.model.attribute.impl.LineAttributesImpl;
+import org.eclipse.birt.chart.model.attribute.impl.TextAlignmentImpl;
+import org.eclipse.birt.chart.model.attribute.impl.TextImpl;
 import org.eclipse.birt.chart.model.component.Label;
+import org.eclipse.birt.chart.model.component.impl.LabelImpl;
 import org.eclipse.birt.chart.model.newtype.DonutSeries;
 import org.eclipse.birt.chart.plugin.ChartEngineExtensionPlugin;
 import org.eclipse.birt.chart.script.ScriptHandler;
@@ -170,13 +179,24 @@ public class DonutRenderer {
 				DataPointHints dph = dataPoints[i];
 				Fill fillColor = this.seriesPalette.getEntries().get(i);
 
-				// TODO Check pixel
 				double startAngle = lastAngle + MIN_DOUBLE;
 				double angleExtent = (360d / total)
 						* Math.abs(primitiveDoubleValues[i]);
 
 				sliceList[i] = new DonutSlice(startAngle, angleExtent,
 						fillColor, dph, sliceDepth, frameThickness);
+
+				// Check quadrants
+				double angleArea = sliceList[i].getMiddleAngle();
+				if (angleArea < 90) {
+					sliceList[i].setQuadrant(1);
+				} else if (angleArea < 180) {
+					sliceList[i].setQuadrant(2);
+				} else if (angleArea < 270) {
+					sliceList[i].setQuadrant(3);
+				} else {
+					sliceList[i].setQuadrant(4);
+				}
 				lastAngle = lastAngle + angleExtent;
 			}
 
@@ -225,6 +245,10 @@ public class DonutRenderer {
 
 	public void render(IDeviceRenderer idr, Fill bgcolor) throws ChartException {
 
+		double mx;
+		double my;
+		double rad;
+
 		for (int i = 0; i < sliceList.length; i++) {
 
 			DonutSlice slice = sliceList[i];
@@ -236,9 +260,10 @@ public class DonutRenderer {
 			Fill fPaletteEntry = slice.getFillColor();
 			coloredarc.setBackground(fPaletteEntry);
 
-			// TODO Check pixel
-			coloredarc.setStartAngle(slice.getStartAngle() );
-			coloredarc.setAngleExtent(slice.getAngleExtent()-explosion);
+			coloredarc.setStartAngle(slice.getStartAngle()
+					+ slice.getExplosion());
+			coloredarc.setAngleExtent(slice.getAngleExtent() - 2
+					* slice.getExplosion());
 
 			Location sliceLocation = goFactory.createLocation(slice.getXc(),
 					slice.getYc());
@@ -246,19 +271,136 @@ public class DonutRenderer {
 
 			coloredarc.setWidth(slice.getWidth());
 			coloredarc.setHeight(slice.getHeight());
-			coloredarc.setOuterRadius(coloredarc.getWidth()/2);
-			
-			coloredarc.setInnerRadius(coloredarc.getOuterRadius()-slice.getFrameThickness());
-			
-			coloredarc.setOutline(LineAttributesImpl.create(ColorDefinitionImpl
-					.ORANGE(), LineStyle.SOLID_LITERAL, 500));
-			coloredarc.getOutline().setVisible(true);
-			coloredarc.setStyle(ArcRenderEvent.SECTOR);
+
+			coloredarc.setOuterRadius(coloredarc.getWidth() / 2);
+			coloredarc.setInnerRadius(coloredarc.getOuterRadius()
+					- slice.getFrameThickness());
 			idr.fillArc(coloredarc);
 
+			mx = sliceLocation.getX() + slice.getWidth() / 2;
+			my = sliceLocation.getY() + slice.getHeight() / 2;
+			double a = slice.getWidth() / 2;
+			double b = slice.getHeight() / 2;
+			double tickLength = 20.0;
+
+			double u = Math.cos(Math.toRadians(slice.getMiddleAngle())) * a;
+			double v = Math.sin(Math.toRadians(slice.getMiddleAngle())) * b;
+
+			Location loc1 = goFactory.createLocation(mx + u, my - v);
+			// m = dy/dx
+
+			Location loc2 = null;
+			double loc2x = 0;
+			double loc2y = 0;
+			double m = 0;
+			double alpha = 0;
+			int quadrant = slice.getQuadrant();
+			if (quadrant == 1) {
+				m = Math.abs(my - loc1.getY()) / Math.abs(loc1.getX() - mx);
+				alpha = Math.atan(Math.toDegrees(m));
+
+				loc2x = loc1.getX() + Math.cos(Math.toDegrees(alpha))
+						* tickLength;
+				loc2y = loc1.getY() - Math.cos(Math.toDegrees(alpha))
+						* tickLength;
+				loc2 = goFactory.createLocation(loc2x, loc2y);
+
+				renderSliceLabel(idr, loc2, slice);
+			}
+			if (quadrant == 2) {
+				m = Math.abs(my - loc1.getY()) / Math.abs(mx - loc1.getX());
+				alpha = Math.atan(Math.toDegrees(m));
+
+				loc2x = loc1.getX() - Math.cos(Math.toDegrees(alpha))
+						* tickLength;
+				loc2y = loc1.getY() - Math.cos(Math.toDegrees(alpha))
+						* tickLength;
+				loc2 = goFactory.createLocation(loc2x, loc2y);
+				renderSliceLabel(idr, loc2, slice);
+
+			}
+			if (quadrant == 3) {
+				m = Math.abs(loc1.getY() - my) / Math.abs(mx - loc1.getX());
+				alpha = Math.atan(Math.toDegrees(m));
+
+				loc2x = loc1.getX() - Math.cos(Math.toDegrees(alpha))
+						* tickLength;
+				loc2y = loc1.getY() + Math.cos(Math.toDegrees(alpha))
+						* tickLength;
+				loc2 = goFactory.createLocation(loc2x, loc2y);
+				renderSliceLabel(idr, loc2, slice);
+
+			}
+			if (quadrant == 4) {
+				m = Math.abs(loc1.getY() - my) / Math.abs(loc1.getX() - mx);
+				alpha = Math.atan(Math.toDegrees(m));
+
+				loc2x = loc1.getX() + Math.cos(Math.toDegrees(alpha))
+						* tickLength;
+				loc2y = loc1.getY() + Math.cos(Math.toDegrees(alpha))
+						* tickLength;
+				loc2 = goFactory.createLocation(loc2x, loc2y);
+				renderSliceLabel(idr, loc2, slice);
+
+			}
+			LineRenderEvent lre = new LineRenderEvent(WrappedStructureSource
+					.createSeriesDataPoint(donutseries, dph));
+			lre.setStart(loc1);
+			lre.setEnd(loc2);
+			lre.setLineAttributes(LineAttributesImpl.create(ColorDefinitionImpl
+					.BLACK(), LineStyle.SOLID_LITERAL, 1));
+			idr.drawLine(lre);
 		}
-		
-		
+	}
+
+	private void renderSliceLabel(IDeviceRenderer idr, Location loc2,
+			DonutSlice slice) throws ChartException {
+		DataPointHints dph = slice.getDataPoint();
+		LineRenderEvent lre = new LineRenderEvent(WrappedStructureSource
+				.createSeriesDataPoint(donutseries, dph));
+		lre.setStart(loc2);
+
+		double linelength = Math.abs(loc2.getX() - slice.getLabelBound());
+		Label laText = LabelImpl.create();
+		TextRenderEvent tre = (TextRenderEvent) ((EventObjectCache) idr)
+				.getEventObject(WrappedStructureSource.createSeriesTitle(
+						donutseries, laText), TextRenderEvent.class);
+		Text txt;
+		try {
+			double text = Double.parseDouble(dph.getDisplayValue());
+			String strText = "" + text;
+			txt = TextImpl.create(strText);
+		} catch (Exception e) {
+			txt = TextImpl.create(dph.getDisplayValue()); 
+		}
+		txt.setColor(ColorDefinitionImpl.create(0, 0, 0));
+		txt.setFont(FontDefinitionImpl.create("Arial", 10, false, false, false,
+				false, false, 0.0, TextAlignmentImpl.create()));
+		laText.setCaption(txt);
+		tre.setLabel(laText);
+		tre.setBlockAlignment(null);
+		tre.setAction(TextRenderEvent.RENDER_TEXT_IN_BLOCK);
+
+		if (slice.getQuadrant() == 1 || slice.getQuadrant() == 4) {
+			Location loc3 = goFactory.createLocation(loc2.getX() + linelength,
+					loc2.getY());
+			lre.setEnd(loc3);
+			lre.setLineAttributes(LineAttributesImpl.create(ColorDefinitionImpl
+					.BLACK(), LineStyle.SOLID_LITERAL, 1));
+			idr.drawLine(lre);
+			tre.setBlockBounds(BoundsImpl.create(loc3.getX(), loc3.getY() - 25,
+					50, 50));
+		} else if (slice.getQuadrant() == 2 || slice.getQuadrant() == 3) {
+			Location loc3 = goFactory.createLocation(loc2.getX() - linelength,
+					loc2.getY());
+			lre.setEnd(loc3);
+			lre.setLineAttributes(LineAttributesImpl.create(ColorDefinitionImpl
+					.BLACK(), LineStyle.SOLID_LITERAL, 1));
+			idr.drawLine(lre);
+			tre.setBlockBounds(BoundsImpl.create(loc3.getX() - 50,
+					loc3.getY() - 25, 50, 50));
+		}
+		idr.drawText(tre);
 
 	}
 
@@ -396,58 +538,68 @@ public class DonutRenderer {
 		}
 	}
 
-	private Insets adjust(Bounds cellBounds, Bounds boAdjusted,
-			Insets trimContainer) throws ChartException {
-		// boAdjusted = initial 0 Values
-		// Set slice.width, slice.height, slice.x, slice.y
-		computeSliceLabelBounds(boAdjusted, true);
-
-		trimContainer.set(0, 0, 0, 0);
-		double dDelta = 0;
-		for (DonutSlice slice : sliceList) {
-			BoundingBox sliceLabelBounds = slice.getLabelBound();
-
-			if (sliceLabelBounds.getLeft() < cellBounds.getLeft()) {
-				dDelta = cellBounds.getLeft() - sliceLabelBounds.getLeft();
-				if (cellBounds.getLeft() < dDelta) {
-					cellBounds.setLeft(dDelta);
-				}
-			}
-			if (sliceLabelBounds.getTop() < cellBounds.getTop()) {
-				dDelta = cellBounds.getTop() - sliceLabelBounds.getTop();
-				if (trimContainer.getTop() < dDelta) {
-					trimContainer.setTop(dDelta);
-				}
-			}
-			if (sliceLabelBounds.getLeft() + sliceLabelBounds.getWidth() > cellBounds
-					.getLeft()
-					+ cellBounds.getWidth()) {
-				dDelta = sliceLabelBounds.getLeft()
-						+ sliceLabelBounds.getWidth() - cellBounds.getLeft()
-						- cellBounds.getWidth();
-				if (trimContainer.getRight() < dDelta) {
-					trimContainer.setRight(dDelta);
-				}
-			}
-			if (sliceLabelBounds.getTop() + sliceLabelBounds.getHeight() > cellBounds
-					.getTop()
-					+ cellBounds.getHeight()) {
-				dDelta = sliceLabelBounds.getTop()
-						+ sliceLabelBounds.getHeight() - cellBounds.getTop()
-						- cellBounds.getHeight();
-				if (trimContainer.getBottom() < dDelta) {
-					trimContainer.setBottom(dDelta);
-				}
-			}
-		}
-		return trimContainer;
-	}
+	// private Insets adjust(Bounds cellBounds, Bounds boAdjusted,
+	// Insets trimContainer) throws ChartException {
+	// // boAdjusted = initial 0 Values
+	// // Set slice.width, slice.height, slice.x, slice.y
+	// computeSliceLabelBounds(boAdjusted, true);
+	//
+	// trimContainer.set(0, 0, 0, 0);
+	// double dDelta = 0;
+	// for (DonutSlice slice : sliceList) {
+	// BoundingBox sliceLabelBounds = slice.getLabelBound();
+	//
+	// if (sliceLabelBounds.getLeft() < cellBounds.getLeft()) {
+	// dDelta = cellBounds.getLeft() - sliceLabelBounds.getLeft();
+	// if (cellBounds.getLeft() < dDelta) {
+	// cellBounds.setLeft(dDelta);
+	// }
+	// }
+	// if (sliceLabelBounds.getTop() < cellBounds.getTop()) {
+	// dDelta = cellBounds.getTop() - sliceLabelBounds.getTop();
+	// if (trimContainer.getTop() < dDelta) {
+	// trimContainer.setTop(dDelta);
+	// }
+	// }
+	// if (sliceLabelBounds.getLeft() + sliceLabelBounds.getWidth() > cellBounds
+	// .getLeft()
+	// + cellBounds.getWidth()) {
+	// dDelta = sliceLabelBounds.getLeft()
+	// + sliceLabelBounds.getWidth() - cellBounds.getLeft()
+	// - cellBounds.getWidth();
+	// if (trimContainer.getRight() < dDelta) {
+	// trimContainer.setRight(dDelta);
+	// }
+	// }
+	// if (sliceLabelBounds.getTop() + sliceLabelBounds.getHeight() > cellBounds
+	// .getTop()
+	// + cellBounds.getHeight()) {
+	// dDelta = sliceLabelBounds.getTop()
+	// + sliceLabelBounds.getHeight() - cellBounds.getTop()
+	// - cellBounds.getHeight();
+	// if (trimContainer.getBottom() < dDelta) {
+	// trimContainer.setBottom(dDelta);
+	// }
+	// }
+	// }
+	// return trimContainer;
+	// }
 
 	private void computeSliceLabelBounds(Bounds cellBounds, boolean isOutside)
 			throws ChartException {
-		// TODO Auto-generated method stub
+
+		double dataPointLabelOffset = 50;
+		cellBounds.setWidth(cellBounds.getWidth() - 2 * leaderLinesLength - 2
+				* dataPointLabelOffset);
+		cellBounds.setLeft(cellBounds.getLeft() + leaderLinesLength
+				+ dataPointLabelOffset);
+
 		for (DonutSlice slice : sliceList) {
 			slice.setBounds(cellBounds);
+			// FIRST SET LABELBOUNDS _ THEN COMPUTE CELLBOUNDS AS RESULT OF
+			// CELLBOUNDS-SLICELABELBOUNDS
+			slice.computeLabelBoundOutside(leaderLineStyle, leaderLinesLength,
+					null, dataPointLabelOffset);
 		}
 
 		// if (!isOutside) {

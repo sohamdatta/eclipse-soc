@@ -9,6 +9,9 @@ import org.eclipse.birt.chart.model.attribute.LeaderLineStyle;
 
 public class DonutSlice {
 
+	
+	private final double LEADER_MIN_TICK = 10.0;
+	
 	private DataPointHints dataPoint;
 	private Fill fillColor;
 	private double angleExtent;
@@ -20,8 +23,12 @@ public class DonutSlice {
 	private double height;
 	private double xc;
 	private double yc;
-	private BoundingBox labelBounds;
+	private double labelPositionX;
 	private double frameThickness;
+
+	private int quadrant;
+
+	private LeaderLineStyle leaderLineStyle;
 
 	public DonutSlice(double startAngle, double angleExtent, Fill fillColor,
 			DataPointHints dph, double sliceDepth, double frameThickness) {
@@ -44,6 +51,10 @@ public class DonutSlice {
 
 	public void setExplosion(int explosion) {
 		this.explosion = explosion;
+	}
+	
+	public double getExplosion(){
+		return explosion;
 	}
 
 	public void setDataPoint(DataPointHints dataPoint) {
@@ -93,7 +104,7 @@ public class DonutSlice {
 
 			// SETS THE FIX POINT TO THE TOP & LEFT OF THE DONUT
 			setXc(bounds.getLeft() + (bounds.getWidth() - getWidth()) / 2);
-			setYc(bounds.getTop() + sliceDepth + 40);
+			setYc(bounds.getTop() + sliceDepth + 20);
 		} else {
 			// SET RADIUS
 			// IF 3D HEIGHT != WIDTH
@@ -130,6 +141,23 @@ public class DonutSlice {
 		}
 	}
 
+	public double getMiddleAngle(){
+		return (getStartAngle()+getStartAngle()+getAngleExtent())/2;
+	}
+	
+	public void setQuadrant(int i){
+		/*
+		 * 2 | 1
+		 * -----
+		 * 3 | 4
+		 */
+		this.quadrant = i;
+	}
+	
+	public int getQuadrant(){
+		return quadrant;
+	}
+	
 	public void setXc(double xc) {
 		this.xc = xc;
 	}
@@ -163,19 +191,35 @@ public class DonutSlice {
 		return height;
 	}
 
-	public BoundingBox getLabelBound() {
-		return labelBounds;
+	public double getLabelBound() {
+		return labelPositionX;
 	}
 
-	public void setLabelBound(BoundingBox labelBound) {
-		this.labelBounds = labelBound;
+	public void setLabelBound(double labelPositionX) {
+		this.labelPositionX = labelPositionX;
 	}
 
 	public <OutsideLabelBoundCache> void computeLabelBoundOutside(
 			LeaderLineStyle leaderLineStyle, double leaderLinesLength,
-			OutsideLabelBoundCache bbCache) throws ChartException {
-		// TODO Auto-generated method stub
+			OutsideLabelBoundCache bbCache,double offset) throws ChartException {
 
+		if (getQuadrant()==1 || getQuadrant()==4){
+			setLabelBound(offset+2*leaderLinesLength+getWidth());
+		}
+		if (getQuadrant()==2 || getQuadrant()==3){
+			setLabelBound(offset);
+		}
+		
+		setLeaderLineStyle(leaderLineStyle);
+		
+	}
+
+	private void setLeaderLineStyle(LeaderLineStyle leaderLineStyle) {
+		this.leaderLineStyle = leaderLineStyle;
+	}
+	
+	public LeaderLineStyle getLeaderLineStyle(){
+		return leaderLineStyle;
 	}
 
 	public void computeLabelBoundInside() {
@@ -192,7 +236,7 @@ public class DonutSlice {
 
 	public double getFrameThickness() {
 		if (frameThickness > width/2) {
-			return width/2 - 40;
+			return width/2 - 80;
 		} else {
 			return frameThickness;
 		}
