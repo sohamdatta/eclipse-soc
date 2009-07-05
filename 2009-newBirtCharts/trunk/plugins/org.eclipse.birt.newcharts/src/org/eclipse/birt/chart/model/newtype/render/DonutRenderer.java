@@ -11,6 +11,7 @@ import org.eclipse.birt.chart.device.IDisplayServer;
 import org.eclipse.birt.chart.device.IStructureDefinitionListener;
 import org.eclipse.birt.chart.event.Arc3DRenderEvent;
 import org.eclipse.birt.chart.event.ArcRenderEvent;
+import org.eclipse.birt.chart.event.AreaRenderEvent;
 import org.eclipse.birt.chart.event.EventObjectCache;
 import org.eclipse.birt.chart.event.LineRenderEvent;
 import org.eclipse.birt.chart.event.TextRenderEvent;
@@ -245,25 +246,30 @@ public class DonutRenderer {
 
 	public void render(IDeviceRenderer idr, Fill bgcolor) throws ChartException {
 
-		double mx;
-		double my;
-		double rad;
-
 		for (int i = 0; i < sliceList.length; i++) {
 
 			DonutSlice slice = sliceList[i];
 			DataPointHints dph = slice.getDataPoint();
-			ArcRenderEvent coloredarc = new ArcRenderEvent(
+			Arc3DRenderEvent coloredarc = new Arc3DRenderEvent(
 					WrappedStructureSource.createSeriesDataPoint(donutseries,
 							dph));
 
 			Fill fPaletteEntry = slice.getFillColor();
 			coloredarc.setBackground(fPaletteEntry);
-
+			coloredarc.setOutline(LineAttributesImpl.create(ColorDefinitionImpl
+					.BLACK(), LineStyle.SOLID_LITERAL, 2));
+			
+			
+			coloredarc.getOutline().setVisible(true);
+			coloredarc.getOutline().setColor(ColorDefinitionImpl.BLACK());
+			coloredarc.getOutline().setThickness(3);
+			
+			
+			
 			coloredarc.setStartAngle(slice.getStartAngle()
-					+ slice.getExplosion());
-			coloredarc.setAngleExtent(slice.getAngleExtent() - 2
-					* slice.getExplosion());
+					+ slice.getExplosion() / 2);
+			coloredarc.setAngleExtent(slice.getAngleExtent()
+					- slice.getExplosion());
 
 			Location sliceLocation = goFactory.createLocation(slice.getXc(),
 					slice.getYc());
@@ -271,86 +277,99 @@ public class DonutRenderer {
 
 			coloredarc.setWidth(slice.getWidth());
 			coloredarc.setHeight(slice.getHeight());
+			coloredarc.setDepth(50);
 
 			coloredarc.setOuterRadius(coloredarc.getWidth() / 2);
 			coloredarc.setInnerRadius(coloredarc.getOuterRadius()
 					- slice.getFrameThickness());
 			idr.fillArc(coloredarc);
-
-			mx = sliceLocation.getX() + slice.getWidth() / 2;
-			my = sliceLocation.getY() + slice.getHeight() / 2;
-			double a = slice.getWidth() / 2;
-			double b = slice.getHeight() / 2;
-			double tickLength = 20.0;
-
-			double u = Math.cos(Math.toRadians(slice.getMiddleAngle())) * a;
-			double v = Math.sin(Math.toRadians(slice.getMiddleAngle())) * b;
-
-			Location loc1 = goFactory.createLocation(mx + u, my - v);
-			// m = dy/dx
-
-			Location loc2 = null;
-			double loc2x = 0;
-			double loc2y = 0;
-			double m = 0;
-			double alpha = 0;
-			int quadrant = slice.getQuadrant();
-			if (quadrant == 1) {
-				m = Math.abs(my - loc1.getY()) / Math.abs(loc1.getX() - mx);
-				alpha = Math.atan(Math.toDegrees(m));
-
-				loc2x = loc1.getX() + Math.cos(Math.toDegrees(alpha))
-						* tickLength;
-				loc2y = loc1.getY() - Math.cos(Math.toDegrees(alpha))
-						* tickLength;
-				loc2 = goFactory.createLocation(loc2x, loc2y);
-
-				renderSliceLabel(idr, loc2, slice);
-			}
-			if (quadrant == 2) {
-				m = Math.abs(my - loc1.getY()) / Math.abs(mx - loc1.getX());
-				alpha = Math.atan(Math.toDegrees(m));
-
-				loc2x = loc1.getX() - Math.cos(Math.toDegrees(alpha))
-						* tickLength;
-				loc2y = loc1.getY() - Math.cos(Math.toDegrees(alpha))
-						* tickLength;
-				loc2 = goFactory.createLocation(loc2x, loc2y);
-				renderSliceLabel(idr, loc2, slice);
-
-			}
-			if (quadrant == 3) {
-				m = Math.abs(loc1.getY() - my) / Math.abs(mx - loc1.getX());
-				alpha = Math.atan(Math.toDegrees(m));
-
-				loc2x = loc1.getX() - Math.cos(Math.toDegrees(alpha))
-						* tickLength;
-				loc2y = loc1.getY() + Math.cos(Math.toDegrees(alpha))
-						* tickLength;
-				loc2 = goFactory.createLocation(loc2x, loc2y);
-				renderSliceLabel(idr, loc2, slice);
-
-			}
-			if (quadrant == 4) {
-				m = Math.abs(loc1.getY() - my) / Math.abs(loc1.getX() - mx);
-				alpha = Math.atan(Math.toDegrees(m));
-
-				loc2x = loc1.getX() + Math.cos(Math.toDegrees(alpha))
-						* tickLength;
-				loc2y = loc1.getY() + Math.cos(Math.toDegrees(alpha))
-						* tickLength;
-				loc2 = goFactory.createLocation(loc2x, loc2y);
-				renderSliceLabel(idr, loc2, slice);
-
-			}
-			LineRenderEvent lre = new LineRenderEvent(WrappedStructureSource
-					.createSeriesDataPoint(donutseries, dph));
-			lre.setStart(loc1);
-			lre.setEnd(loc2);
-			lre.setLineAttributes(LineAttributesImpl.create(ColorDefinitionImpl
-					.BLACK(), LineStyle.SOLID_LITERAL, 1));
-			idr.drawLine(lre);
+			
+			drawLabel(slice, sliceLocation, idr);
 		}
+	}
+
+	private void drawLabel(DonutSlice slice, Location sliceLocation,
+			IDeviceRenderer idr) throws ChartException {
+
+		DataPointHints dph = slice.getDataPoint();
+
+		double tickLength = 20.0;
+		double mx = sliceLocation.getX() + slice.getWidth() / 2;
+		double my = sliceLocation.getY() + slice.getHeight() / 2;
+		double a = slice.getWidth() / 2;
+		double b = slice.getHeight() / 2;
+
+		double u = Math.cos(Math.toRadians(slice.getMiddleAngle())) * a;
+		double v = Math.sin(Math.toRadians(slice.getMiddleAngle())) * b;
+
+		Location loc1 = goFactory.createLocation(mx + u, my - v);
+		double deltaY = my - loc1.getY();
+		double deltaX = loc1.getX() - mx;
+		double m = deltaY / deltaX;
+
+		Location loc3 = goFactory.createLocation(0, 0);
+		double alpha = Math.atan(m);
+
+		double loc3x;
+		double loc3y;
+		if (slice.getQuadrant() == 1 || slice.getQuadrant() == 4) {
+			loc3x = loc1.getX() + Math.cos(alpha) * tickLength;
+			loc3y = loc1.getY() - Math.sin(alpha) * tickLength;
+		} else {
+			loc3x = loc1.getX() - Math.cos(alpha) * tickLength;
+			loc3y = loc1.getY() + Math.sin(alpha) * tickLength;
+		}
+		loc3.setX(loc3x);
+		loc3.setY(loc3y);
+
+		LineRenderEvent debug = new LineRenderEvent(WrappedStructureSource
+				.createSeriesDataPoint(donutseries, dph));
+		debug.setStart(loc1);
+
+		debug.setEnd(loc3);
+		debug.setLineAttributes(leaderLineAttributes);
+		idr.drawLine(debug);
+
+		renderSliceLabel(idr, loc3, slice);
+
+	}
+
+	private void drawDebugLine(IDeviceRenderer idr, Location loc1, double mx,
+			double my, DataPointHints dph, Fill fill, int quadrant)
+			throws ChartException {
+
+		LineRenderEvent lre = new LineRenderEvent(WrappedStructureSource
+				.createSeriesDataPoint(donutseries, dph));
+		lre.setStart(loc1);
+
+		Location loc2 = goFactory.createLocation(mx, my);
+		lre.setEnd(loc2);
+		lre.setLineAttributes(LineAttributesImpl.create(ColorDefinitionImpl
+				.BLACK(), LineStyle.SOLID_LITERAL, 1));
+		idr.drawLine(lre);
+
+		double deltaY = my - loc1.getY();
+		double deltaX = loc1.getX() - mx;
+		double m = deltaY / deltaX;
+
+		System.out.println(fill.toString() + " :" + m);
+
+		Location loc3 = goFactory.createLocation(0, 0);
+		double alpha = Math.atan(m);
+
+		double loc3x = loc1.getX() + Math.cos(alpha) * 30;
+		double loc3y = loc1.getY() - Math.sin(alpha) * 30;
+		loc3.setX(loc3x);
+		loc3.setY(loc3y);
+
+		LineRenderEvent debug = new LineRenderEvent(WrappedStructureSource
+				.createSeriesDataPoint(donutseries, dph));
+		debug.setStart(loc1);
+
+		debug.setEnd(loc3);
+		debug.setLineAttributes(leaderLineAttributes);
+		idr.drawLine(debug);
+
 	}
 
 	private void renderSliceLabel(IDeviceRenderer idr, Location loc2,
@@ -371,7 +390,7 @@ public class DonutRenderer {
 			String strText = "" + text;
 			txt = TextImpl.create(strText);
 		} catch (Exception e) {
-			txt = TextImpl.create(dph.getDisplayValue()); 
+			txt = TextImpl.create(dph.getDisplayValue());
 		}
 		txt.setColor(ColorDefinitionImpl.create(0, 0, 0));
 		txt.setFont(FontDefinitionImpl.create("Arial", 10, false, false, false,
@@ -385,8 +404,7 @@ public class DonutRenderer {
 			Location loc3 = goFactory.createLocation(loc2.getX() + linelength,
 					loc2.getY());
 			lre.setEnd(loc3);
-			lre.setLineAttributes(LineAttributesImpl.create(ColorDefinitionImpl
-					.BLACK(), LineStyle.SOLID_LITERAL, 1));
+			lre.setLineAttributes(leaderLineAttributes);
 			idr.drawLine(lre);
 			tre.setBlockBounds(BoundsImpl.create(loc3.getX(), loc3.getY() - 25,
 					50, 50));
@@ -394,8 +412,7 @@ public class DonutRenderer {
 			Location loc3 = goFactory.createLocation(loc2.getX() - linelength,
 					loc2.getY());
 			lre.setEnd(loc3);
-			lre.setLineAttributes(LineAttributesImpl.create(ColorDefinitionImpl
-					.BLACK(), LineStyle.SOLID_LITERAL, 1));
+			lre.setLineAttributes(leaderLineAttributes);
 			idr.drawLine(lre);
 			tre.setBlockBounds(BoundsImpl.create(loc3.getX() - 50,
 					loc3.getY() - 25, 50, 50));

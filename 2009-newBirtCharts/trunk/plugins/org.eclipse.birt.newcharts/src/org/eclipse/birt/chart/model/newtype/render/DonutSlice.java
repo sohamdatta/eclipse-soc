@@ -1,6 +1,5 @@
 package org.eclipse.birt.chart.model.newtype.render;
 
-import org.eclipse.birt.chart.computation.BoundingBox;
 import org.eclipse.birt.chart.computation.DataPointHints;
 import org.eclipse.birt.chart.exception.ChartException;
 import org.eclipse.birt.chart.model.attribute.Bounds;
@@ -9,9 +8,6 @@ import org.eclipse.birt.chart.model.attribute.LeaderLineStyle;
 
 public class DonutSlice {
 
-	
-	private final double LEADER_MIN_TICK = 10.0;
-	
 	private DataPointHints dataPoint;
 	private Fill fillColor;
 	private double angleExtent;
@@ -25,6 +21,7 @@ public class DonutSlice {
 	private double yc;
 	private double labelPositionX;
 	private double frameThickness;
+	double MIN_FRAMETHICKNESS = 80;
 
 	private int quadrant;
 
@@ -211,7 +208,6 @@ public class DonutSlice {
 		}
 		
 		setLeaderLineStyle(leaderLineStyle);
-		
 	}
 
 	private void setLeaderLineStyle(LeaderLineStyle leaderLineStyle) {
@@ -220,10 +216,6 @@ public class DonutSlice {
 	
 	public LeaderLineStyle getLeaderLineStyle(){
 		return leaderLineStyle;
-	}
-
-	public void computeLabelBoundInside() {
-		// TODO
 	}
 
 	public void setFrameThickness(double frameThickness) {
@@ -236,7 +228,7 @@ public class DonutSlice {
 
 	public double getFrameThickness() {
 		if (frameThickness > width/2) {
-			return width/2 - 80;
+			return width/2 - MIN_FRAMETHICKNESS;
 		} else {
 			return frameThickness;
 		}
