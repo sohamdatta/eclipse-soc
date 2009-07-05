@@ -4,6 +4,7 @@ import org.eclipse.birt.chart.model.Chart;
 import org.eclipse.birt.chart.model.ChartWithAxes;
 import org.eclipse.birt.chart.model.ChartWithoutAxes;
 import org.eclipse.birt.chart.model.attribute.ChartDimension;
+import org.eclipse.birt.chart.model.attribute.ColorDefinition;
 import org.eclipse.birt.chart.model.attribute.Fill;
 import org.eclipse.birt.chart.model.attribute.FontDefinition;
 import org.eclipse.birt.chart.model.attribute.LegendItemType;
@@ -49,21 +50,21 @@ public class NewChartsView extends ViewPart {
 
   private void createChartFolder( Composite parent ) {
     tabFolder = new TabFolder( parent, SWT.TOP );
-    ChartCanvas pieChart = new ChartCanvas( tabFolder, SWT.NONE );
-    pieChart.setChart( createPieChart() );
-    TabItem pieTabItem = new TabItem( tabFolder, SWT.NONE );
-    pieTabItem.setText( "Pie Chart" );
-    pieTabItem.setControl( pieChart );
-    // ChartCanvas barChart = new ChartCanvas( tabFolder, SWT.NONE );
-    // barChart.setChart( createBarChart() );
-    // TabItem barTabItem = new TabItem( tabFolder, SWT.NONE );
-    // barTabItem.setText( "Bar Chart" );
-    // barTabItem.setControl( barChart );
     ChartCanvas donutChart = new ChartCanvas( tabFolder, SWT.NONE );
     donutChart.setChart( createDonutChart() );
     TabItem donutTabItem = new TabItem( tabFolder, SWT.NONE );
     donutTabItem.setText( "Donut Chart" );
     donutTabItem.setControl( donutChart );
+    ChartCanvas pieChart = new ChartCanvas( tabFolder, SWT.NONE );
+    pieChart.setChart( createPieChart() );
+    TabItem pieTabItem = new TabItem( tabFolder, SWT.NONE );
+    pieTabItem.setText( "Pie Chart" );
+    pieTabItem.setControl( pieChart );
+    ChartCanvas barChart = new ChartCanvas( tabFolder, SWT.NONE );
+    barChart.setChart( createBarChart() );
+    TabItem barTabItem = new TabItem( tabFolder, SWT.NONE );
+    barTabItem.setText( "Bar Chart" );
+    barTabItem.setControl( barChart );
   }
 
   private Chart createDonutChart() {
@@ -79,38 +80,44 @@ public class NewChartsView extends ViewPart {
     TextDataSet categoryValues = TextDataSetImpl.create( new String[]{
       "category1", "category2", "category3", "category4"} );//$NON-NLS-1$ //$NON-NLS-2$
     NumberDataSet seriesOneValues = NumberDataSetImpl.create( new double[]{
-      50, 50, 50, 50
+      75, 65, 90, 20
     } );
     // Base Series
-    Series seCategory = SeriesImpl.create();
-    seCategory.setDataSet( categoryValues );
     SeriesDefinition sd = SeriesDefinitionImpl.create();
-    chart.getSeriesDefinitions().add( sd );
     sd.getSeriesPalette().shift( 0 );
-    sd.getSeries().add( seCategory );
+    chart.getSeriesDefinitions().add( sd );
+
+    Series seBase = SeriesImpl.create();
+    seBase.setDataSet( categoryValues );
+    sd.getSeries().add( seBase );
     // new colors
     final Fill[] fiaBase = {
       ColorDefinitionImpl.BLUE(),
-      ColorDefinitionImpl.GREY(),
-      ColorDefinitionImpl.GREEN(),
-      ColorDefinitionImpl.BLACK()
+      ColorDefinitionImpl.RED(),
+      ColorDefinitionImpl.BLACK(),
+      ColorDefinitionImpl.ORANGE()
     };
     sd.getSeriesPalette().getEntries().clear();
     for( int i = 0; i < fiaBase.length; i++ ) {
       sd.getSeriesPalette().getEntries().add( fiaBase[ i ] );
     }
-    // Add new Donut Series
-    DonutSeries seDonut = ( DonutSeries )DonutSeriesImpl.create();
-    seDonut.setDataSet( seriesOneValues );
-    seDonut.getLabel().setVisible( false );
-    // Test properties
-    seDonut.setRotation( 20 );
-    seDonut.setExplosion( 40 );
-    seDonut.setThickness( 30 );
-    seDonut.getLeaderLineAttributes().setVisible( true );
     
+    // Add new Donut Series
     SeriesDefinition sdCity = SeriesDefinitionImpl.create();
     sd.getSeriesDefinitions().add( sdCity );
+    DonutSeries seDonut = ( DonutSeries )DonutSeriesImpl.create();
+    seDonut.setDataSet( seriesOneValues );
+    seDonut.getLabel().setVisible( true );
+    // Test properties
+    seDonut.setRotation( 10 );
+    seDonut.setExplosion(5 );
+    seDonut.setThickness( 30 );
+    seDonut.getLeaderLineAttributes().setVisible( true );
+    seDonut.getLeaderLineAttributes().setThickness( 1 );
+    seDonut.getLeaderLineAttributes().setColor( ColorDefinitionImpl.BLACK() );
+    seDonut.getLeaderLineAttributes().setStyle( LineStyle.SOLID_LITERAL );
+    seDonut.setLeaderLineLength( 70 );
+    
     sdCity.getSeries().add( seDonut );
     return chart;
   }
@@ -148,8 +155,11 @@ public class NewChartsView extends ViewPart {
     }
     // 3) Orthogonal Series
     PieSeries sePie = ( PieSeries )PieSeriesImpl.create();
+    sePie.getTitle().getCaption().setColor( ColorDefinitionImpl.BLACK() );
+    sePie.setTitlePosition( Position.ABOVE_LITERAL );
+    sePie.getTitle().setVisible( true );
     sePie.setDataSet( seriesOneValues );
-    sePie.setExplosion( 5 );
+    sePie.setExplosion( 50 );
     sePie.setRotation( 40 );
     sePie.getLabel().setVisible( true );
     sePie.getLabel().getCaption().setValue( "LABEL" );
@@ -159,7 +169,6 @@ public class NewChartsView extends ViewPart {
     sePie.getLeaderLineAttributes().setColor( ColorDefinitionImpl.CYAN() );
     sePie.getLeaderLineAttributes().setStyle( LineStyle.DOTTED_LITERAL );
     
-    System.out.println( sePie.getLeaderLineLength() );
     SeriesDefinition sdCity = SeriesDefinitionImpl.create();
     sd.getSeriesDefinitions().add( sdCity );
     sdCity.getSeries().add( sePie );
@@ -168,7 +177,7 @@ public class NewChartsView extends ViewPart {
 
   private Chart createBarChart() {
     ChartWithAxes chart = ChartWithAxesImpl.create();
-    chart.setDimension( ChartDimension.TWO_DIMENSIONAL_WITH_DEPTH_LITERAL );
+    chart.setDimension( ChartDimension.TWO_DIMENSIONAL_LITERAL );
     Plot plot = chart.getPlot();
     plot.setBackground( ColorDefinitionImpl.WHITE() );
     plot.getClientArea().setBackground( ColorDefinitionImpl.WHITE() );
