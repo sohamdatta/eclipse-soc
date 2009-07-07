@@ -24,17 +24,24 @@ public static void main (String [] args) {
 
     Grid grid = new Grid(shell,SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL);
     grid.setHeaderVisible(true);
+    grid.setCellSelectionEnabled(true);
     GridColumn column = new GridColumn(grid,SWT.NONE);
     column.setText("Column 1");
     column.setWidth(100);
     GridColumn column2 = new GridColumn(grid,SWT.CHECK | SWT.CENTER);
     column2.setText("Column 2");
     column2.setWidth(100);
+    GridColumn column3 = new GridColumn(grid,SWT.CENTER);
+    column3.setText("Column 3");
+    column3.setWidth(100);
     GridItem item1 = new GridItem(grid,SWT.NONE);
     item1.setText("First Item");
     item1.setChecked(1,true);
+    item1.setColumnSpan(1, 1);
     GridItem item2 = new GridItem(grid,SWT.NONE);
     item2.setText("Second Item");
+    item2.setAreaSpan(1, 1, 1);
+    item2.setChecked(1,true);
     GridItem item3 = new GridItem(grid,SWT.NONE);
     item3.setText("Third Item");
     
