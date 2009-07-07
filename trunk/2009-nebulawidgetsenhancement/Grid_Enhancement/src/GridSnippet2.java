@@ -26,14 +26,10 @@ public static void main (String [] args) {
     grid.setHeaderVisible(true);
     grid.setCellSelectionEnabled(true);
     grid.setRowHeaderVisible(true);
-    //grid.setRowsResizeable(true);
-    grid.setDragDetect(true);
-    grid.setFooterVisible(true);
     GridColumn column = new GridColumn(grid,SWT.NONE);
     column.setText("Column 1");
     column.setWidth(100);
     column.setMoveable(true);
-    //column.setCellSelectionEnabled(false);
     GridColumn column2 = new GridColumn(grid,SWT.NONE);
     column2.setText("Column 2");
     column2.setWidth(100);
@@ -44,6 +40,7 @@ public static void main (String [] args) {
     GridColumn column4 = new GridColumn(grid,SWT.NONE);
     column4.setText("Column 4");
     column4.setWidth(100);
+    column4.setMoveable(true);
     GridColumn column5 = new GridColumn(grid,SWT.NONE);
     column5.setText("Column 5");
     column5.setWidth(100);
@@ -51,15 +48,13 @@ public static void main (String [] args) {
     item1.setText("First Item");
     item1.setText(1,"xxxxxxx");
     GridItem item2 = new GridItem(grid,SWT.NONE);
-    item2.setText(0,"This cell spans both columns");
+    item2.setText(3,"This cell spans both columns");
     item1.setText(1,"xxxxxxx");
-    //item2.setColumnSpan(0,1);
-    //item2.setColumnSpan(3, 1);
+    item1.setAreaSpan(0, 0, 3);
     item1.setAreaSpan(1, 1, 2);//new added test code
-    item2.setAreaSpan(3, 1, 1);
+    item1.setAreaSpan(3, 1, 1);
     GridItem item3 = new GridItem(grid,SWT.NONE);
     item3.setText("Third Item");
-    //item3.setAreaSpan(3, 1, 0);
     item1.setText(1,"xxxxxxx");
     
     GridItem item4 = new GridItem(grid,SWT.NONE);
