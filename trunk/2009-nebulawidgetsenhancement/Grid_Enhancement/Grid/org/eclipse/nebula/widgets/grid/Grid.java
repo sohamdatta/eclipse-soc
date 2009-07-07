@@ -1236,7 +1236,9 @@ public class Grid extends Canvas
     				Rectangle area = (Rectangle)rect;
     				if ( area.contains(columnIndex,rowIndex))//click in a valid cell
     				{
-    					if(!getDisplayPixelBlock(area).contains(point)) break; 
+    					if(!getDisplayPixelBlock(area).contains(point)) {
+    						break; 
+    					}
     					column = (GridColumn)displayOrderedColumns.get(area.x);
     					break;
     				}
@@ -1834,8 +1836,8 @@ public class Grid extends Canvas
     	Rectangle rect = new Rectangle(0,0,0,0);
     	GridColumn column = (GridColumn)columns.get(cellSpans.x);
     	GridItem item = (GridItem) items.get(cellSpans.y);
-    	rect.x = column.getBounds().x;
-    	rect.y = column.getBounds().y + column.getBounds().height;
+    	rect.x = item.getBounds(cellSpans.x).x;
+    	rect.y = item.getBounds(cellSpans.x).y;
     	int displayOrderIndex = displayOrderedColumns.indexOf(column);
     	boolean hidden = false;//this block may be covered by ahead columns
     	if(displayOrderIndex>0)
