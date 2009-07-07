@@ -6,12 +6,13 @@ import org.eclipse.nebula.widgets.grid.GridColumn;
 import org.eclipse.nebula.widgets.grid.GridColumnGroup;
 import org.eclipse.nebula.widgets.grid.GridItem;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 
 /*
- * Create a grid with a collapsible column group with a seperate summary column
+ * Create a grid with a collapsible column group with a separate summary column
  * that is shown when the group is collapsed.
  *
  * For a list of all Nebula Grid example snippets see
@@ -26,6 +27,8 @@ public static void main (String [] args) {
 
     Grid grid = new Grid(shell,SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL);
     grid.setHeaderVisible(true);
+    grid.setRowHeaderVisible(true);
+    grid.setRowsResizeable(true);
     GridColumn column = new GridColumn(grid,SWT.NONE);
     column.setText("Column 1");
     column.setWidth(100);
@@ -48,11 +51,14 @@ public static void main (String [] args) {
     item1.setText("First Item");
     item1.setText(1,"100");
     item1.setText(2,"42");
+    item1.setFont(0, new Font(display,"Aria",18,SWT.NORMAL));
+    item1.setColumnSpan(1, 1);
     item1.setText(3,"142");
     GridItem item2 = new GridItem(grid,SWT.NONE);
     item2.setText("Second Item");
     item2.setText(1,"63");
     item2.setText(2,"92");
+    item2.setAreaSpan(1, 1, 1);
     item2.setText(3,"155");
     GridItem item3 = new GridItem(grid,SWT.NONE);
     item3.setText("Third Item");
