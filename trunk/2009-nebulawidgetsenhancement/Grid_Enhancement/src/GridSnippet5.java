@@ -42,9 +42,11 @@ public static void main (String [] args) {
     GridItem item1 = new GridItem(grid,SWT.NONE);
     item1.setText("First Item");
     item1.setText(1,"abc");
+    item1.setColumnSpan(1, 1);
     GridItem item2 = new GridItem(grid,SWT.NONE);
     item2.setText("Second Item");
     item2.setText(2,"def");
+    item2.setAreaSpan(0, 2, 1);
     GridItem item3 = new GridItem(grid,SWT.NONE);
     item3.setText("Third Item");
     item3.setText(1,"xyz");
