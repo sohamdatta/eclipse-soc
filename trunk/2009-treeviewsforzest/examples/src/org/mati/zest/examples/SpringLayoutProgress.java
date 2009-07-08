@@ -17,10 +17,10 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.zest.layout.algorithms.SpringLayoutAlgorithm;
 import org.mati.zest.core.widgets.Graph;
 import org.mati.zest.core.widgets.GraphConnection;
 import org.mati.zest.core.widgets.GraphNode;
-import org.mati.zest.layout.algorithms.SpringLayoutAlgorithm;
 
 /**
  * This snippet shows how to use the findFigureAt to get the figure under the

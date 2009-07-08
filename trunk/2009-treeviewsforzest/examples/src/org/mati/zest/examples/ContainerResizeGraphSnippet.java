@@ -17,17 +17,17 @@ import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.zest.core.widgets.ZestStyles;
+import org.eclipse.zest.layout.algorithms.CompositeLayoutAlgorithm;
+import org.eclipse.zest.layout.algorithms.GridLayoutAlgorithm;
+import org.eclipse.zest.layout.algorithms.HorizontalShiftAlgorithm;
+import org.eclipse.zest.layout.algorithms.RadialLayoutAlgorithm;
+import org.eclipse.zest.layout.algorithms.TreeLayoutAlgorithm;
+import org.eclipse.zest.layout.interfaces.LayoutAlgorithm;
 import org.mati.zest.core.widgets.Graph;
 import org.mati.zest.core.widgets.GraphConnection;
 import org.mati.zest.core.widgets.GraphContainer;
 import org.mati.zest.core.widgets.GraphItem;
 import org.mati.zest.core.widgets.GraphNode;
-import org.mati.zest.layout.algorithms.CompositeLayoutAlgorithm;
-import org.mati.zest.layout.algorithms.GridLayoutAlgorithm;
-import org.mati.zest.layout.algorithms.HorizontalShiftAlgorithm;
-import org.mati.zest.layout.algorithms.RadialLayoutAlgorithm;
-import org.mati.zest.layout.algorithms.TreeLayoutAlgorithm;
-import org.mati.zest.layout.interfaces.LayoutAlgorithm;
 
 public class ContainerResizeGraphSnippet {
 

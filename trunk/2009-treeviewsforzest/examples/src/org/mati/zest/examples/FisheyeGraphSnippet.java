@@ -16,10 +16,10 @@ import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.zest.core.widgets.ZestStyles;
+import org.eclipse.zest.layout.algorithms.GridLayoutAlgorithm;
 import org.mati.zest.core.widgets.Graph;
 import org.mati.zest.core.widgets.GraphConnection;
 import org.mati.zest.core.widgets.GraphNode;
-import org.mati.zest.layout.algorithms.GridLayoutAlgorithm;
 
 /**
  * This snippet creates a graph with 80*3 nodes (240 nodes).  Only the icons are shown for the nodes, but if

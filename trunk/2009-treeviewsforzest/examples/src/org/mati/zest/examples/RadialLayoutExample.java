@@ -4,11 +4,11 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.zest.layout.algorithms.RadialLayoutAlgorithm;
+import org.eclipse.zest.layout.interfaces.LayoutAlgorithm;
 import org.mati.zest.core.widgets.Graph;
 import org.mati.zest.core.widgets.GraphConnection;
 import org.mati.zest.core.widgets.GraphNode;
-import org.mati.zest.layout.algorithms.RadialLayoutAlgorithm;
-import org.mati.zest.layout.interfaces.LayoutAlgorithm;
 
 public class RadialLayoutExample {
 	public static void main(String[] args) {
