@@ -16,6 +16,7 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.zest.layout.algorithms.SpringLayoutAlgorithm;
 import org.mati.zest.core.widgets.Graph;
@@ -23,10 +24,6 @@ import org.mati.zest.core.widgets.GraphConnection;
 import org.mati.zest.core.widgets.GraphNode;
 
 /**
- * This snippet shows how to use the findFigureAt to get the figure under the
- * mouse
- * 
- * @author Ian Bull
  * 
  */
 public class SpringLayoutProgress {
@@ -40,11 +37,12 @@ public class SpringLayoutProgress {
 		Shell shell = new Shell(d);
 		shell.setText("GraphSnippet1");
 		GridLayout gridLayout = new GridLayout();
+		gridLayout.numColumns = 5;
 		shell.setLayout(gridLayout);
 		shell.setSize(500, 500);
 
 		final Graph g = new Graph(shell, SWT.NONE);
-		g.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+		g.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 5, 5));
 		g.setSize(500, 500);
 		GraphNode root = new GraphNode(g, SWT.NONE, "Root");
 		for (int i = 0; i < 3; i++) {
@@ -63,10 +61,17 @@ public class SpringLayoutProgress {
 
 		Button b = new Button(shell, SWT.FLAT);
 		b.setText("step");
+
+		final Label label = new Label(shell, SWT.LEFT);
+		label.setText("<--click");
+		label.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+
 		b.addSelectionListener(new SelectionAdapter() {
+			int steps = 0;
 			public void widgetSelected(SelectionEvent e) {
 				springLayoutAlgorithm.performOneIteration();
 				g.redraw();
+				label.setText("steps: " + ++steps);
 			}
 		});
 

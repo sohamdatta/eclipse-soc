@@ -24,6 +24,8 @@ import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.ControlEvent;
+import org.eclipse.swt.events.ControlListener;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -37,7 +39,6 @@ import org.eclipse.swt.widgets.Item;
 import org.eclipse.zest.core.widgets.ZestStyles;
 import org.eclipse.zest.core.widgets.internal.ContainerFigure;
 import org.eclipse.zest.core.widgets.internal.ZestRootLayer;
-import org.eclipse.zest.layout.interfaces.Filter;
 import org.eclipse.zest.layout.interfaces.LayoutAlgorithm;
 
 public class Graph extends FigureCanvas {
@@ -155,6 +156,17 @@ public class Graph extends FigureCanvas {
 			}
 		});
 
+		this.addControlListener(new ControlListener() {
+
+			public void controlResized(ControlEvent e) {
+				if (preferredSize.width == -1 || preferredSize.height == -1)
+					getLayoutContext().fireBoundsChangedEvent();
+			}
+
+			public void controlMoved(ControlEvent e) {
+				// do nothing
+			}
+		});
 	}
 
 	/**
@@ -348,6 +360,7 @@ public class Graph extends FigureCanvas {
 	 */
 	public void setPreferredSize(int width, int height) {
 		this.preferredSize = new Dimension(width, height);
+		getLayoutContext().fireBoundsChangedEvent();
 	}
 
 	/**
@@ -397,7 +410,7 @@ public class Graph extends FigureCanvas {
 	 * @param filter
 	 *            filter to add
 	 */
-	public void addLayoutFilter(Filter filter) {
+	public void addLayoutFilter(LayoutFilter filter) {
 		getLayoutContext().addFilter(filter);
 	}
 
@@ -408,7 +421,7 @@ public class Graph extends FigureCanvas {
 	 * @param filter
 	 *            filter to remove
 	 */
-	public void removeLayoutFilter(Filter filter) {
+	public void removeLayoutFilter(LayoutFilter filter) {
 		getLayoutContext().removeFilter(filter);
 	}
 

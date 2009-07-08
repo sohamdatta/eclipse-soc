@@ -14,8 +14,15 @@ import org.mati.zest.core.widgets.GraphConnection;
 import org.mati.zest.core.widgets.GraphItem;
 import org.mati.zest.core.widgets.GraphNode;
 
-public class SpaceTreeExample {
-	
+/**
+ * This example shows how SpringLayoutAlgorithm reacts to graph structure
+ * related events, automatically rebuilding trees every time a new connection is
+ * added.
+ */
+public class SpaceTreeBuilding {
+	private static GraphNode parentNode = null;
+	private static GraphNode childNode = null;
+
 	public static void main(String[] args) {
 		Display d = new Display();
 		Shell shell = new Shell(d);
@@ -23,13 +30,16 @@ public class SpaceTreeExample {
 		shell.setLayout(new FillLayout());
 		shell.setSize(400, 400);
 
-		Graph g = new Graph(shell, SWT.NONE);
+		final Graph g = new Graph(shell, SWT.NONE);
 		
+		hookMenu(g);
+
 		g.setLayoutAlgorithm(new SpaceTreeLayoutAlgorithm(), false);
 		
-		createTree(g, "!", 4, 4);
-
-		hookMenu(g);
+		for (int i = 0; i < 20; i++) {
+			GraphNode graphNode = new GraphNode(g, SWT.NONE);
+			graphNode.setText("" + i);
+		}
 
 		shell.open();
 		while (!shell.isDisposed()) {
@@ -39,20 +49,42 @@ public class SpaceTreeExample {
 		}
 	}
 
-	private static GraphNode createTree(Graph g, String rootTitle, int depth, int breadth) {
-		GraphNode root = new GraphNode(g, SWT.NONE, rootTitle);
-		if (depth > 0) {
-			for (int i = 0; i < breadth; i++) {
-				GraphNode child = createTree(g, rootTitle + i, depth-1, breadth);
-				new GraphConnection(g, SWT.NONE, root, child);
-			}
+	private static void tryToAddConnection(Graph g) {
+		if (parentNode != null && childNode != null) {
+			new GraphConnection(g, SWT.NONE, parentNode, childNode);
+			parentNode = childNode = null;
 		}
-		return root;
 	}
 
 	private static void hookMenu(final Graph g) {
 		MenuManager menuMgr = new MenuManager("#PopupMenu");
 		
+		Action parentAction = new Action() {
+			public void run() {
+				List selection = g.getSelection();
+				if (!selection.isEmpty()) {
+					GraphNode selected = (GraphNode) selection.get(0);
+					parentNode = selected;
+					tryToAddConnection(g);
+				}
+			}
+		};
+		parentAction.setText("use as parent");
+		menuMgr.add(parentAction);
+
+		Action childAction = new Action() {
+			public void run() {
+				List selection = g.getSelection();
+				if (!selection.isEmpty()) {
+					GraphNode selected = (GraphNode) selection.get(0);
+					childNode = selected;
+					tryToAddConnection(g);
+				}
+			}
+		};
+		childAction.setText("use as child");
+		menuMgr.add(childAction);
+
 		Action expandAction = new Action() {
 			public void run() {
 				List selection = g.getSelection();
@@ -64,7 +96,7 @@ public class SpaceTreeExample {
 		};
 		expandAction.setText("expand");
 		menuMgr.add(expandAction);
-		
+
 		Action collapseAction = new Action() {
 			public void run() {
 				List selection = g.getSelection();
@@ -76,7 +108,7 @@ public class SpaceTreeExample {
 		};
 		collapseAction.setText("collapse");
 		menuMgr.add(collapseAction);
-		
+
 		g.setMenu(menuMgr.createContextMenu(g));
 	}
 }

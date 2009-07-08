@@ -17,12 +17,12 @@ class InternalNodeLayout implements NodeLayout {
 	private DisplayIndependentDimension size;
 	private boolean minimized = false;
 	private final GraphNode node;
-	private final InternalLayoutContext rootLayoutContext;
+	private final InternalLayoutContext ownerLayoutContext;
 	private SubgraphLayout subgraph;
 
 	public InternalNodeLayout(GraphNode graphNode) {
 		this.node = graphNode;
-		this.rootLayoutContext = node.parent.getGraph().getLayoutContext();
+		this.ownerLayoutContext = node.parent.getLayoutContext();
 	}
 
 	public DisplayIndependentPoint getLocation() {
@@ -50,7 +50,7 @@ class InternalNodeLayout implements NodeLayout {
 	}
 
 	public boolean isPrunable() {
-		return rootLayoutContext.isPruningEnabled();
+		return ownerLayoutContext.isPruningEnabled();
 	}
 
 	public boolean isPruned() {
@@ -128,12 +128,12 @@ class InternalNodeLayout implements NodeLayout {
 		ArrayList result = new ArrayList();
 		for (Iterator iterator = node.getTargetConnections().iterator(); iterator.hasNext();) {
 			GraphConnection connection = (GraphConnection) iterator.next();
-			if (!rootLayoutContext.isLayoutItemFiltered(connection))
+			if (!ownerLayoutContext.isLayoutItemFiltered(connection))
 				result.add(connection.getLayout());
 		}
 		for (Iterator iterator = node.getSourceConnections().iterator(); iterator.hasNext();) {
 			GraphConnection connection = (GraphConnection) iterator.next();
-			if (!connection.isDirected() && !rootLayoutContext.isLayoutItemFiltered(connection))
+			if (!connection.isDirected() && !ownerLayoutContext.isLayoutItemFiltered(connection))
 				result.add(connection.getLayout());
 		}
 		return (ConnectionLayout[]) result.toArray(new ConnectionLayout[result.size()]);
@@ -143,12 +143,12 @@ class InternalNodeLayout implements NodeLayout {
 		ArrayList result = new ArrayList();
 		for (Iterator iterator = node.getSourceConnections().iterator(); iterator.hasNext();) {
 			GraphConnection connection = (GraphConnection) iterator.next();
-			if (!rootLayoutContext.isLayoutItemFiltered(connection))
+			if (!ownerLayoutContext.isLayoutItemFiltered(connection))
 				result.add(connection.getLayout());
 		}
 		for (Iterator iterator = node.getTargetConnections().iterator(); iterator.hasNext();) {
 			GraphConnection connection = (GraphConnection) iterator.next();
-			if (!connection.isDirected() && !rootLayoutContext.isLayoutItemFiltered(connection))
+			if (!connection.isDirected() && !ownerLayoutContext.isLayoutItemFiltered(connection))
 				result.add(connection.getLayout());
 		}
 		return (ConnectionLayout[]) result.toArray(new ConnectionLayout[result.size()]);
@@ -169,5 +169,13 @@ class InternalNodeLayout implements NodeLayout {
 			if (size != null)
 				node.setSize(size.width, size.height);
 		}
+	}
+
+	InternalLayoutContext getOwnerLayoutContext() {
+		return ownerLayoutContext;
+	}
+
+	public String toString() {
+		return node.toString() + "(layout)";
 	}
 }
