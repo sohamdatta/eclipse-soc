@@ -4,25 +4,145 @@
 package org.mati.zest.core.widgets;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import org.eclipse.zest.core.widgets.ZestStyles;
-import org.eclipse.zest.layouts.dataStructures.DisplayIndependentRectangle;
-import org.mati.zest.layout.interfaces.ConnectionLayout;
-import org.mati.zest.layout.interfaces.ContextListener;
-import org.mati.zest.layout.interfaces.EntityLayout;
-import org.mati.zest.layout.interfaces.Filter;
-import org.mati.zest.layout.interfaces.GraphStructureListener;
-import org.mati.zest.layout.interfaces.LayoutAlgorithm;
-import org.mati.zest.layout.interfaces.LayoutContext;
-import org.mati.zest.layout.interfaces.LayoutListener;
-import org.mati.zest.layout.interfaces.NodeLayout;
-import org.mati.zest.layout.interfaces.PruningListener;
-import org.mati.zest.layout.interfaces.SubgraphLayout;
+import org.eclipse.zest.layout.dataStructures.DisplayIndependentDimension;
+import org.eclipse.zest.layout.dataStructures.DisplayIndependentPoint;
+import org.eclipse.zest.layout.dataStructures.DisplayIndependentRectangle;
+import org.eclipse.zest.layout.interfaces.ConnectionLayout;
+import org.eclipse.zest.layout.interfaces.ContextListener;
+import org.eclipse.zest.layout.interfaces.EntityLayout;
+import org.eclipse.zest.layout.interfaces.ExpandCollapseManager;
+import org.eclipse.zest.layout.interfaces.Filter;
+import org.eclipse.zest.layout.interfaces.GraphStructureListener;
+import org.eclipse.zest.layout.interfaces.LayoutAlgorithm;
+import org.eclipse.zest.layout.interfaces.LayoutContext;
+import org.eclipse.zest.layout.interfaces.LayoutListener;
+import org.eclipse.zest.layout.interfaces.NodeLayout;
+import org.eclipse.zest.layout.interfaces.PruningListener;
+import org.eclipse.zest.layout.interfaces.SubgraphFactory;
+import org.eclipse.zest.layout.interfaces.SubgraphLayout;
 
 class InternalLayoutContext implements LayoutContext {
+
+	/**
+	 * This factory throws all nodes into one subgraph that doesn't show
+	 * anything on the screen. A node pruned to this factory's subtree is
+	 * resized to (0, 0) and all connections adjacent to it are made invisible.
+	 */
+	private class DummySubgraphFacotry implements SubgraphFactory {
+		private class DummySubgraph implements SubgraphLayout {
+			private LayoutContext context;
+
+			public DummySubgraph(LayoutContext context) {
+				super();
+				this.context = context;
+			}
+
+			private Set nodes = new HashSet();
+
+			public boolean isGraphEntity() {
+				return false;
+			}
+
+			public void setSize(double width, double height) {
+				// do nothing
+			}
+
+			public void setLocation(double x, double y) {
+				// do nothing
+			}
+
+			public boolean isResizable() {
+				return false;
+			}
+
+			public boolean isMovable() {
+				return false;
+			}
+
+			public NodeLayout[] getSuccessingEntities() {
+				// TODO Auto-generated method stub
+				return null;
+			}
+
+			public DisplayIndependentDimension getSize() {
+				DisplayIndependentRectangle bounds = context.getBounds();
+				return new DisplayIndependentDimension(bounds.width, bounds.height);
+			}
+
+			public double getPreferredAspectRatio() {
+				return 0;
+			}
+
+			public NodeLayout[] getPredecessingEntities() {
+				// TODO Auto-generated method stub
+				return null;
+			}
+
+			public DisplayIndependentPoint getLocation() {
+				DisplayIndependentRectangle bounds = context.getBounds();
+				return new DisplayIndependentPoint(bounds.x + bounds.width / 2, bounds.y + bounds.height / 2);
+			}
+
+			public void removeNodes(NodeLayout[] nodes) {
+				for (int i = 0; i < nodes.length; i++) {
+					if (this.nodes.remove(nodes[i])) {
+						nodes[i].prune(null);
+						nodes[i].setMinimized(false);
+						showConnections(nodes[i].getIncomingConnections());
+						showConnections(nodes[i].getOutgoingConnections());
+					}
+				}
+			}
+
+			public NodeLayout[] getNodes() {
+				return (NodeLayout[]) nodes.toArray(new NodeLayout[nodes.size()]);
+			}
+
+			public void addNodes(NodeLayout[] nodes) {
+				for (int i = 0; i < nodes.length; i++) {
+					if (this.nodes.add(nodes[i])) {
+						nodes[i].prune(this);
+						nodes[i].setMinimized(true);
+						hideConnections(nodes[i].getIncomingConnections());
+						hideConnections(nodes[i].getOutgoingConnections());
+					}
+				}
+			}
+
+			private void hideConnections(ConnectionLayout[] connections) {
+				for (int i = 0; i < connections.length; i++)
+					connections[i].setVisible(false);
+			}
+
+			private void showConnections(ConnectionLayout[] connections) {
+				for (int i = 0; i < connections.length; i++) {
+					if (!connections[i].getSource().isPruned() && !connections[i].getTarget().isPruned())
+						connections[i].setVisible(true);
+				}
+			}
+
+		};
+
+		private HashMap contextToSubgraph = new HashMap();
+
+		public SubgraphLayout createSubgraph(NodeLayout[] nodes, LayoutContext context) {
+			DummySubgraph subgraph = (DummySubgraph) contextToSubgraph.get(context);
+			if (subgraph == null) {
+				subgraph = new DummySubgraph(context);
+				contextToSubgraph.put(context, subgraph);
+			}
+			subgraph.addNodes(nodes);
+			return subgraph;
+		}
+
+	}
 
 	private final NodeContainerAdapter container;
 	private List filters = new ArrayList();
@@ -31,6 +151,8 @@ class InternalLayoutContext implements LayoutContext {
 	private List layoutListeners = new ArrayList();
 	private List pruningListeners = new ArrayList();
 	private LayoutAlgorithm mainAlgorithm;
+	private ExpandCollapseManager expandCollapseManager;
+	private SubgraphFactory subgraphFactory = new DummySubgraphFacotry();
 	private ArrayList subgraphs = new ArrayList();
 
 	/**
@@ -41,7 +163,7 @@ class InternalLayoutContext implements LayoutContext {
 		this.container = NodeContainerAdapter.get(graph);
 
 		addFilter(new Filter() {
-			public boolean isObjectFiltered(GraphItem item) {
+			public boolean isObjectFiltered(Object item) {
 				if (item instanceof GraphConnection) {
 					// filter out connections connecting nodes lying inside
 					// containers with outside nodes
@@ -50,7 +172,8 @@ class InternalLayoutContext implements LayoutContext {
 						return true;
 				}
 				// filter out invisible elements
-				if (ZestStyles.checkStyle(container.getGraph().getStyle(), ZestStyles.IGNORE_INVISIBLE_LAYOUT) && !item.isVisible())
+				if (item instanceof GraphItem && ZestStyles.checkStyle(container.getGraph().getStyle(), ZestStyles.IGNORE_INVISIBLE_LAYOUT)
+						&& !((GraphItem) item).isVisible())
 					return true;
 				return false;
 			}
@@ -78,17 +201,21 @@ class InternalLayoutContext implements LayoutContext {
 	}
 
 	public SubgraphLayout addSubgraph(NodeLayout[] nodes) {
-		// TODO Auto-generated method stub
-		return null;
+		return subgraphFactory.createSubgraph(nodes, this);
 	}
 
 	public void flushChanges(boolean animationHint) {
 		// TODO Auto-generated method stub
 		// TODO probably OK for nodes, need to add subgraphs
 		// TODO respect animation hint
+		// TODO support for asynchronous call
 		for (Iterator iterator = container.getNodes().iterator(); iterator.hasNext();) {
 			GraphNode node = (GraphNode) iterator.next();
 			node.applyLayoutChanges();
+		}
+		for (Iterator iterator = container.getConnections().iterator(); iterator.hasNext();) {
+			GraphConnection connection = (GraphConnection) iterator.next();
+			connection.applyLayoutChanges();
 		}
 	}
 
@@ -98,6 +225,10 @@ class InternalLayoutContext implements LayoutContext {
 
 	public LayoutAlgorithm getMainLayoutAlgorithm() {
 		return mainAlgorithm;
+	}
+
+	public ExpandCollapseManager getExpandCollapseManager() {
+		return expandCollapseManager;
 	}
 
 	public NodeLayout[] getNodes() {
@@ -129,7 +260,7 @@ class InternalLayoutContext implements LayoutContext {
 	}
 
 	public boolean isPruningEnabled() {
-		return false;
+		return expandCollapseManager != null;
 	}
 
 	public void removeContextListener(ContextListener listener) {
@@ -150,6 +281,10 @@ class InternalLayoutContext implements LayoutContext {
 
 	public void setMainLayoutAlgorithm(LayoutAlgorithm algorithm) {
 		mainAlgorithm = algorithm;
+	}
+
+	public void setExpandCollapseManager(ExpandCollapseManager pruningManager) {
+		this.expandCollapseManager = pruningManager;
 	}
 
 	public ConnectionLayout[] getConnections() {
@@ -205,4 +340,59 @@ class InternalLayoutContext implements LayoutContext {
 		return false;
 	}
 
+	void setExpanded(NodeLayout node, boolean expanded) {
+		if (expandCollapseManager != null)
+			expandCollapseManager.setExpanded(node, expanded);
+	}
+
+	void setSubgraphFactory(SubgraphFactory factory) {
+		subgraphFactory = factory;
+	}
+
+	void applyMainAlgorithm() {
+		if (mainAlgorithm != null) {
+			mainAlgorithm.applyLayout();
+			flushChanges(false);
+		}
+	}
+
+	void fireNodeAddedEvent(NodeLayout node) {
+		boolean intercepted = false;
+		for (Iterator iterator = graphStructureListeners.iterator(); iterator.hasNext() && !intercepted;) {
+			GraphStructureListener listener = (GraphStructureListener) iterator.next();
+			intercepted = listener.nodeAdded(this, node);
+		}
+		if (!intercepted && mainAlgorithm != null)
+			mainAlgorithm.applyLayout();
+	}
+
+	void fireNodeRemovedEvent(NodeLayout node) {
+		boolean intercepted = false;
+		for (Iterator iterator = graphStructureListeners.iterator(); iterator.hasNext() && !intercepted;) {
+			GraphStructureListener listener = (GraphStructureListener) iterator.next();
+			intercepted = listener.nodeRemoved(this, node);
+		}
+		if (!intercepted)
+			applyMainAlgorithm();
+	}
+
+	void fireConnectionAddedEvent(ConnectionLayout connection) {
+		boolean intercepted = false;
+		for (Iterator iterator = graphStructureListeners.iterator(); iterator.hasNext() && !intercepted;) {
+			GraphStructureListener listener = (GraphStructureListener) iterator.next();
+			intercepted = listener.connectionAdded(this, connection);
+		}
+		if (!intercepted)
+			applyMainAlgorithm();
+	}
+
+	void fireConnectionRemovedEvent(ConnectionLayout connection) {
+		boolean intercepted = false;
+		for (Iterator iterator = graphStructureListeners.iterator(); iterator.hasNext() && !intercepted;) {
+			GraphStructureListener listener = (GraphStructureListener) iterator.next();
+			intercepted = listener.connectionRemoved(this, connection);
+		}
+		if (!intercepted)
+			applyMainAlgorithm();
+	}
 }

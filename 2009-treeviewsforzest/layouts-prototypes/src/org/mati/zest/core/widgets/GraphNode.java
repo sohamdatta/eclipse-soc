@@ -92,7 +92,7 @@ public class GraphNode extends GraphItem {
 	}
 
 	public GraphNode(GraphContainer graphModel, int style, Object data) {
-		this(graphModel.getGraph(), style, "" /*text*/, null /*image*/, data);
+		this(graphModel, style, "" /* text */, null /* image */, data);
 	}
 
 	public GraphNode(GraphContainer graphModel, int style, String text) {
@@ -100,7 +100,7 @@ public class GraphNode extends GraphItem {
 	}
 
 	public GraphNode(GraphContainer graphModel, int style, String text, Object data) {
-		this(graphModel.getGraph(), style, text, null /*image*/, data);
+		this(graphModel, style, text, null /* image */, data);
 	}
 
 	public GraphNode(GraphContainer graphModel, int style, String text, Image image) {

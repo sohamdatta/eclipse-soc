@@ -37,8 +37,8 @@ import org.eclipse.swt.widgets.Item;
 import org.eclipse.zest.core.widgets.ZestStyles;
 import org.eclipse.zest.core.widgets.internal.ContainerFigure;
 import org.eclipse.zest.core.widgets.internal.ZestRootLayer;
-import org.mati.zest.layout.interfaces.Filter;
-import org.mati.zest.layout.interfaces.LayoutAlgorithm;
+import org.eclipse.zest.layout.interfaces.Filter;
+import org.eclipse.zest.layout.interfaces.LayoutAlgorithm;
 
 public class Graph extends FigureCanvas {
 
@@ -770,6 +770,7 @@ public class Graph extends FigureCanvas {
 		if (targetContainerConnectionFigure != null) {
 			figure2ItemMap.remove(targetContainerConnectionFigure);
 		}
+		getLayoutContext().fireConnectionRemovedEvent(connection.getLayout());
 	}
 
 	void removeNode(GraphNode node) {
@@ -783,6 +784,7 @@ public class Graph extends FigureCanvas {
 		}
 		this.getNodes().remove(node);
 		figure2ItemMap.remove(figure);
+		getLayoutContext().fireNodeRemovedEvent(node.getLayout());
 	}
 
 	void addConnection(GraphConnection connection, boolean addToEdgeLayer) {
@@ -790,11 +792,13 @@ public class Graph extends FigureCanvas {
 		if (addToEdgeLayer) {
 			zestRootLayer.addConnection(connection.getFigure());
 		}
+		getLayoutContext().fireConnectionAddedEvent(connection.getLayout());
 	}
 
 	void addNode(GraphNode node) {
 		this.getNodes().add(node);
 		zestRootLayer.addNode(node.getFigure());
+		getLayoutContext().fireNodeAddedEvent(node.getLayout());
 	}
 
 	void registerItem(GraphItem item) {
@@ -963,5 +967,9 @@ public class Graph extends FigureCanvas {
 
 	GraphItem getGraphItem(IFigure figure) {
 		return (GraphItem) figure2ItemMap.get(figure);
+	}
+
+	public void setExpanded(GraphNode node, boolean expanded) {
+		layoutContext.setExpanded(node.getLayout(), expanded);
 	}
 }

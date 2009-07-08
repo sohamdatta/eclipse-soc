@@ -8,7 +8,7 @@ import java.util.List;
 import org.eclipse.draw2d.PolylineConnection;
 import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.swt.widgets.Widget;
-import org.eclipse.zest.layouts.dataStructures.DisplayIndependentRectangle;
+import org.eclipse.zest.layout.dataStructures.DisplayIndependentRectangle;
 
 abstract class NodeContainerAdapter {
 	private static class GraphAdapter extends NodeContainerAdapter {

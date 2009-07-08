@@ -6,17 +6,19 @@ import java.util.Iterator;
 import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.zest.core.widgets.ZestStyles;
-import org.eclipse.zest.layouts.dataStructures.DisplayIndependentDimension;
-import org.eclipse.zest.layouts.dataStructures.DisplayIndependentPoint;
-import org.mati.zest.layout.interfaces.ConnectionLayout;
-import org.mati.zest.layout.interfaces.NodeLayout;
-import org.mati.zest.layout.interfaces.SubgraphLayout;
+import org.eclipse.zest.layout.dataStructures.DisplayIndependentDimension;
+import org.eclipse.zest.layout.dataStructures.DisplayIndependentPoint;
+import org.eclipse.zest.layout.interfaces.ConnectionLayout;
+import org.eclipse.zest.layout.interfaces.NodeLayout;
+import org.eclipse.zest.layout.interfaces.SubgraphLayout;
 
 class InternalNodeLayout implements NodeLayout {
 	private DisplayIndependentPoint location;
 	private DisplayIndependentDimension size;
+	private boolean minimized = false;
 	private final GraphNode node;
 	private final InternalLayoutContext rootLayoutContext;
+	private SubgraphLayout subgraph;
 
 	public InternalNodeLayout(GraphNode graphNode) {
 		this.node = graphNode;
@@ -40,8 +42,7 @@ class InternalNodeLayout implements NodeLayout {
 	}
 
 	public SubgraphLayout getSubgraph() {
-		// TODO Auto-generated method stub
-		return null;
+		return subgraph;
 	}
 
 	public boolean isMovable() {
@@ -49,13 +50,11 @@ class InternalNodeLayout implements NodeLayout {
 	}
 
 	public boolean isPrunable() {
-		// TODO Auto-generated method stub
-		return false;
+		return rootLayoutContext.isPruningEnabled();
 	}
 
 	public boolean isPruned() {
-		// TODO Auto-generated method stub
-		return false;
+		return subgraph != null;
 	}
 
 	public boolean isResizable() {
@@ -63,8 +62,17 @@ class InternalNodeLayout implements NodeLayout {
 	}
 
 	public void prune(SubgraphLayout subgraph) {
-		// TODO Auto-generated method stub
-
+		if (subgraph == this.subgraph)
+			return;
+		if (this.subgraph != null) {
+			SubgraphLayout subgraph2 = this.subgraph;
+			this.subgraph = null;
+			subgraph2.removeNodes(new NodeLayout[] { this });
+		}
+		if (subgraph != null) {
+			this.subgraph = subgraph;
+			subgraph.addNodes(new NodeLayout[] { this });
+		}
 	}
 
 	public void setLocation(double x, double y) {
@@ -73,6 +81,15 @@ class InternalNodeLayout implements NodeLayout {
 
 	public void setSize(double width, double height) {
 		size = new DisplayIndependentDimension(width, height);
+	}
+
+	public void setMinimized(boolean minimized) {
+		getSize();
+		this.minimized = minimized;
+	}
+
+	public boolean isMinimized() {
+		return minimized;
 	}
 
 	public NodeLayout[] getPredecessingNodes() {
@@ -142,9 +159,15 @@ class InternalNodeLayout implements NodeLayout {
 	}
 
 	void applyLayout() {
-		if (size != null)
-			node.setSize(size.width, size.height);
-		if (location != null)
-			node.setLocation(location.x - getSize().width / 2, location.y - size.height / 2);
+		if (minimized) {
+			node.setSize(0, 0);
+			if (location != null)
+				node.setLocation(location.x, location.y);
+		} else {
+			if (location != null)
+				node.setLocation(location.x - getSize().width / 2, location.y - size.height / 2);
+			if (size != null)
+				node.setSize(size.width, size.height);
+		}
 	}
 }
