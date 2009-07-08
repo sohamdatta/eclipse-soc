@@ -8,10 +8,7 @@
  * Contributors:
  *     The Chisel Group, University of Victoria
  *******************************************************************************/
-package org.eclipse.zest.layout.interfaces;
-
-
-//TODO this is probably not the best place for this interface
+package org.mati.zest.core.widgets;
 
 /**
  * A filter is used to filter objects.  Once implemented, interested
@@ -24,7 +21,7 @@ package org.eclipse.zest.layout.interfaces;
  * 
  * @author Casey Best
  */
-public interface Filter {
+public interface LayoutFilter {
 
 	/**
 	 * Returns true if the object is filtered, or false if it's not filtered.
@@ -33,5 +30,5 @@ public interface Filter {
 	 *            object to check
 	 * @return
 	 */
-	public boolean isObjectFiltered(Object item);
+	public boolean isObjectFiltered(GraphItem item);
 }

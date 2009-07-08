@@ -32,7 +32,7 @@ abstract class NodeContainerAdapter {
 		}
 
 		public List getConnections() {
-			return graph.getConnections();
+			return filterConnections(graph.getConnections());
 		}
 
 		public void addNode(GraphNode graphNode) {
@@ -59,6 +59,10 @@ abstract class NodeContainerAdapter {
 			Dimension preferredSize = graph.getPreferredSize();
 			return new DisplayIndependentRectangle(0, 0, preferredSize.width, preferredSize.height);
 		}
+
+		public InternalLayoutContext getLayoutContext() {
+			return graph.getLayoutContext();
+		}
 	}
 
 	private static class GraphContainerAdapter extends NodeContainerAdapter {
@@ -81,14 +85,7 @@ abstract class NodeContainerAdapter {
 		}
 
 		public List getConnections() {
-			List connections = container.getGraph().getConnections();
-			List result = new ArrayList();
-			for (Iterator iterator = connections.iterator(); iterator.hasNext();) {
-				GraphConnection connection = (GraphConnection) iterator.next();
-				if (connection.getSource().getParent() == this && connection.getDestination().getParent() == this)
-					result.add(connection);
-			}
-			return result;
+			return filterConnections(container.getGraph().getConnections());
 		}
 
 		public void addNode(GraphNode graphNode) {
@@ -113,6 +110,10 @@ abstract class NodeContainerAdapter {
 
 		public DisplayIndependentRectangle getLayoutBounds() {
 			return container.getLayoutBounds();
+		}
+
+		public InternalLayoutContext getLayoutContext() {
+			return container.getLayoutContext();
 		}
 	}
 
@@ -144,6 +145,13 @@ abstract class NodeContainerAdapter {
 
 	public abstract List getNodes();
 
+	/**
+	 * Returns list of connections laying inside this container. Only
+	 * connections which both source and target nodes lay directly in this
+	 * container are returned.
+	 * 
+	 * @return
+	 */
 	public abstract List getConnections();
 
 	public abstract void addNode(GraphNode graphNode);
@@ -158,4 +166,23 @@ abstract class NodeContainerAdapter {
 
 	public abstract DisplayIndependentRectangle getLayoutBounds();
 
+	public abstract InternalLayoutContext getLayoutContext();
+
+	/**
+	 * Takes a list of connections and returns only those which source and
+	 * target nodes lay directly in this container.
+	 * 
+	 * @param connections
+	 *            list of GraphConnection to filter
+	 * @return filtered list
+	 */
+	protected List filterConnections(List connections) {
+		List result = new ArrayList();
+		for (Iterator iterator = connections.iterator(); iterator.hasNext();) {
+			GraphConnection connection = (GraphConnection) iterator.next();
+			if (connection.getSource().getParent() == this && connection.getDestination().getParent() == this)
+				result.add(connection);
+		}
+		return result;
+	}
 }

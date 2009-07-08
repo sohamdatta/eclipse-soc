@@ -16,10 +16,11 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.zest.core.widgets.ZestStyles;
 import org.eclipse.zest.layout.algorithms.TreeLayoutAlgorithm;
-import org.eclipse.zest.layout.interfaces.Filter;
 import org.mati.zest.core.widgets.Graph;
 import org.mati.zest.core.widgets.GraphConnection;
+import org.mati.zest.core.widgets.GraphItem;
 import org.mati.zest.core.widgets.GraphNode;
+import org.mati.zest.core.widgets.LayoutFilter;
 
 /**
  * This snippet shows how to filter elements in the layout.  The Data on the tree
@@ -85,8 +86,8 @@ public class FilterGraphSnippet {
 		connection.setLineWidth(3);
 		
 		TreeLayoutAlgorithm treeLayoutAlgorithm = new TreeLayoutAlgorithm();
-		Filter filter = new Filter() {
-			public boolean isObjectFiltered(Object item) {
+		LayoutFilter filter = new LayoutFilter() {
+			public boolean isObjectFiltered(GraphItem item) {
 				if  (item instanceof GraphConnection ) {
 					GraphConnection connection = (GraphConnection) item;
 					Object data = connection.getData();

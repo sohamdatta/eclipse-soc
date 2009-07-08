@@ -383,7 +383,7 @@ public class SpringLayoutAlgorithm implements LayoutAlgorithm {
 
 	private void saveLocations() {
 		for (int i = 0; i < entities.length; i++) {
-			entities[i].setLocation(locationsX[i] - sizeW[i] / 2, locationsY[i] - sizeH[i] / 2);
+			entities[i].setLocation(locationsX[i], locationsY[i]);
 		}
 	}
 

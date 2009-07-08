@@ -63,6 +63,10 @@ public interface GraphStructureListener {
 	 * be assumed that both source and target nodes of the added connection
 	 * already exist in the context.
 	 * 
+	 * This method will be called only if both nodes connected by added
+	 * connection lay directly in the node container owned by the notifying
+	 * layout context.
+	 * 
 	 * If true is returned, it means that the receiving listener has intercepted
 	 * this event. Intercepted events will not be passed to the rest of the
 	 * listeners. If the event is not intercepted by any listener,
@@ -82,6 +86,10 @@ public interface GraphStructureListener {
 	 * can be assumed that both source and target nodes of the removed
 	 * connection still exist in the context and will not be removed along with
 	 * it.
+	 * 
+	 * This method will be called only if both nodes connected by removed
+	 * connection lay directly in the node container owned by the notifying
+	 * layout context.
 	 * 
 	 * If true is returned, it means that the receiving listener has intercepted
 	 * this event. Intercepted events will not be passed to the rest of the

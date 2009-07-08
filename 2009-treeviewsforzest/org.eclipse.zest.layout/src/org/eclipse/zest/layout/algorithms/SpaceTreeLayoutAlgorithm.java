@@ -19,12 +19,14 @@ import java.util.Set;
 
 import org.eclipse.zest.layout.dataStructures.DisplayIndependentRectangle;
 import org.eclipse.zest.layout.interfaces.ConnectionLayout;
+import org.eclipse.zest.layout.interfaces.ContextListener;
 import org.eclipse.zest.layout.interfaces.EntityLayout;
 import org.eclipse.zest.layout.interfaces.ExpandCollapseManager;
 import org.eclipse.zest.layout.interfaces.GraphStructureListener;
 import org.eclipse.zest.layout.interfaces.LayoutAlgorithm;
 import org.eclipse.zest.layout.interfaces.LayoutContext;
 import org.eclipse.zest.layout.interfaces.NodeLayout;
+import org.eclipse.zest.layout.interfaces.SubgraphLayout;
 
 import sun.misc.Queue;
 
@@ -73,19 +75,38 @@ public class SpaceTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCollapse
 		public void addChild(NodeInfo child) {
 			children.add(child);
 			child.parent = this;
+
+			if (node == null || (expanded && !node.isPruned())) {
+				// unprune and refresh expanded state
+				child.node.prune(null);
+				setExpanded(child.node, child.expanded);
+			} else {
+				List allChildren = getAllChildren(child);
+				allChildren.add(child.node);
+				if (node.isPruned()) {
+					// prune into a subgraph containing this node
+					node.getSubgraph().addNodes((NodeLayout[]) allChildren.toArray(new NodeLayout[allChildren.size()]));
+				} else {
+					// prune into subgraph under this node
+					subgraph.addNodes((NodeLayout[]) allChildren.toArray(new NodeLayout[allChildren.size()]));
+				}
+			}
 		}
 
 		public void precomputeTree() {
 			if (children.isEmpty()) {
 				numOfLeaves = 1;
 				height = 0;
-			} else
-			for (Iterator iterator = children.iterator(); iterator.hasNext();) {
-				NodeInfo child = (NodeInfo) iterator.next();
+			} else {
+				numOfLeaves = 0;
+				height = 0;
+				for (Iterator iterator = children.iterator(); iterator.hasNext();) {
+					NodeInfo child = (NodeInfo) iterator.next();
 					child.depth = this.depth + 1;
-				child.precomputeTree();
-				this.numOfLeaves += child.numOfLeaves;
-				this.height = Math.max(this.height, child.height + 1);
+					child.precomputeTree();
+					this.numOfLeaves += child.numOfLeaves;
+					this.height = Math.max(this.height, child.height + 1);
+				}
 			}
 		}
 
@@ -97,6 +118,25 @@ public class SpaceTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCollapse
 			}
 		}
 
+		public void findNewParent() {
+			if (parent != null)
+				parent.children.remove(this);
+			NodeLayout[] predecessingNodes = node.getPredecessingNodes();
+			NodeInfo bestParent;
+			if (predecessingNodes.length > 0) {
+				bestParent = (NodeInfo) nodeToInfo.get(predecessingNodes[0]);
+				for (int i = 1; i < predecessingNodes.length; i++) {
+					NodeInfo potentialParent = (NodeInfo) nodeToInfo.get(predecessingNodes[i]);
+					if (isBetterParent(bestParent, potentialParent))
+						bestParent = potentialParent;
+				}
+			} else
+				bestParent = superRoot;
+
+			bestParent.addChild(this);
+			superRoot.precomputeTree();
+		}
+
 		final public NodeLayout node;
 		public int height = 0;
 		public int depth = -1;
@@ -104,28 +144,79 @@ public class SpaceTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCollapse
 		public boolean expanded = false;
 		public final List children = new ArrayList();
 		public NodeInfo parent;
+
+		/**
+		 * If node is collapsed and not pruned, all it's children are placed in
+		 * this subgraph
+		 */
+		public SubgraphLayout subgraph = null;
+
+		public String toString() {
+			StringBuffer sb = new StringBuffer();
+			for (int i = 0; i < depth; i++)
+				sb.append(" ");
+			if (node != null)
+				sb.append(node.toString());
+			sb.append('\n');
+			for (Iterator iterator = children.iterator(); iterator.hasNext();) {
+				NodeInfo child = (NodeInfo) iterator.next();
+				sb.append(child.toString());
+			}
+			return sb.toString();
+		}
 	}
 
-	private GraphStructureListener graphStructureListener = new GraphStructureListener() {
+	private GraphStructureListener structureListener = new GraphStructureListener() {
 
 		public boolean nodeRemoved(LayoutContext context, NodeLayout node) {
 			NodeInfo info = (NodeInfo) nodeToInfo.get(node);
 			info.delete();
+			superRoot.precomputeTree();
+			refreshLayout();
 			return false;
 		}
 
 		public boolean nodeAdded(LayoutContext context, NodeLayout node) {
 			superRoot.addChild(new NodeInfo(node));
+			superRoot.precomputeTree();
+			refreshLayout();
 			return false;
 		}
 
 		public boolean connectionRemoved(LayoutContext context, ConnectionLayout connection) {
-			// TODO Auto-generated method stub
+			NodeInfo info1 = (NodeInfo) nodeToInfo.get(connection.getSource());
+			NodeInfo info2 = (NodeInfo) nodeToInfo.get(connection.getTarget());
+			if (info1.parent == info2) {
+				info1.findNewParent();
+			}
+			if (info2.parent == info1) {
+				info2.findNewParent();
+			}
+			refreshLayout();
 			return false;
 		}
 
 		public boolean connectionAdded(LayoutContext context, ConnectionLayout connection) {
-			// TODO Auto-generated method stub
+			NodeInfo source = (NodeInfo) nodeToInfo.get(connection.getSource());
+			NodeInfo target = (NodeInfo) nodeToInfo.get(connection.getTarget());
+			if (isBetterParent(target.parent, source)) {
+				target.parent.children.remove(target);
+				source.addChild(target);
+				superRoot.precomputeTree();
+			}
+			if (!connection.isDirected() && isBetterParent(source.parent, target)) {
+				source.parent.children.remove(source);
+				target.addChild(source);
+				superRoot.precomputeTree();
+			}
+			refreshLayout();
+			return false;
+		}
+	};
+
+	private ContextListener contextListener = new ContextListener.Stub() {
+		public boolean boundsChanged(LayoutContext context) {
+			refreshLayout();
 			return false;
 		}
 	};
@@ -187,9 +278,13 @@ public class SpaceTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCollapse
 	public void setLayoutContext(LayoutContext context) {
 		if (this.context != null) {
 			this.context.setExpandCollapseManager(null);
+			this.context.removeGraphStructureListener(structureListener);
+			this.context.removeContextListener(contextListener);
 		}
 		this.context = context;
 		context.setExpandCollapseManager(this);
+		context.addGraphStructureListener(structureListener);
+		context.addContextListener(contextListener);
 
 		superRoot = new NodeInfo(null);
 		createTrees(context.getNodes());
@@ -206,6 +301,10 @@ public class SpaceTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCollapse
 		} else {
 			collapse(info);
 		}
+		refreshLayout();
+	}
+
+	protected void refreshLayout() {
 		internalApplyLayout();
 		context.flushChanges(true);
 	}
@@ -225,6 +324,14 @@ public class SpaceTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCollapse
 			computePositionRecursively(rootInfo, leafCountSoFar);
 			leafCountSoFar = leafCountSoFar + rootInfo.numOfLeaves;
 		}
+	}
+
+	private static boolean isBetterParent(NodeInfo base, NodeInfo better) {
+		if (better.depth < base.depth && better.depth != -1)
+			return true;
+		if (base.depth == -1 && better.depth >= 0)
+			return true;
+		return false;
 	}
 
 	/**
@@ -319,6 +426,7 @@ public class SpaceTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCollapse
 	}
 
 	private void expand(NodeInfo info) {
+		info.subgraph = null;
 		for (Iterator iterator = info.children.iterator(); iterator.hasNext();) {
 			NodeInfo info2 = (NodeInfo) iterator.next();
 			info2.node.prune(null);
@@ -332,7 +440,7 @@ public class SpaceTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCollapse
 
 	private void collapse(NodeInfo info) {
 		List children = getAllChildren(info);
-		context.addSubgraph((NodeLayout[]) children.toArray(new NodeLayout[children.size()]));
+		info.subgraph = context.addSubgraph((NodeLayout[]) children.toArray(new NodeLayout[children.size()]));
 	}
 
 	/**

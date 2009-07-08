@@ -18,7 +18,6 @@ import org.eclipse.zest.layout.interfaces.ConnectionLayout;
 import org.eclipse.zest.layout.interfaces.ContextListener;
 import org.eclipse.zest.layout.interfaces.EntityLayout;
 import org.eclipse.zest.layout.interfaces.ExpandCollapseManager;
-import org.eclipse.zest.layout.interfaces.Filter;
 import org.eclipse.zest.layout.interfaces.GraphStructureListener;
 import org.eclipse.zest.layout.interfaces.LayoutAlgorithm;
 import org.eclipse.zest.layout.interfaces.LayoutContext;
@@ -155,33 +154,28 @@ class InternalLayoutContext implements LayoutContext {
 	private SubgraphFactory subgraphFactory = new DummySubgraphFacotry();
 	private ArrayList subgraphs = new ArrayList();
 
+	private final LayoutFilter defaultFilter = new LayoutFilter() {
+		public boolean isObjectFiltered(GraphItem item) {
+			// filter out invisible elements
+			if (item instanceof GraphItem && ZestStyles.checkStyle(container.getGraph().getStyle(), ZestStyles.IGNORE_INVISIBLE_LAYOUT)
+					&& !((GraphItem) item).isVisible())
+				return true;
+			return false;
+		}
+	};
+
 	/**
 	 * @param graph
 	 *            the graph owning this context
 	 */
 	InternalLayoutContext(Graph graph) {
 		this.container = NodeContainerAdapter.get(graph);
-
-		addFilter(new Filter() {
-			public boolean isObjectFiltered(Object item) {
-				if (item instanceof GraphConnection) {
-					// filter out connections connecting nodes lying inside
-					// containers with outside nodes
-					GraphConnection connection = (GraphConnection) item;
-					if (connection.getSource().parent != connection.getDestination().parent)
-						return true;
-				}
-				// filter out invisible elements
-				if (item instanceof GraphItem && ZestStyles.checkStyle(container.getGraph().getStyle(), ZestStyles.IGNORE_INVISIBLE_LAYOUT)
-						&& !((GraphItem) item).isVisible())
-					return true;
-				return false;
-			}
-		});
+		addFilter(defaultFilter);
 	}
 
 	InternalLayoutContext(GraphContainer container) {
 		this.container = NodeContainerAdapter.get(container);
+		addFilter(defaultFilter);
 	}
 
 	public void addContextListener(ContextListener listener) {
@@ -318,23 +312,18 @@ class InternalLayoutContext implements LayoutContext {
 		return (ConnectionLayout[]) result.toArray(new ConnectionLayout[result.size()]);
 	}
 
-	void addFilter(Filter filter) {
+	void addFilter(LayoutFilter filter) {
 		filters.add(filter);
 	}
 
-	void removeFilter(Filter filter) {
+	void removeFilter(LayoutFilter filter) {
 		filters.remove(filter);
 	}
 
 	boolean isLayoutItemFiltered(GraphItem item) {
 		for (Iterator it = filters.iterator(); it.hasNext();) {
-			Filter filter = (Filter) it.next();
+			LayoutFilter filter = (LayoutFilter) it.next();
 			if (filter.isObjectFiltered(item))
-				return true;
-		}
-		if (container.getItemType() == GraphItem.CONTAINER) {
-			InternalLayoutContext parentLayout = container.getGraph().getLayoutContext();
-			if (parentLayout.isLayoutItemFiltered(item))
 				return true;
 		}
 		return false;
@@ -377,20 +366,46 @@ class InternalLayoutContext implements LayoutContext {
 	}
 
 	void fireConnectionAddedEvent(ConnectionLayout connection) {
-		boolean intercepted = false;
-		for (Iterator iterator = graphStructureListeners.iterator(); iterator.hasNext() && !intercepted;) {
-			GraphStructureListener listener = (GraphStructureListener) iterator.next();
-			intercepted = listener.connectionAdded(this, connection);
+		InternalLayoutContext sourceContext = ((InternalNodeLayout) connection.getSource()).getOwnerLayoutContext();
+		InternalLayoutContext targetContext = ((InternalNodeLayout) connection.getTarget()).getOwnerLayoutContext();
+		if (sourceContext != targetContext)
+			return;
+		if (sourceContext == this) {
+			boolean intercepted = false;
+			for (Iterator iterator = graphStructureListeners.iterator(); iterator.hasNext() && !intercepted;) {
+				GraphStructureListener listener = (GraphStructureListener) iterator.next();
+				intercepted = listener.connectionAdded(this, connection);
+			}
+			if (!intercepted)
+				applyMainAlgorithm();
+		} else {
+			sourceContext.fireConnectionAddedEvent(connection);
 		}
-		if (!intercepted)
-			applyMainAlgorithm();
 	}
 
 	void fireConnectionRemovedEvent(ConnectionLayout connection) {
+		InternalLayoutContext sourceContext = ((InternalNodeLayout) connection.getSource()).getOwnerLayoutContext();
+		InternalLayoutContext targetContext = ((InternalNodeLayout) connection.getTarget()).getOwnerLayoutContext();
+		if (sourceContext != targetContext)
+			return;
+		if (sourceContext == this) {
+			boolean intercepted = false;
+			for (Iterator iterator = graphStructureListeners.iterator(); iterator.hasNext() && !intercepted;) {
+				GraphStructureListener listener = (GraphStructureListener) iterator.next();
+				intercepted = listener.connectionRemoved(this, connection);
+			}
+			if (!intercepted)
+				applyMainAlgorithm();
+		} else {
+			sourceContext.fireConnectionAddedEvent(connection);
+		}
+	}
+
+	void fireBoundsChangedEvent() {
 		boolean intercepted = false;
-		for (Iterator iterator = graphStructureListeners.iterator(); iterator.hasNext() && !intercepted;) {
-			GraphStructureListener listener = (GraphStructureListener) iterator.next();
-			intercepted = listener.connectionRemoved(this, connection);
+		for (Iterator iterator = contextListeners.iterator(); iterator.hasNext() && !intercepted;) {
+			ContextListener listener = (ContextListener) iterator.next();
+			intercepted = listener.boundsChanged(this);
 		}
 		if (!intercepted)
 			applyMainAlgorithm();
