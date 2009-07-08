@@ -20,8 +20,8 @@ import org.eclipse.zest.core.widgets.internal.LoopAnchor;
 import org.eclipse.zest.core.widgets.internal.PolylineArcConnection;
 import org.eclipse.zest.core.widgets.internal.RoundedChopboxAnchor;
 import org.eclipse.zest.core.widgets.internal.ZestRootLayer;
-import org.mati.zest.layout.interfaces.ConnectionLayout;
-import org.mati.zest.layout.interfaces.NodeLayout;
+import org.eclipse.zest.layout.interfaces.ConnectionLayout;
+import org.eclipse.zest.layout.interfaces.NodeLayout;
 
 /*
  * This is the graph connection model which stores the source and destination
@@ -645,6 +645,7 @@ public class GraphConnection extends GraphItem {
 	}
 
 	class InternalConnectionLayout implements ConnectionLayout {
+		private boolean visible = GraphConnection.this.isVisible();
 
 		public NodeLayout getSource() {
 			return sourceNode.getLayout();
@@ -662,5 +663,23 @@ public class GraphConnection extends GraphItem {
 			return !ZestStyles.checkStyle(getConnectionStyle(), ZestStyles.CONNECTIONS_DIRECTED);
 		}
 
+		public boolean isVisible() {
+			return visible;
+		}
+
+		public void setVisible(boolean visible) {
+			this.visible = visible;
+		}
+
+		void applyLayout() {
+			if (GraphConnection.this.isVisible() != this.visible)
+				GraphConnection.this.setVisible(this.visible);
+		}
+	}
+
+	void applyLayoutChanges() {
+		if (layout != null) {
+			layout.applyLayout();
+		}
 	}
 }

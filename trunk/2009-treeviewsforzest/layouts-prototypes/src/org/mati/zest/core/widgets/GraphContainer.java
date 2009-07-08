@@ -35,9 +35,9 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.zest.core.widgets.internal.AspectRatioFreeformLayer;
 import org.eclipse.zest.core.widgets.internal.ContainerFigure;
 import org.eclipse.zest.core.widgets.internal.ZestRootLayer;
-import org.eclipse.zest.layouts.dataStructures.DisplayIndependentRectangle;
-import org.mati.zest.layout.algorithms.TreeLayoutAlgorithm;
-import org.mati.zest.layout.interfaces.LayoutAlgorithm;
+import org.eclipse.zest.layout.algorithms.TreeLayoutAlgorithm;
+import org.eclipse.zest.layout.dataStructures.DisplayIndependentRectangle;
+import org.eclipse.zest.layout.interfaces.LayoutAlgorithm;
 
 /**
  * A Container that can be added to a Graph. Nodes can be added to this
@@ -627,7 +627,7 @@ public class GraphContainer extends GraphNode {
 
 	public void applyLayout() {
 		if (layoutAlgorithm == null) {
-			layoutAlgorithm = new TreeLayoutAlgorithm();
+			setLayoutAlgorithm(new TreeLayoutAlgorithm(), false);
 		}
 		Animation.markBegin();
 		layoutAlgorithm.applyLayout();
