@@ -4,12 +4,12 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.zest.layout.interfaces.EntityLayout;
+import org.eclipse.zest.layout.interfaces.LayoutAlgorithm;
+import org.eclipse.zest.layout.interfaces.LayoutContext;
 import org.mati.zest.core.widgets.Graph;
 import org.mati.zest.core.widgets.GraphConnection;
 import org.mati.zest.core.widgets.GraphNode;
-import org.mati.zest.layout.interfaces.EntityLayout;
-import org.mati.zest.layout.interfaces.LayoutAlgorithm;
-import org.mati.zest.layout.interfaces.LayoutContext;
 
 /**
  * This snippet shows how to create a custom layout. This layout simply lays the nodes out vertically

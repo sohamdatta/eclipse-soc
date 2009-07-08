@@ -13,10 +13,10 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.zest.layout.algorithms.SpringLayoutAlgorithm;
 import org.mati.zest.core.widgets.Graph;
 import org.mati.zest.core.widgets.GraphConnection;
 import org.mati.zest.core.widgets.GraphNode;
-import org.mati.zest.layout.algorithms.SpringLayoutAlgorithm;
 
 /**
  * This snippet creates a very simple graph where Rock is connected to Paper
