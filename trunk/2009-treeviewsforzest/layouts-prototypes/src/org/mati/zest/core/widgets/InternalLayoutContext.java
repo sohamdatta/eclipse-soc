@@ -10,6 +10,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import org.eclipse.draw2d.Animation;
 import org.eclipse.zest.core.widgets.ZestStyles;
 import org.eclipse.zest.layout.dataStructures.DisplayIndependentDimension;
 import org.eclipse.zest.layout.dataStructures.DisplayIndependentPoint;
@@ -24,7 +25,6 @@ import org.eclipse.zest.layout.interfaces.LayoutContext;
 import org.eclipse.zest.layout.interfaces.LayoutListener;
 import org.eclipse.zest.layout.interfaces.NodeLayout;
 import org.eclipse.zest.layout.interfaces.PruningListener;
-import org.eclipse.zest.layout.interfaces.SubgraphFactory;
 import org.eclipse.zest.layout.interfaces.SubgraphLayout;
 
 class InternalLayoutContext implements LayoutContext {
@@ -32,7 +32,7 @@ class InternalLayoutContext implements LayoutContext {
 	/**
 	 * This factory throws all nodes into one subgraph that doesn't show
 	 * anything on the screen. A node pruned to this factory's subtree is
-	 * resized to (0, 0) and all connections adjacent to it are made invisible.
+	 * minimized and all connections adjacent to it are made invisible.
 	 */
 	private class DummySubgraphFacotry implements SubgraphFactory {
 		private class DummySubgraph implements SubgraphLayout {
@@ -195,14 +195,19 @@ class InternalLayoutContext implements LayoutContext {
 	}
 
 	public SubgraphLayout addSubgraph(NodeLayout[] nodes) {
-		return subgraphFactory.createSubgraph(nodes, this);
+		SubgraphLayout subgraph = subgraphFactory.createSubgraph(nodes, this);
+		subgraphs.add(subgraph);
+		return subgraph;
 	}
 
 	public void flushChanges(boolean animationHint) {
 		// TODO Auto-generated method stub
 		// TODO probably OK for nodes, need to add subgraphs
-		// TODO respect animation hint
 		// TODO support for asynchronous call
+		animationHint = animationHint && container.getGraph().isVisible();
+		if (animationHint) {
+			Animation.markBegin();
+		}
 		for (Iterator iterator = container.getNodes().iterator(); iterator.hasNext();) {
 			GraphNode node = (GraphNode) iterator.next();
 			node.applyLayoutChanges();
@@ -210,6 +215,9 @@ class InternalLayoutContext implements LayoutContext {
 		for (Iterator iterator = container.getConnections().iterator(); iterator.hasNext();) {
 			GraphConnection connection = (GraphConnection) iterator.next();
 			connection.applyLayoutChanges();
+		}
+		if (animationHint) {
+			Animation.run(Graph.ANIMATION_TIME);
 		}
 	}
 
