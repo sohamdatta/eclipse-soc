@@ -106,7 +106,7 @@ public class GraphConnection extends GraphItem {
 			// If the container of the source is a container, we need to draw another
 			// arc on that arc layer
 			sourceContainerConnectionFigure = doCreateFigure();
-			source.getParent().addConnectionFigure((PolylineConnection) sourceContainerConnectionFigure);
+			((GraphContainer) source.getParent().getAdaptee()).addConnectionFigure((PolylineConnection) sourceContainerConnectionFigure);
 			this.setVisible(false);
 		}
 
@@ -114,7 +114,7 @@ public class GraphConnection extends GraphItem {
 			// If the container of the source is a container, we need to draw another
 			// arc on that arc layer
 			targetContainerConnectionFigure = doCreateFigure();
-			destination.getParent().addConnectionFigure((PolylineConnection) targetContainerConnectionFigure);
+			((GraphContainer) destination.getParent().getAdaptee()).addConnectionFigure((PolylineConnection) targetContainerConnectionFigure);
 			this.setVisible(false);
 		}
 		graph.registerItem(this);

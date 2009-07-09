@@ -5,7 +5,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
-import org.eclipse.draw2d.PolylineConnection;
 import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.swt.widgets.Widget;
 import org.eclipse.zest.layout.dataStructures.DisplayIndependentRectangle;
@@ -49,10 +48,6 @@ abstract class NodeContainerAdapter {
 
 		public int getItemType() {
 			return GraphItem.GRAPH;
-		}
-
-		public void addConnectionFigure(PolylineConnection figure) {
-			/* do nothing */
 		}
 
 		public DisplayIndependentRectangle getLayoutBounds() {
@@ -102,10 +97,6 @@ abstract class NodeContainerAdapter {
 
 		public int getItemType() {
 			return GraphItem.CONTAINER;
-		}
-
-		public void addConnectionFigure(PolylineConnection figure) {
-			container.addConnectionFigure(figure);
 		}
 
 		public DisplayIndependentRectangle getLayoutBounds() {
@@ -161,8 +152,6 @@ abstract class NodeContainerAdapter {
 	public abstract void unhighlightNode(GraphNode graphNode);
 
 	public abstract int getItemType();
-
-	public abstract void addConnectionFigure(PolylineConnection figure);
 
 	public abstract DisplayIndependentRectangle getLayoutBounds();
 

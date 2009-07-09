@@ -833,7 +833,6 @@ public class GraphContainer extends GraphNode {
 		refreshLocation();
 		figure.getUpdateManager().performValidation();
 		*/
-
 	}
 
 	protected void refreshLocation() {
@@ -869,6 +868,7 @@ public class GraphContainer extends GraphNode {
 	void addNode(GraphNode node) {
 		zestLayer.addNode(node.getNodeFigure());
 		this.childNodes.add(node);
+		node.setVisible(isExpanded);
 	}
 
 	void addNode(GraphContainer container) {
