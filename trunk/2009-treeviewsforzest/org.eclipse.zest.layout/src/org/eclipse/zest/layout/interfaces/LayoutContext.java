@@ -76,7 +76,7 @@ public interface LayoutContext {
 	 * @param nodes
 	 *            nodes to add to the new subgraph
 	 */
-	public SubgraphLayout addSubgraph(NodeLayout[] nodes);
+	public SubgraphLayout createSubgraph(NodeLayout[] nodes);
 
 	/**
 	 * 

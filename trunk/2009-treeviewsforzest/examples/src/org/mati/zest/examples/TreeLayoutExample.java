@@ -1,5 +1,9 @@
 package org.mati.zest.examples;
 
+import java.util.List;
+
+import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.MenuManager;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
@@ -8,9 +12,12 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.zest.layout.algorithms.SpaceTreeLayoutAlgorithm;
 import org.eclipse.zest.layout.algorithms.TreeLayoutAlgorithm;
+import org.mati.zest.core.widgets.ExperimentalSubgraphLayout;
 import org.mati.zest.core.widgets.Graph;
 import org.mati.zest.core.widgets.GraphConnection;
+import org.mati.zest.core.widgets.GraphItem;
 import org.mati.zest.core.widgets.GraphNode;
 
 public class TreeLayoutExample {
@@ -40,8 +47,10 @@ public class TreeLayoutExample {
 			new GraphConnection(g, SWT.NONE, root, n);
 		}
 
-		final TreeLayoutAlgorithm algorithm = new TreeLayoutAlgorithm();
+		final SpaceTreeLayoutAlgorithm algorithm = new SpaceTreeLayoutAlgorithm();
 		g.setLayoutAlgorithm(algorithm, false);
+		g.setSubgraphFactory(ExperimentalSubgraphLayout.FACTORY);
+		hookMenu(g);
 
 		final Button buttonTopDown = new Button(shell, SWT.FLAT);
 		buttonTopDown.setText("TOP_DOWN");
@@ -89,5 +98,35 @@ public class TreeLayoutExample {
 				d.sleep();
 			}
 		}
+	}
+
+	private static void hookMenu(final Graph g) {
+		MenuManager menuMgr = new MenuManager("#PopupMenu");
+
+		Action expandAction = new Action() {
+			public void run() {
+				List selection = g.getSelection();
+				if (!selection.isEmpty()) {
+					GraphNode selected = (GraphNode) selection.get(0);
+					g.setExpanded((GraphNode) selected, true);
+				}
+			}
+		};
+		expandAction.setText("expand");
+		menuMgr.add(expandAction);
+
+		Action collapseAction = new Action() {
+			public void run() {
+				List selection = g.getSelection();
+				if (!selection.isEmpty()) {
+					GraphItem selected = (GraphItem) selection.get(0);
+					g.setExpanded((GraphNode) selected, false);
+				}
+			}
+		};
+		collapseAction.setText("collapse");
+		menuMgr.add(collapseAction);
+
+		g.setMenu(menuMgr.createContextMenu(g));
 	}
 }

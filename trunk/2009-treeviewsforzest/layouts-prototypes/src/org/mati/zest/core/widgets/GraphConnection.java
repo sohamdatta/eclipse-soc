@@ -19,9 +19,9 @@ import org.eclipse.zest.core.widgets.ZestStyles;
 import org.eclipse.zest.core.widgets.internal.LoopAnchor;
 import org.eclipse.zest.core.widgets.internal.PolylineArcConnection;
 import org.eclipse.zest.core.widgets.internal.RoundedChopboxAnchor;
-import org.eclipse.zest.core.widgets.internal.ZestRootLayer;
 import org.eclipse.zest.layout.interfaces.ConnectionLayout;
 import org.eclipse.zest.layout.interfaces.NodeLayout;
+import org.mati.zest.core.widgets.internal.ZestRootLayer;
 
 /*
  * This is the graph connection model which stores the source and destination
@@ -97,7 +97,7 @@ public class GraphConnection extends GraphItem {
 		if (source.getParent().getItemType() == GraphItem.CONTAINER && destination.getParent().getItemType() == GraphItem.CONTAINER && (source.getParent() == destination.getParent())) {
 			// 196189: Edges should not draw on the edge layer if both the src and dest are in the same container
 			// https://bugs.eclipse.org/bugs/show_bug.cgi?id=196189
-			graph.addConnection(this, ZestRootLayer.EDGES_ON_TOP);
+			graph.addConnection(this, false);
 		} else {
 			graph.addConnection(this, true);
 		}
@@ -106,7 +106,7 @@ public class GraphConnection extends GraphItem {
 			// If the container of the source is a container, we need to draw another
 			// arc on that arc layer
 			sourceContainerConnectionFigure = doCreateFigure();
-			((GraphContainer) source.getParent().getAdaptee()).addConnectionFigure((PolylineConnection) sourceContainerConnectionFigure);
+			((GraphContainer) source.getParent().getAdaptee()).addFigure((PolylineConnection) sourceContainerConnectionFigure);
 			this.setVisible(false);
 		}
 
@@ -114,7 +114,7 @@ public class GraphConnection extends GraphItem {
 			// If the container of the source is a container, we need to draw another
 			// arc on that arc layer
 			targetContainerConnectionFigure = doCreateFigure();
-			((GraphContainer) destination.getParent().getAdaptee()).addConnectionFigure((PolylineConnection) targetContainerConnectionFigure);
+			((GraphContainer) destination.getParent().getAdaptee()).addFigure((PolylineConnection) targetContainerConnectionFigure);
 			this.setVisible(false);
 		}
 		graph.registerItem(this);
@@ -392,9 +392,11 @@ public class GraphConnection extends GraphItem {
 		if (highlighted) {
 			return;
 		}
+		IFigure parentFigure = connectionFigure.getParent();
+		if (parentFigure instanceof ZestRootLayer)
+			((ZestRootLayer) parentFigure).highlightConnection(connectionFigure);
 		highlighted = true;
 		updateFigure(connectionFigure);
-		graph.highlightEdge(this);
 	}
 
 	/**
@@ -404,9 +406,11 @@ public class GraphConnection extends GraphItem {
 		if (!highlighted) {
 			return;
 		}
+		IFigure parentFigure = connectionFigure.getParent();
+		if (parentFigure instanceof ZestRootLayer)
+			((ZestRootLayer) parentFigure).unHighlightConnection(connectionFigure);
 		highlighted = false;
 		updateFigure(connectionFigure);
-		graph.unhighlightEdge(this);
 	}
 
 	/**
