@@ -18,6 +18,7 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.zest.core.widgets.ZestStyles;
 import org.eclipse.zest.core.widgets.internal.GraphLabel;
+import org.mati.zest.core.widgets.internal.ZestRootLayer;
 
 /**
  * Simple node class which has the following properties: color, size, location,
@@ -380,7 +381,9 @@ public class GraphNode extends GraphItem {
 		if (highlighted == HIGHLIGHT_ON) {
 			return;
 		}
-		parent.highlightNode(this);
+		IFigure parentFigure = nodeFigure.getParent();
+		if (parentFigure instanceof ZestRootLayer)
+			((ZestRootLayer) parentFigure).highlightNode(nodeFigure);
 		highlighted = HIGHLIGHT_ON;
 		updateFigureForModel(getNodeFigure());
 	}
@@ -394,7 +397,9 @@ public class GraphNode extends GraphItem {
 			return;
 		}
 
-		parent.unhighlightNode(this);
+		IFigure parentFigure = nodeFigure.getParent();
+		if (parentFigure instanceof ZestRootLayer)
+			((ZestRootLayer) parentFigure).unHighlightNode(nodeFigure);
 
 		highlighted = HIGHLIGHT_NONE;
 		updateFigureForModel(nodeFigure);

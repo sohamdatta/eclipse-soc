@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
+import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.swt.widgets.Widget;
 import org.eclipse.zest.layout.dataStructures.DisplayIndependentRectangle;
@@ -38,12 +39,8 @@ abstract class NodeContainerAdapter {
 			graph.addNode(graphNode);
 		}
 
-		public void highlightNode(GraphNode graphNode) {
-			graph.highlightNode(graphNode);
-		}
-
-		public void unhighlightNode(GraphNode graphNode) {
-			graph.highlightNode(graphNode);
+		public void addFigure(IFigure figure) {
+			graph.addFigure(figure);
 		}
 
 		public int getItemType() {
@@ -87,12 +84,8 @@ abstract class NodeContainerAdapter {
 			container.addNode(graphNode);
 		}
 
-		public void highlightNode(GraphNode graphNode) {
-			/* do nothing */
-		}
-
-		public void unhighlightNode(GraphNode graphNode) {
-			/* do nothing */
+		public void addFigure(IFigure figure) {
+			container.addFigure(figure);
 		}
 
 		public int getItemType() {
@@ -147,9 +140,13 @@ abstract class NodeContainerAdapter {
 
 	public abstract void addNode(GraphNode graphNode);
 
-	public abstract void highlightNode(GraphNode graphNode);
-
-	public abstract void unhighlightNode(GraphNode graphNode);
+	/**
+	 * Adds a custom figure to be displayed on top of nodes. Can be used to add
+	 * subgraph figures.
+	 * 
+	 * @param figure
+	 */
+	public abstract void addFigure(IFigure figure);
 
 	public abstract int getItemType();
 

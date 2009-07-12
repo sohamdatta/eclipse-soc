@@ -18,7 +18,6 @@ import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.Label;
 import org.eclipse.draw2d.LayoutAnimator;
 import org.eclipse.draw2d.LineBorder;
-import org.eclipse.draw2d.PolylineConnection;
 import org.eclipse.draw2d.ScrollPane;
 import org.eclipse.draw2d.ToolbarLayout;
 import org.eclipse.draw2d.Triangle;
@@ -34,10 +33,10 @@ import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.zest.core.widgets.internal.AspectRatioFreeformLayer;
 import org.eclipse.zest.core.widgets.internal.ContainerFigure;
-import org.eclipse.zest.core.widgets.internal.ZestRootLayer;
 import org.eclipse.zest.layout.algorithms.TreeLayoutAlgorithm;
 import org.eclipse.zest.layout.dataStructures.DisplayIndependentRectangle;
 import org.eclipse.zest.layout.interfaces.LayoutAlgorithm;
+import org.mati.zest.core.widgets.internal.ZestRootLayer;
 
 /**
  * A Container that can be added to a Graph. Nodes can be added to this
@@ -259,7 +258,7 @@ public class GraphContainer extends GraphNode {
 	private List childNodes = null;
 	private int childAreaHeight = CONTAINER_HEIGHT;
 
-	public ZestRootLayer zestLayer;
+	private ZestRootLayer zestLayer;
 	private ScrollPane scrollPane;
 	private LayoutAlgorithm layoutAlgorithm;
 	private boolean isExpanded = false;
@@ -861,18 +860,14 @@ public class GraphContainer extends GraphNode {
 		scalledLayer.setScale(computeWidthScale(), computeHeightScale());
 	}
 
-	void addConnectionFigure(PolylineConnection connection) {
-		nodeFigure.add(connection);
+	void addFigure(IFigure figure) {
+		nodeFigure.add(figure);
 	}
 
 	void addNode(GraphNode node) {
 		zestLayer.addNode(node.getNodeFigure());
 		this.childNodes.add(node);
 		node.setVisible(isExpanded);
-	}
-
-	void addNode(GraphContainer container) {
-		throw new RuntimeException("Containers cannot be added to other containers (yet)");
 	}
 
 	public List getNodes() {

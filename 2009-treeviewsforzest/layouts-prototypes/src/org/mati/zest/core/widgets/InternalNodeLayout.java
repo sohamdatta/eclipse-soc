@@ -76,11 +76,19 @@ class InternalNodeLayout implements NodeLayout {
 	}
 
 	public void setLocation(double x, double y) {
-		location = new DisplayIndependentPoint(x, y);
+		if (location != null) {
+			location.x = x;
+			location.y = y;
+		} else {
+			location = new DisplayIndependentPoint(x, y);
+		}
 	}
 
 	public void setSize(double width, double height) {
-		size = new DisplayIndependentDimension(width, height);
+		if (location == null)
+			size = new DisplayIndependentDimension(width, height);
+		size.width = width;
+		size.height = height;
 	}
 
 	public void setMinimized(boolean minimized) {

@@ -4,16 +4,12 @@
 package org.mati.zest.core.widgets;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 
 import org.eclipse.draw2d.Animation;
 import org.eclipse.zest.core.widgets.ZestStyles;
-import org.eclipse.zest.layout.dataStructures.DisplayIndependentDimension;
-import org.eclipse.zest.layout.dataStructures.DisplayIndependentPoint;
 import org.eclipse.zest.layout.dataStructures.DisplayIndependentRectangle;
 import org.eclipse.zest.layout.interfaces.ConnectionLayout;
 import org.eclipse.zest.layout.interfaces.ContextListener;
@@ -29,130 +25,17 @@ import org.eclipse.zest.layout.interfaces.SubgraphLayout;
 
 class InternalLayoutContext implements LayoutContext {
 
-	/**
-	 * This factory throws all nodes into one subgraph that doesn't show
-	 * anything on the screen. A node pruned to this factory's subtree is
-	 * minimized and all connections adjacent to it are made invisible.
-	 */
-	private class DummySubgraphFacotry implements SubgraphFactory {
-		private class DummySubgraph implements SubgraphLayout {
-			private LayoutContext context;
-
-			public DummySubgraph(LayoutContext context) {
-				super();
-				this.context = context;
-			}
-
-			private Set nodes = new HashSet();
-
-			public boolean isGraphEntity() {
-				return false;
-			}
-
-			public void setSize(double width, double height) {
-				// do nothing
-			}
-
-			public void setLocation(double x, double y) {
-				// do nothing
-			}
-
-			public boolean isResizable() {
-				return false;
-			}
-
-			public boolean isMovable() {
-				return false;
-			}
-
-			public NodeLayout[] getSuccessingEntities() {
-				// TODO Auto-generated method stub
-				return null;
-			}
-
-			public DisplayIndependentDimension getSize() {
-				DisplayIndependentRectangle bounds = context.getBounds();
-				return new DisplayIndependentDimension(bounds.width, bounds.height);
-			}
-
-			public double getPreferredAspectRatio() {
-				return 0;
-			}
-
-			public NodeLayout[] getPredecessingEntities() {
-				// TODO Auto-generated method stub
-				return null;
-			}
-
-			public DisplayIndependentPoint getLocation() {
-				DisplayIndependentRectangle bounds = context.getBounds();
-				return new DisplayIndependentPoint(bounds.x + bounds.width / 2, bounds.y + bounds.height / 2);
-			}
-
-			public void removeNodes(NodeLayout[] nodes) {
-				for (int i = 0; i < nodes.length; i++) {
-					if (this.nodes.remove(nodes[i])) {
-						nodes[i].prune(null);
-						nodes[i].setMinimized(false);
-						showConnections(nodes[i].getIncomingConnections());
-						showConnections(nodes[i].getOutgoingConnections());
-					}
-				}
-			}
-
-			public NodeLayout[] getNodes() {
-				return (NodeLayout[]) nodes.toArray(new NodeLayout[nodes.size()]);
-			}
-
-			public void addNodes(NodeLayout[] nodes) {
-				for (int i = 0; i < nodes.length; i++) {
-					if (this.nodes.add(nodes[i])) {
-						nodes[i].prune(this);
-						nodes[i].setMinimized(true);
-						hideConnections(nodes[i].getIncomingConnections());
-						hideConnections(nodes[i].getOutgoingConnections());
-					}
-				}
-			}
-
-			private void hideConnections(ConnectionLayout[] connections) {
-				for (int i = 0; i < connections.length; i++)
-					connections[i].setVisible(false);
-			}
-
-			private void showConnections(ConnectionLayout[] connections) {
-				for (int i = 0; i < connections.length; i++) {
-					if (!connections[i].getSource().isPruned() && !connections[i].getTarget().isPruned())
-						connections[i].setVisible(true);
-				}
-			}
-
-		};
-
-		private HashMap contextToSubgraph = new HashMap();
-
-		public SubgraphLayout createSubgraph(NodeLayout[] nodes, LayoutContext context) {
-			DummySubgraph subgraph = (DummySubgraph) contextToSubgraph.get(context);
-			if (subgraph == null) {
-				subgraph = new DummySubgraph(context);
-				contextToSubgraph.put(context, subgraph);
-			}
-			subgraph.addNodes(nodes);
-			return subgraph;
-		}
-
-	}
-
-	private final NodeContainerAdapter container;
-	private List filters = new ArrayList();
-	private List contextListeners = new ArrayList();
-	private List graphStructureListeners = new ArrayList();
-	private List layoutListeners = new ArrayList();
-	private List pruningListeners = new ArrayList();
+	final NodeContainerAdapter container;
+	private final List filters = new ArrayList();
+	private final List contextListeners = new ArrayList();
+	private final List graphStructureListeners = new ArrayList();
+	private final List layoutListeners = new ArrayList();
+	private final List pruningListeners = new ArrayList();
 	private LayoutAlgorithm mainAlgorithm;
 	private ExpandCollapseManager expandCollapseManager;
-	private SubgraphFactory subgraphFactory = new DummySubgraphFacotry();
-	private ArrayList subgraphs = new ArrayList();
+	private SubgraphFactory subgraphFactory = InternalSubgraphLayout.FACTORY;
+	private final HashSet subgraphs = new HashSet();
+	private boolean eventsOn = true;
 
 	private final LayoutFilter defaultFilter = new LayoutFilter() {
 		public boolean isObjectFiltered(GraphItem item) {
@@ -194,16 +77,20 @@ class InternalLayoutContext implements LayoutContext {
 		pruningListeners.add(listener);
 	}
 
-	public SubgraphLayout addSubgraph(NodeLayout[] nodes) {
+	public SubgraphLayout createSubgraph(NodeLayout[] nodes) {
 		SubgraphLayout subgraph = subgraphFactory.createSubgraph(nodes, this);
 		subgraphs.add(subgraph);
 		return subgraph;
 	}
 
+	void removeSubgrah(InternalSubgraphLayout subgraph) {
+		subgraphs.remove(subgraph);
+	}
+
 	public void flushChanges(boolean animationHint) {
 		// TODO Auto-generated method stub
-		// TODO probably OK for nodes, need to add subgraphs
 		// TODO support for asynchronous call
+		eventsOn = false;
 		animationHint = animationHint && container.getGraph().isVisible();
 		if (animationHint) {
 			Animation.markBegin();
@@ -216,9 +103,14 @@ class InternalLayoutContext implements LayoutContext {
 			GraphConnection connection = (GraphConnection) iterator.next();
 			connection.applyLayoutChanges();
 		}
+		for (Iterator iterator = subgraphs.iterator(); iterator.hasNext();) {
+			InternalSubgraphLayout subgraph = (InternalSubgraphLayout) iterator.next();
+			subgraph.applyLayoutChanges();
+		}
 		if (animationHint) {
 			Animation.run(Graph.ANIMATION_TIME);
 		}
+		eventsOn = true;
 	}
 
 	public DisplayIndependentRectangle getBounds() {
@@ -354,7 +246,7 @@ class InternalLayoutContext implements LayoutContext {
 	}
 
 	void fireNodeAddedEvent(NodeLayout node) {
-		boolean intercepted = false;
+		boolean intercepted = !eventsOn;
 		for (Iterator iterator = graphStructureListeners.iterator(); iterator.hasNext() && !intercepted;) {
 			GraphStructureListener listener = (GraphStructureListener) iterator.next();
 			intercepted = listener.nodeAdded(this, node);
@@ -364,7 +256,7 @@ class InternalLayoutContext implements LayoutContext {
 	}
 
 	void fireNodeRemovedEvent(NodeLayout node) {
-		boolean intercepted = false;
+		boolean intercepted = !eventsOn;
 		for (Iterator iterator = graphStructureListeners.iterator(); iterator.hasNext() && !intercepted;) {
 			GraphStructureListener listener = (GraphStructureListener) iterator.next();
 			intercepted = listener.nodeRemoved(this, node);
@@ -379,7 +271,7 @@ class InternalLayoutContext implements LayoutContext {
 		if (sourceContext != targetContext)
 			return;
 		if (sourceContext == this) {
-			boolean intercepted = false;
+			boolean intercepted = !eventsOn;
 			for (Iterator iterator = graphStructureListeners.iterator(); iterator.hasNext() && !intercepted;) {
 				GraphStructureListener listener = (GraphStructureListener) iterator.next();
 				intercepted = listener.connectionAdded(this, connection);
@@ -397,7 +289,7 @@ class InternalLayoutContext implements LayoutContext {
 		if (sourceContext != targetContext)
 			return;
 		if (sourceContext == this) {
-			boolean intercepted = false;
+			boolean intercepted = !eventsOn;
 			for (Iterator iterator = graphStructureListeners.iterator(); iterator.hasNext() && !intercepted;) {
 				GraphStructureListener listener = (GraphStructureListener) iterator.next();
 				intercepted = listener.connectionRemoved(this, connection);
@@ -410,7 +302,7 @@ class InternalLayoutContext implements LayoutContext {
 	}
 
 	void fireBoundsChangedEvent() {
-		boolean intercepted = false;
+		boolean intercepted = !eventsOn;
 		for (Iterator iterator = contextListeners.iterator(); iterator.hasNext() && !intercepted;) {
 			ContextListener listener = (ContextListener) iterator.next();
 			intercepted = listener.boundsChanged(this);

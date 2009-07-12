@@ -38,8 +38,8 @@ import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Item;
 import org.eclipse.zest.core.widgets.ZestStyles;
 import org.eclipse.zest.core.widgets.internal.ContainerFigure;
-import org.eclipse.zest.core.widgets.internal.ZestRootLayer;
 import org.eclipse.zest.layout.interfaces.LayoutAlgorithm;
+import org.mati.zest.core.widgets.internal.ZestRootLayer;
 
 public class Graph extends FigureCanvas {
 
@@ -400,6 +400,10 @@ public class Graph extends FigureCanvas {
 		return this.layoutAlgorithm;
 	}
 
+	public void setSubgraphFactory(SubgraphFactory factory) {
+		getLayoutContext().setSubgraphFactory(factory);
+	}
+
 	/**
 	 * Adds a filter used for hiding elements from layout algorithm.
 	 * 
@@ -710,55 +714,6 @@ public class Graph extends FigureCanvas {
 	}
 
 	/**
-	 * Moves the edge to the highlight layer. This moves the edge above the
-	 * nodes
-	 * 
-	 * @param connection
-	 */
-	void highlightEdge(GraphConnection connection) {
-		IFigure figure = connection.getConnectionFigure();
-		if (figure != null && !connection.isHighlighted()) {
-			zestRootLayer.highlightConnection(figure);
-		}
-	}
-
-	/**
-	 * Moves the edge from the edge feedback layer back to the edge layer
-	 * 
-	 * @param graphConnection
-	 */
-	void unhighlightEdge(GraphConnection connection) {
-		IFigure figure = connection.getConnectionFigure();
-		if (figure != null && connection.isHighlighted()) {
-			zestRootLayer.unHighlightConnection(figure);
-		}
-	}
-
-	/**
-	 * Moves the node onto the node feedback layer
-	 * 
-	 * @param node
-	 */
-	void highlightNode(GraphNode node) {
-		IFigure figure = node.getNodeFigure();
-		if (figure != null && !node.isHighlighted()) {
-			zestRootLayer.highlightNode(figure);
-		}
-	}
-
-	/**
-	 * Moves the node off the node feedback layer
-	 * 
-	 * @param node
-	 */
-	void unhighlightNode(GraphNode node) {
-		IFigure figure = node.getNodeFigure();
-		if (figure != null && node.isHighlighted()) {
-			zestRootLayer.unHighlightNode(figure);
-		}
-	}
-
-	/**
 	 * Converts the list of GraphModelConnection objects into an array and
 	 * returns it.
 	 * 
@@ -812,6 +767,10 @@ public class Graph extends FigureCanvas {
 		this.getNodes().add(node);
 		zestRootLayer.addNode(node.getFigure());
 		getLayoutContext().fireNodeAddedEvent(node.getLayout());
+	}
+
+	void addFigure(IFigure figure) {
+		fishEyeLayer.add(figure);
 	}
 
 	void registerItem(GraphItem item) {
