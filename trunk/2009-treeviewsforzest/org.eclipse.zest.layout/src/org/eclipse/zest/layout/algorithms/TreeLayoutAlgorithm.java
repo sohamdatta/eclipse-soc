@@ -257,10 +257,10 @@ public class TreeLayoutAlgorithm implements LayoutAlgorithm {
 			entityInfo.entity.setLocation(breadthPosition * leafSize, bounds.height - depthPosition * layerSize);
 			break;
 		case LEFT_RIGHT:
-			entityInfo.entity.setLocation(bounds.width - depthPosition * layerSize, breadthPosition * leafSize);
+			entityInfo.entity.setLocation(depthPosition * layerSize, breadthPosition * leafSize);
 			break;
 		case RIGHT_LEFT:
-			entityInfo.entity.setLocation(depthPosition * layerSize, breadthPosition * leafSize);
+			entityInfo.entity.setLocation(bounds.width - depthPosition * layerSize, breadthPosition * leafSize);
 			break;
 		}
 

@@ -769,8 +769,8 @@ public class Graph extends FigureCanvas {
 		getLayoutContext().fireNodeAddedEvent(node.getLayout());
 	}
 
-	void addFigure(IFigure figure) {
-		fishEyeLayer.add(figure);
+	void addSubgraphFigure(IFigure figure) {
+		zestRootLayer.addSubgraph(figure);
 	}
 
 	void registerItem(GraphItem item) {
