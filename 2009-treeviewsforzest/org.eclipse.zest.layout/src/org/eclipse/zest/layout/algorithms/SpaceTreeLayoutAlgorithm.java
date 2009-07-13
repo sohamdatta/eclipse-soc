@@ -503,10 +503,10 @@ public class SpaceTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCollapse
 			node.node.setLocation(breadthPosition * leafSize, bounds.height - depthPosition * layerSize);
 			break;
 		case LEFT_RIGHT:
-			node.node.setLocation(bounds.width - depthPosition * layerSize, breadthPosition * leafSize);
+			node.node.setLocation(depthPosition * layerSize, breadthPosition * leafSize);
 			break;
 		case RIGHT_LEFT:
-			node.node.setLocation(depthPosition * layerSize, breadthPosition * leafSize);
+			node.node.setLocation(bounds.width - depthPosition * layerSize, breadthPosition * leafSize);
 			break;
 		}
 		node.refreshSubgraphLocation();

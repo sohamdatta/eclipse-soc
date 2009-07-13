@@ -860,8 +860,8 @@ public class GraphContainer extends GraphNode {
 		scalledLayer.setScale(computeWidthScale(), computeHeightScale());
 	}
 
-	void addFigure(IFigure figure) {
-		nodeFigure.add(figure);
+	void addSubgraphFigure(IFigure figure) {
+		zestLayer.addSubgraph(figure);
 	}
 
 	void addNode(GraphNode node) {

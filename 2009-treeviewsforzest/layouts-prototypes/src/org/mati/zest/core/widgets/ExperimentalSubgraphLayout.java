@@ -3,6 +3,7 @@ package org.mati.zest.core.widgets;
 import java.util.Arrays;
 
 import org.eclipse.draw2d.ColorConstants;
+import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.Label;
 import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.draw2d.geometry.Point;
@@ -11,6 +12,7 @@ import org.eclipse.zest.layout.dataStructures.DisplayIndependentDimension;
 import org.eclipse.zest.layout.dataStructures.DisplayIndependentPoint;
 import org.eclipse.zest.layout.interfaces.NodeLayout;
 import org.eclipse.zest.layout.interfaces.SubgraphLayout;
+import org.mati.zest.core.widgets.internal.ZestRootLayer;
 
 public class ExperimentalSubgraphLayout extends InternalSubgraphLayout {
 
@@ -82,7 +84,12 @@ public class ExperimentalSubgraphLayout extends InternalSubgraphLayout {
 	protected void dispose() {
 		super.dispose();
 		System.out.println("" + this.hashCode() + " disposing");
-		figure.getParent().remove(figure);
+		IFigure parent = figure.getParent();
+		if (parent instanceof ZestRootLayer) {
+			((ZestRootLayer) parent).removeSubgraph(figure);
+		} else {
+			parent.remove(figure);
+		}
 	}
 
 	protected void applyLayoutChanges() {

@@ -13,12 +13,10 @@ import org.eclipse.draw2d.FreeformLayer;
 import org.eclipse.draw2d.IFigure;
 
 /**
- * The root figure for Zest.  The figure is broken up into four segments,
- *  
- * 1. The Connections
- * 2. The Nodes
- * 3. The Highlighted Connections
- * 4. The Highlighted Nodes
+ * The root figure for Zest. The figure is broken up into following segments:
+ * 
+ * 1. The Connections 2. The Subgraphs 3. The Nodes 4. The Highlighted
+ * Connections 5. The Highlighted Nodes
  * 
  * @author Ian Bull
  * 
@@ -27,13 +25,15 @@ public class ZestRootLayer extends FreeformLayer {
 
 	public static final int CONNECTIONS_LAYER = 0;
 	
-	public static final int NODES_LAYER = 1;
+	public static final int SUBGRAPHS_LAYER = 1;
+
+	public static final int NODES_LAYER = 2;
 	
-	public static final int CONNECTIONS_HIGHLIGHTED_LAYER = 2;
+	public static final int CONNECTIONS_HIGHLIGHTED_LAYER = 3;
 	
-	public static final int NODES_HIGHLIGHTED_LAYER = 3;
+	public static final int NODES_HIGHLIGHTED_LAYER = 4;
 	
-	public static final int NUMBER_OF_LAYERS = 4;
+	public static final int NUMBER_OF_LAYERS = 5;
 	
 	private int[] itemsInLayer = new int[NUMBER_OF_LAYERS];
 
@@ -59,6 +59,14 @@ public class ZestRootLayer extends FreeformLayer {
 
 	public void addConnection(IFigure connectionFigure) {
 		addFigure(connectionFigure, CONNECTIONS_LAYER);
+	}
+
+	public void addSubgraph(IFigure subgraphFigrue) {
+		addFigure(subgraphFigrue, SUBGRAPHS_LAYER);
+	}
+
+	public void removeSubgraph(IFigure subgraphFigure) {
+		removeFigure(subgraphFigure);
 	}
 
 	public void highlightNode(IFigure nodeFigure) {

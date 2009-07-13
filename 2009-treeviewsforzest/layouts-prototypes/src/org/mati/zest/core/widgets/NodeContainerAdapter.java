@@ -40,7 +40,7 @@ abstract class NodeContainerAdapter {
 		}
 
 		public void addFigure(IFigure figure) {
-			graph.addFigure(figure);
+			graph.addSubgraphFigure(figure);
 		}
 
 		public int getItemType() {
@@ -85,7 +85,7 @@ abstract class NodeContainerAdapter {
 		}
 
 		public void addFigure(IFigure figure) {
-			container.addFigure(figure);
+			container.addSubgraphFigure(figure);
 		}
 
 		public int getItemType() {
