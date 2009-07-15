@@ -264,6 +264,9 @@ public class DonutSeriesImpl extends SeriesImpl implements DonutSeries {
 	 */
 	protected static final Position TITLE_POSITION_EDEFAULT = Position.ABOVE_LITERAL;
 
+
+	private static final double RATIO_EDEFAULT = 0;
+
 	/**
 	 * The cached value of the '{@link #getTitlePosition() <em>Title Position</em>}' attribute.
 	 * <!-- begin-user-doc -->
@@ -282,6 +285,12 @@ public class DonutSeriesImpl extends SeriesImpl implements DonutSeries {
 	 * @ordered
 	 */
 	protected boolean titlePositionESet;
+
+
+	private double ratio;
+
+
+	private boolean ratioESet;
 
 	/**
 	 * <!-- begin-user-doc -->
@@ -992,8 +1001,8 @@ public class DonutSeriesImpl extends SeriesImpl implements DonutSeries {
 		leaderLineStyleESet = src.isSetLeaderLineStyle( );
 		leaderLineLength = src.getLeaderLineLength( );
 		leaderLineLengthESet = src.isSetLeaderLineLength( );
-//		ratio = src.getRatio( );
-//		ratioESet = src.isSetRatio( );
+		ratio = src.getRatio( );
+		ratioESet = src.isSetRatio( );
 		rotation = src.getRotation( );
 		rotationESet = src.isSetRotation( );
 		
@@ -1007,6 +1016,65 @@ public class DonutSeriesImpl extends SeriesImpl implements DonutSeries {
 		return new DonutSeriesImpl( );
 	}
 	
-	
+	/**
+	 * <!-- begin-user-doc -->
+	 * <!-- end-user-doc -->
+	 * @generated
+	 */
+	public double getRatio( )
+	{
+		return ratio;
+	}
+
+	/**
+	 * <!-- begin-user-doc -->
+	 * <!-- end-user-doc -->
+	 * @generated
+	 */
+	public void setRatio( double newRatio )
+	{
+		double oldRatio = ratio;
+		ratio = newRatio;
+		boolean oldRatioESet = ratioESet;
+		ratioESet = true;
+		if ( eNotificationRequired( ) )
+			eNotify( new ENotificationImpl( this,
+					Notification.SET,
+					TypePackage.PIE_SERIES__RATIO,
+					oldRatio,
+					ratio,
+					!oldRatioESet ) );
+	}
+
+	/**
+	 * <!-- begin-user-doc -->
+	 * <!-- end-user-doc -->
+	 * @generated
+	 */
+	public void unsetRatio( )
+	{
+		double oldRatio = ratio;
+		boolean oldRatioESet = ratioESet;
+		ratio = RATIO_EDEFAULT;
+		ratioESet = false;
+		if ( eNotificationRequired( ) )
+			eNotify( new ENotificationImpl( this,
+					Notification.UNSET,
+					TypePackage.PIE_SERIES__RATIO,
+					oldRatio,
+					RATIO_EDEFAULT,
+					oldRatioESet ) );
+	}
+
+	/**
+	 * <!-- begin-user-doc -->
+	 * <!-- end-user-doc -->
+	 * @generated
+	 */
+	public boolean isSetRatio( )
+	{
+		return ratioESet;
+	}
+
 
 } //DonutSeriesImpl
