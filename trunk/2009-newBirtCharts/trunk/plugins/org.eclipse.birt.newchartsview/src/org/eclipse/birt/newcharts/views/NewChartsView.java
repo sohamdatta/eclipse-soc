@@ -13,7 +13,9 @@ import org.eclipse.birt.chart.model.attribute.Position;
 import org.eclipse.birt.chart.model.attribute.Text;
 import org.eclipse.birt.chart.model.attribute.impl.ColorDefinitionImpl;
 import org.eclipse.birt.chart.model.component.Axis;
+import org.eclipse.birt.chart.model.component.CurveFitting;
 import org.eclipse.birt.chart.model.component.Series;
+import org.eclipse.birt.chart.model.component.impl.CurveFittingImpl;
 import org.eclipse.birt.chart.model.component.impl.SeriesImpl;
 import org.eclipse.birt.chart.model.data.NumberDataSet;
 import org.eclipse.birt.chart.model.data.SeriesDefinition;
@@ -26,9 +28,13 @@ import org.eclipse.birt.chart.model.impl.ChartWithoutAxesImpl;
 import org.eclipse.birt.chart.model.layout.Legend;
 import org.eclipse.birt.chart.model.layout.Plot;
 import org.eclipse.birt.chart.model.type.BarSeries;
+import org.eclipse.birt.chart.model.type.LineSeries;
 import org.eclipse.birt.chart.model.type.PieSeries;
+import org.eclipse.birt.chart.model.type.ScatterSeries;
 import org.eclipse.birt.chart.model.type.impl.BarSeriesImpl;
+import org.eclipse.birt.chart.model.type.impl.LineSeriesImpl;
 import org.eclipse.birt.chart.model.type.impl.PieSeriesImpl;
+import org.eclipse.birt.chart.model.type.impl.ScatterSeriesImpl;
 import org.eclipse.birt.chart.model.newtype.DonutSeries;
 import org.eclipse.birt.chart.model.newtype.impl.DonutSeriesImpl;
 import org.eclipse.swt.SWT;
@@ -55,16 +61,68 @@ public class NewChartsView extends ViewPart {
     TabItem donutTabItem = new TabItem( tabFolder, SWT.NONE );
     donutTabItem.setText( "Donut Chart" );
     donutTabItem.setControl( donutChart );
+    
     ChartCanvas pieChart = new ChartCanvas( tabFolder, SWT.NONE );
     pieChart.setChart( createPieChart() );
     TabItem pieTabItem = new TabItem( tabFolder, SWT.NONE );
     pieTabItem.setText( "Pie Chart" );
     pieTabItem.setControl( pieChart );
+    
     ChartCanvas barChart = new ChartCanvas( tabFolder, SWT.NONE );
     barChart.setChart( createBarChart() );
     TabItem barTabItem = new TabItem( tabFolder, SWT.NONE );
     barTabItem.setText( "Bar Chart" );
     barTabItem.setControl( barChart );
+    
+    ChartCanvas lineChart = new ChartCanvas( tabFolder, SWT.NONE );
+    lineChart.setChart( createLineChart() );
+    TabItem lineChartItem = new TabItem( tabFolder, SWT.NONE );
+    lineChartItem.setText( "Line Chart" );
+    lineChartItem.setControl( lineChart );
+  }
+
+  private Chart createLineChart() {
+    
+    ChartWithAxes chart = ChartWithAxesImpl.create();
+    chart.setDimension( ChartDimension.TWO_DIMENSIONAL_LITERAL );
+    Plot plot = chart.getPlot();
+    plot.setBackground( ColorDefinitionImpl.WHITE() );
+    plot.getClientArea().setBackground( ColorDefinitionImpl.WHITE() );
+    Legend legend = chart.getLegend();
+    legend.setItemType( LegendItemType.CATEGORIES_LITERAL );
+    legend.setVisible( true );
+    adjustFont( legend.getText().getFont() );
+    Text caption = chart.getTitle().getLabel().getCaption();
+    caption.setValue( "Distribution of Chart Column Heights" );
+    adjustFont( caption.getFont() );
+    Axis xAxis = ( ( ChartWithAxes )chart ).getPrimaryBaseAxes()[ 0 ];
+    xAxis.getTitle().setVisible( true );
+    xAxis.getTitle().getCaption().setValue( "" );
+    Axis yAxis = ( ( ChartWithAxes )chart ).getPrimaryOrthogonalAxis( xAxis );
+    yAxis.getTitle().setVisible( true );
+    yAxis.getTitle().getCaption().setValue( "" );
+    yAxis.getScale().setStep( 1.0 );
+    TextDataSet categoryValues = TextDataSetImpl.create( new String[]{
+      "short", "medium", "tall"
+    } );
+    Series seCategory = SeriesImpl.create();
+    seCategory.setDataSet( categoryValues );
+    adjustFont( seCategory.getLabel().getCaption().getFont() );
+    SeriesDefinition sdX = SeriesDefinitionImpl.create();
+    sdX.getSeriesPalette().shift( 1 );
+    xAxis.getSeriesDefinitions().add( sdX );
+    sdX.getSeries().add( seCategory );
+    NumberDataSet orthoValuesDataSet1 = NumberDataSetImpl.create( new double[]{
+      1, 5, 6
+    } );
+    ScatterSeries lineseries = ( ScatterSeries )ScatterSeriesImpl.create();
+    lineseries.setDataSet( orthoValuesDataSet1 );
+    lineseries.setCurveFitting( CurveFittingImpl.create() );
+    adjustFont( lineseries.getLabel().getCaption().getFont() );
+    SeriesDefinition sdY = SeriesDefinitionImpl.create();
+    yAxis.getSeriesDefinitions().add( sdY );
+    sdY.getSeries().add( lineseries );
+    return chart;
   }
 
   private Chart createDonutChart() {
@@ -92,10 +150,10 @@ public class NewChartsView extends ViewPart {
     sd.getSeries().add( seBase );
     // new colors
     final Fill[] fiaBase = {
-      ColorDefinitionImpl.BLUE(),
+      ColorDefinitionImpl.ORANGE(),
+      ColorDefinitionImpl.GREEN(),
       ColorDefinitionImpl.RED(),
-      ColorDefinitionImpl.BLACK(),
-      ColorDefinitionImpl.ORANGE()
+      ColorDefinitionImpl.YELLOW()
     };
     sd.getSeriesPalette().getEntries().clear();
     for( int i = 0; i < fiaBase.length; i++ ) {
@@ -112,6 +170,7 @@ public class NewChartsView extends ViewPart {
     seDonut.setRotation( 10 );
     seDonut.setExplosion(5 );
     seDonut.setThickness( 30 );
+    seDonut.setRatio(0);
     seDonut.getLeaderLineAttributes().setVisible( true );
     seDonut.getLeaderLineAttributes().setThickness( 1 );
     seDonut.getLeaderLineAttributes().setColor( ColorDefinitionImpl.BLACK() );
@@ -124,7 +183,7 @@ public class NewChartsView extends ViewPart {
 
   private Chart createPieChart() {
     ChartWithoutAxes chart = ChartWithoutAxesImpl.create();
-    chart.setDimension( ChartDimension.TWO_DIMENSIONAL_WITH_DEPTH_LITERAL );
+    chart.setDimension( ChartDimension.TWO_DIMENSIONAL_WITH_DEPTH_LITERAL);
     Text caption = chart.getTitle().getLabel().getCaption();
     caption.setValue( "Percentage of charts looking like Pac-man" );
     adjustFont( caption.getFont() );
@@ -159,8 +218,9 @@ public class NewChartsView extends ViewPart {
     sePie.setTitlePosition( Position.ABOVE_LITERAL );
     sePie.getTitle().setVisible( true );
     sePie.setDataSet( seriesOneValues );
-    sePie.setExplosion( 50 );
+    sePie.setExplosion( 0 );
     sePie.setRotation( 40 );
+    sePie.setRatio( 0 );
     sePie.getLabel().setVisible( true );
     sePie.getLabel().getCaption().setValue( "LABEL" );
     sePie.setLabelPosition( Position.OUTSIDE_LITERAL );
