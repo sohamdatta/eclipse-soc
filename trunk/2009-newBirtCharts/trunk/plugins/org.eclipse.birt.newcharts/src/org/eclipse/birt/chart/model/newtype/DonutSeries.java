@@ -478,4 +478,10 @@ public interface DonutSeries extends Series {
 	 */
 	boolean isSetTitlePosition();
 
+	void setRatio(double i);
+
+	double getRatio();
+
+	boolean isSetRatio();
+
 } // DonutSeries

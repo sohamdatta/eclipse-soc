@@ -26,9 +26,11 @@ public class DonutSlice {
 	private int quadrant;
 
 	private LeaderLineStyle leaderLineStyle;
+	private double ratio;
 
 	public DonutSlice(double startAngle, double angleExtent, Fill fillColor,
-			DataPointHints dph, double sliceDepth, double frameThickness) {
+			DataPointHints dph, double sliceDepth, double frameThickness,
+			double ratio) {
 
 		this.setStartAngle(startAngle);
 		this.setAngleExtent(angleExtent);
@@ -36,6 +38,15 @@ public class DonutSlice {
 		this.setDataPoint(dph);
 		this.setSliceDepth(sliceDepth);
 		this.setFrameThickness(frameThickness);
+		this.setRatio(ratio);
+	}
+
+	private void setRatio(double ratio) {
+		this.ratio = ratio;
+	}
+
+	public double getRatio() {
+		return ratio;
 	}
 
 	private void setSliceDepth(double depth) {
@@ -49,8 +60,8 @@ public class DonutSlice {
 	public void setExplosion(int explosion) {
 		this.explosion = explosion;
 	}
-	
-	public double getExplosion(){
+
+	public double getExplosion() {
 		return explosion;
 	}
 
@@ -94,9 +105,10 @@ public class DonutSlice {
 			// SET RADIUS
 			// IF 3D HEIGHT != WIDTH
 			if (sliceDepth != 0)
-				setHeight(bounds.getHeight() - sliceDepth);
+				setHeight(bounds.getHeight() - 2 * sliceDepth);
 			else
 				setHeight(bounds.getHeight());
+
 			setWidth(getHeight());
 
 			// SETS THE FIX POINT TO THE TOP & LEFT OF THE DONUT
@@ -116,21 +128,13 @@ public class DonutSlice {
 			setYc(bounds.getTop() + (bounds.getHeight() - getHeight()) / 2
 					+ sliceDepth);
 		}
-
-		// // SETS THE FIX POINT TO THE TOP & LEFT OF THE DONUT
-		// setXc(bounds.getLeft()+(bounds.getWidth()-getWidth())/2);
-		// setYc(bounds.getTop() + sliceDepth);
-		// if ( ratio > 0 && width > 0 )
-		// {
-		// if ( height / width > ratio )
-		// {
-		// height = width * ratio;
-		// }
-		// else if ( height / width < ratio )
-		// {
-		// width = height / ratio;
-		// }
-		// }
+		if (getRatio() > 0 && getWidth() > 0) {
+			if (getHeight() / getWidth() > getRatio()) {
+				setHeight(getWidth()*getRatio());
+			} else if (getHeight() / getWidth() < getRatio()) {
+				setWidth(getHeight() / getRatio());
+			}
+		}
 
 		// detect invalid size.
 		if (getWidth() <= 0 || getHeight() <= 0) {
@@ -138,23 +142,21 @@ public class DonutSlice {
 		}
 	}
 
-	public double getMiddleAngle(){
-		return (getStartAngle()+getStartAngle()+getAngleExtent())/2;
+	public double getMiddleAngle() {
+		return (getStartAngle() + getStartAngle() + getAngleExtent()) / 2;
 	}
-	
-	public void setQuadrant(int i){
+
+	public void setQuadrant(int i) {
 		/*
-		 * 2 | 1
-		 * -----
-		 * 3 | 4
+		 * 2 | 1 ----- 3 | 4
 		 */
 		this.quadrant = i;
 	}
-	
-	public int getQuadrant(){
+
+	public int getQuadrant() {
 		return quadrant;
 	}
-	
+
 	public void setXc(double xc) {
 		this.xc = xc;
 	}
@@ -198,23 +200,24 @@ public class DonutSlice {
 
 	public <OutsideLabelBoundCache> void computeLabelBoundOutside(
 			LeaderLineStyle leaderLineStyle, double leaderLinesLength,
-			OutsideLabelBoundCache bbCache,double offset) throws ChartException {
+			OutsideLabelBoundCache bbCache, double offset)
+			throws ChartException {
 
-		if (getQuadrant()==1 || getQuadrant()==4){
-			setLabelBound(offset+2*leaderLinesLength+getWidth());
+		if (getQuadrant() == 1 || getQuadrant() == 4) {
+			setLabelBound(offset + 2 * leaderLinesLength + getWidth());
 		}
-		if (getQuadrant()==2 || getQuadrant()==3){
+		if (getQuadrant() == 2 || getQuadrant() == 3) {
 			setLabelBound(offset);
 		}
-		
+
 		setLeaderLineStyle(leaderLineStyle);
 	}
 
 	private void setLeaderLineStyle(LeaderLineStyle leaderLineStyle) {
 		this.leaderLineStyle = leaderLineStyle;
 	}
-	
-	public LeaderLineStyle getLeaderLineStyle(){
+
+	public LeaderLineStyle getLeaderLineStyle() {
 		return leaderLineStyle;
 	}
 
@@ -227,8 +230,8 @@ public class DonutSlice {
 	}
 
 	public double getFrameThickness() {
-		if (frameThickness > width/2) {
-			return width/2 - MIN_FRAMETHICKNESS;
+		if (frameThickness > width / 2) {
+			return width / 2 - MIN_FRAMETHICKNESS;
 		} else {
 			return frameThickness;
 		}
