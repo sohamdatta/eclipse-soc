@@ -251,6 +251,7 @@ public class DonutRenderer {
 
 	public void render(IDeviceRenderer idr, Fill bgcolor) throws ChartException {
 
+		
 		for (int i = 0; i < sliceList.length; i++) {
 
 			DonutSlice slice = sliceList[i];
@@ -259,8 +260,53 @@ public class DonutRenderer {
 					WrappedStructureSource.createSeriesDataPoint(donutseries,
 							dph));
 
-			Fill fPaletteEntry = slice.getFillColor();
-			coloredarc.setBackground(fPaletteEntry);
+//			Fill fPaletteEntry = slice.getFillColor();
+			ColorDefinition color = (ColorDefinition)slice.getFillColor();
+			coloredarc.setBackground(color.darker());
+			coloredarc.setOutline(LineAttributesImpl.create(ColorDefinitionImpl
+					.BLACK(), LineStyle.SOLID_LITERAL, 2));
+
+			coloredarc.getOutline().setVisible(true);
+			coloredarc.getOutline().setColor(ColorDefinitionImpl.BLACK());
+			coloredarc.getOutline().setThickness(1);
+
+			coloredarc.setStartAngle(slice.getStartAngle());
+			coloredarc.setAngleExtent(slice.getAngleExtent()-slice.getExplosion());
+
+			Location sliceLocation = goFactory.createLocation(slice.getXc(),
+					slice.getYc()+10);
+			coloredarc.setTopLeft(sliceLocation);
+
+			coloredarc.setWidth(slice.getWidth());
+			slice.setHeight(slice.getHeight()-100);
+			coloredarc.setHeight(slice.getHeight());
+
+			ArcRenderEvent backgroundArc = (ArcRenderEvent) coloredarc.copy();
+
+			Location sliceLocationInner = goFactory.createLocation(slice.getXc()+frameThickness, slice.getYc()+10+frameThickness);
+			backgroundArc.setTopLeft(sliceLocationInner);
+			backgroundArc.setWidth(coloredarc.getWidth() - 2*frameThickness);
+			backgroundArc.setHeight(coloredarc.getHeight() - 2*frameThickness);
+			backgroundArc.setStartAngle(coloredarc.getStartAngle()-6);
+			backgroundArc.setAngleExtent(coloredarc.getAngleExtent()+12);
+			backgroundArc.setBackground(bgcolor);
+
+//			idr.drawArc(coloredarc);
+			idr.fillArc(coloredarc);
+			idr.fillArc(backgroundArc);
+//			drawLabel(slice, sliceLocation, idr);
+		}
+		
+		for (int i = 0; i < sliceList.length; i++) {
+
+			DonutSlice slice = sliceList[i];
+			DataPointHints dph = slice.getDataPoint();
+			ArcRenderEvent coloredarc = new ArcRenderEvent(
+					WrappedStructureSource.createSeriesDataPoint(donutseries,
+							dph));
+
+			ColorDefinition color = (ColorDefinition)slice.getFillColor();
+			coloredarc.setBackground(color);
 			coloredarc.setOutline(LineAttributesImpl.create(ColorDefinitionImpl
 					.BLACK(), LineStyle.SOLID_LITERAL, 2));
 
@@ -276,7 +322,7 @@ public class DonutRenderer {
 			coloredarc.setTopLeft(sliceLocation);
 
 			coloredarc.setWidth(slice.getWidth());
-			coloredarc.setHeight(slice.getHeight() - 100);
+			coloredarc.setHeight(slice.getHeight());
 
 			ArcRenderEvent backgroundArc = (ArcRenderEvent) coloredarc.copy();
 
@@ -288,18 +334,9 @@ public class DonutRenderer {
 			backgroundArc.setAngleExtent(coloredarc.getAngleExtent()+12);
 			backgroundArc.setBackground(bgcolor);
 
-			ArcRenderEvent coloredArcDown = (ArcRenderEvent)coloredarc.copy();
-			coloredArcDown.getTopLeft().translate(0, -10);
-			coloredarc.setBackground(ColorDefinitionImpl.GREY());
-			
-			ArcRenderEvent backgroundArcDown = (ArcRenderEvent) backgroundArc.copy();
-			backgroundArcDown.getTopLeft().translate(0, -10);
-			
-
-			
 			idr.fillArc(coloredarc);
-			idr.fillArc(coloredArcDown);
-			idr.fillArc(backgroundArcDown);
+
+//			idr.drawArc(coloredarc);
 			idr.fillArc(backgroundArc);
 			drawLabel(slice, sliceLocation, idr);
 		}
