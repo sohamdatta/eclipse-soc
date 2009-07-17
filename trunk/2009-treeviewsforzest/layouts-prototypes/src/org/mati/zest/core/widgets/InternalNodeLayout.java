@@ -27,16 +27,14 @@ class InternalNodeLayout implements NodeLayout {
 
 	public DisplayIndependentPoint getLocation() {
 		if (location == null) {
-			Point location2 = node.getLocation();
-			location = new DisplayIndependentPoint(location2.x + getSize().width / 2, location2.y + size.height / 2);
+			refreshLocation();
 		}
 		return new DisplayIndependentPoint(location);
 	}
 
 	public DisplayIndependentDimension getSize() {
 		if (size == null) {
-			Dimension size2 = node.getSize();
-			size = new DisplayIndependentDimension(size2.width, size2.height);
+			refreshSize();
 		}
 		return new DisplayIndependentDimension(size);
 	}
@@ -85,10 +83,12 @@ class InternalNodeLayout implements NodeLayout {
 	}
 
 	public void setSize(double width, double height) {
-		if (location == null)
+		if (size != null) {
+			size.width = width;
+			size.height = height;
+		} else {
 			size = new DisplayIndependentDimension(width, height);
-		size.width = width;
-		size.height = height;
+		}
 	}
 
 	public void setMinimized(boolean minimized) {
@@ -181,6 +181,16 @@ class InternalNodeLayout implements NodeLayout {
 
 	InternalLayoutContext getOwnerLayoutContext() {
 		return ownerLayoutContext;
+	}
+
+	void refreshSize() {
+		Dimension size2 = node.getSize();
+		setSize(size2.width, size2.height);
+	}
+
+	void refreshLocation() {
+		Point location2 = node.getLocation();
+		setLocation(location2.x + getSize().width / 2, location2.y + size.height / 2);
 	}
 
 	public String toString() {

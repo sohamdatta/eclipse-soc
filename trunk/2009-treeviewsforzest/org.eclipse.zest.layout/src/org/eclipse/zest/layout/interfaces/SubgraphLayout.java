@@ -18,6 +18,12 @@ public interface SubgraphLayout extends EntityLayout {
 	public NodeLayout[] getNodes();
 
 	/**
+	 * 
+	 * @return number of nodes pruned into this subgraph
+	 */
+	public int countNodes();
+
+	/**
 	 * Adds nodes to this subgraph. If given nodes already belong to another
 	 * subgraph, they are first removed from them.
 	 * 

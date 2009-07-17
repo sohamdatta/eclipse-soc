@@ -267,6 +267,7 @@ public class GraphNode extends GraphItem {
 			currentLocation.x = (int) x;
 			currentLocation.y = (int) y;
 			refreshLocation();
+			parent.getLayoutContext().fireNodeMovedEvent(this.getLayout());
 		}
 	}
 
@@ -503,6 +504,7 @@ public class GraphNode extends GraphItem {
 			size.width = (int) width;
 			size.height = (int) height;
 			refreshLocation();
+			parent.getLayoutContext().fireNodeMovedEvent(this.getLayout());
 		}
 	}
 

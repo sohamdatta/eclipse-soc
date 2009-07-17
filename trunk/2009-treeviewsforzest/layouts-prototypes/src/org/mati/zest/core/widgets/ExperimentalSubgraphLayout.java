@@ -1,6 +1,6 @@
 package org.mati.zest.core.widgets;
 
-import java.util.Arrays;
+import java.util.Iterator;
 
 import org.eclipse.draw2d.ColorConstants;
 import org.eclipse.draw2d.IFigure;
@@ -30,15 +30,20 @@ public class ExperimentalSubgraphLayout extends InternalSubgraphLayout {
 		figure.setLocation(new Point(20, 20));
 		figure.setForegroundColor(ColorConstants.black);
 		figure.setBackgroundColor(ColorConstants.yellow);
+		updateFigure();
 	}
 
 	protected void updateFigure() {
-
+		if (figure != null) {
+			if (disposed)
+				figure.setText("##");
+			else
+				figure.setText("" + nodes.size());
+		}
 	}
 
 	protected ExperimentalSubgraphLayout(NodeLayout[] nodes, InternalLayoutContext context) {
 		super(context);
-		System.out.println("" + this.hashCode() + " creating a subgraph for: " + Arrays.asList(nodes).toString());
 		addNodes(nodes);
 		createFigure();
 		context.container.addFigure(figure);
@@ -46,12 +51,16 @@ public class ExperimentalSubgraphLayout extends InternalSubgraphLayout {
 
 	public void addNodes(NodeLayout[] nodes) {
 		super.addNodes(nodes);
-		System.out.println("" + this.hashCode() + " adding nodes: " + Arrays.asList(nodes).toString());
+		updateFigure();
+		if (location != null)
+			for (int i = 0; i < nodes.length; i++) {
+				nodes[i].setLocation(location.x, location.y);
+			}
 	}
 
 	public void removeNodes(NodeLayout[] nodes) {
 		super.removeNodes(nodes);
-		System.out.println("" + this.hashCode() + " removing nodes: " + Arrays.asList(nodes).toString());
+		updateFigure();
 	}
 
 	public DisplayIndependentDimension getSize() {
@@ -69,11 +78,18 @@ public class ExperimentalSubgraphLayout extends InternalSubgraphLayout {
 	}
 
 	public void setLocation(double x, double y) {
+		for (Iterator iterator = nodes.iterator(); iterator.hasNext();) {
+			NodeLayout node = (NodeLayout) iterator.next();
+			node.setLocation(x, y);
+		}
+
 		if (location != null) {
 			location.x = x;
 			location.y = y;
 		} else {
 			location = new DisplayIndependentPoint(x, y);
+			// the first location change will be applied immediately
+			applyLayoutChanges();
 		}
 	}
 
@@ -81,14 +97,19 @@ public class ExperimentalSubgraphLayout extends InternalSubgraphLayout {
 		return true;
 	}
 
+	public boolean isMovable() {
+		return true;
+	}
+
 	protected void dispose() {
-		super.dispose();
-		System.out.println("" + this.hashCode() + " disposing");
-		IFigure parent = figure.getParent();
-		if (parent instanceof ZestRootLayer) {
-			((ZestRootLayer) parent).removeSubgraph(figure);
-		} else {
-			parent.remove(figure);
+		if (!disposed) {
+			super.dispose();
+			IFigure parent = figure.getParent();
+			if (parent instanceof ZestRootLayer) {
+				((ZestRootLayer) parent).removeSubgraph(figure);
+			} else {
+				parent.remove(figure);
+			}
 		}
 	}
 

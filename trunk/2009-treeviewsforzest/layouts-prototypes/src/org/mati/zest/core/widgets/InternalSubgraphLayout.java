@@ -42,6 +42,8 @@ public class InternalSubgraphLayout implements SubgraphLayout {
 
 	protected final Set nodes = new HashSet();
 
+	protected boolean disposed = false;
+
 	protected InternalSubgraphLayout(InternalLayoutContext context) {
 		this.context = context;
 	}
@@ -116,6 +118,10 @@ public class InternalSubgraphLayout implements SubgraphLayout {
 		return (NodeLayout[]) nodes.toArray(new NodeLayout[nodes.size()]);
 	}
 
+	public int countNodes() {
+		return nodes.size();
+	}
+
 	public void addNodes(NodeLayout[] nodes) {
 		for (int i = 0; i < nodes.length; i++) {
 			if (this.nodes.add(nodes[i])) {
@@ -137,7 +143,10 @@ public class InternalSubgraphLayout implements SubgraphLayout {
 	}
 
 	protected void dispose() {
-		context.removeSubgrah(this);
+		if (!disposed) {
+			context.removeSubgrah(this);
+			disposed = true;
+		}
 	}
 
 };
