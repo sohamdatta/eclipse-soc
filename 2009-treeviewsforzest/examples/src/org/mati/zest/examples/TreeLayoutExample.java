@@ -12,7 +12,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
-import org.eclipse.zest.layout.algorithms.SpaceTreeLayoutAlgorithm;
+import org.eclipse.zest.layout.algorithms.ExpandableTreeLayoutAlgorithm;
 import org.eclipse.zest.layout.algorithms.TreeLayoutAlgorithm;
 import org.mati.zest.core.widgets.ExperimentalSubgraphLayout;
 import org.mati.zest.core.widgets.Graph;
@@ -47,9 +47,9 @@ public class TreeLayoutExample {
 			new GraphConnection(g, SWT.NONE, root, n);
 		}
 
-		final SpaceTreeLayoutAlgorithm algorithm = new SpaceTreeLayoutAlgorithm();
-		g.setLayoutAlgorithm(algorithm, false);
+		final ExpandableTreeLayoutAlgorithm algorithm = new ExpandableTreeLayoutAlgorithm();
 		g.setSubgraphFactory(ExperimentalSubgraphLayout.FACTORY);
+		g.setLayoutAlgorithm(algorithm, false);
 		hookMenu(g);
 
 		final Button buttonTopDown = new Button(shell, SWT.FLAT);

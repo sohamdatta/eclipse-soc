@@ -310,4 +310,28 @@ class InternalLayoutContext implements LayoutContext {
 		if (!intercepted)
 			applyMainAlgorithm();
 	}
+
+	void fireNodeMovedEvent(InternalNodeLayout node) {
+		if (eventsOn)
+			node.refreshLocation();
+		boolean intercepted = !eventsOn;
+		for (Iterator iterator = layoutListeners.iterator(); iterator.hasNext() && !intercepted;) {
+			LayoutListener listener = (LayoutListener) iterator.next();
+			intercepted = listener.nodeMoved(this, node);
+		}
+		if (!intercepted)
+			applyMainAlgorithm();
+	}
+
+	void fireNodeResizedEvent(InternalNodeLayout node) {
+		if (eventsOn)
+			node.refreshSize();
+		boolean intercepted = !eventsOn;
+		for (Iterator iterator = layoutListeners.iterator(); iterator.hasNext() && !intercepted;) {
+			LayoutListener listener = (LayoutListener) iterator.next();
+			intercepted = listener.nodeResized(this, node);
+		}
+		if (!intercepted)
+			applyMainAlgorithm();
+	}
 }
