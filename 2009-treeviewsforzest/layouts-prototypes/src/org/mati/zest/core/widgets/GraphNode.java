@@ -45,7 +45,7 @@ public class GraphNode extends GraphItem {
 	private Color borderColor;
 	private Color borderHighlightColor;
 	private int borderWidth;
-	private Point currentLocation;
+	private PrecisionPoint currentLocation;
 	protected Dimension size;
 	private Font font;
 	private boolean cacheLabel;
@@ -263,9 +263,10 @@ public class GraphNode extends GraphItem {
 	 * Sets the current location for this node.
 	 */
 	public void setLocation(double x, double y) {
-		if (currentLocation.x != x || currentLocation.y != y) {
-			currentLocation.x = (int) x;
-			currentLocation.y = (int) y;
+		if (currentLocation.preciseX != x || currentLocation.preciseY != y) {
+			currentLocation.preciseX = x;
+			currentLocation.preciseY = y;
+			currentLocation.updateInts();
 			refreshLocation();
 			parent.getLayoutContext().fireNodeMovedEvent(this.getLayout());
 		}
