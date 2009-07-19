@@ -7,6 +7,7 @@ import java.util.List;
 
 import org.eclipse.draw2d.Animation;
 import org.eclipse.draw2d.ColorConstants;
+import org.eclipse.draw2d.CoordinateListener;
 import org.eclipse.draw2d.FigureCanvas;
 import org.eclipse.draw2d.FreeformLayer;
 import org.eclipse.draw2d.FreeformLayout;
@@ -370,7 +371,8 @@ public class Graph extends FigureCanvas {
 	public Dimension getPreferredSize() {
 		if (preferredSize.width < 0 || preferredSize.height < 0) {
 			org.eclipse.swt.graphics.Point size = getSize();
-			return new Dimension(size.x, size.y);
+			double scale = getRootLayer().getScale();
+			return new Dimension((int) (size.x / scale + 0.5), (int) (size.y / scale + 0.5));
 		}
 		return preferredSize;
 	}
@@ -475,7 +477,9 @@ public class Graph extends FigureCanvas {
 
 	private class DragSupport implements MouseMotionListener, org.eclipse.draw2d.MouseListener {
 
-		Point lastLocation = null;
+		Point dragStartLocation = null;
+		/** locations of dragged items relative to cursor position */
+		ArrayList relativeLocations = new ArrayList();
 		GraphItem fisheyedItem = null;
 		boolean isDragging = false;
 
@@ -484,28 +488,38 @@ public class Graph extends FigureCanvas {
 				return;
 			}
 			Point mousePoint = new Point(me.x, me.y);
-			Point tempPoint = mousePoint.getCopy();
 			if (selectedItems.size() > 0) {
-				Iterator iterator = selectedItems.iterator();
-				while (iterator.hasNext()) {
-					GraphItem item = (GraphItem) iterator.next();
+
+				if (relativeLocations.isEmpty()) {
+					for (Iterator iterator = selectedItems.iterator(); iterator.hasNext();) {
+						GraphItem item = (GraphItem) iterator.next();
+						if ((item.getItemType() == GraphItem.NODE) || (item.getItemType() == GraphItem.CONTAINER)) {
+							Point location = ((GraphNode) item).getLocation().getCopy();
+							Point mousePointCopy = mousePoint.getCopy();
+							item.getFigure().getParent().translateToRelative(mousePointCopy);
+							item.getFigure().getParent().translateFromParent(mousePointCopy);
+							location.x -= mousePointCopy.x;
+							location.y -= mousePointCopy.y;
+							relativeLocations.add(location);
+						}
+					}
+				}
+
+				Iterator selectionIterator = selectedItems.iterator();
+				Iterator locationsIterator = relativeLocations.iterator();
+				while (selectionIterator.hasNext()) {
+					GraphItem item = (GraphItem) selectionIterator.next();
 					if ((item.getItemType() == GraphItem.NODE) || (item.getItemType() == GraphItem.CONTAINER)) {
 						// @tag Zest.selection Zest.move : This is where the
 						// node movement is tracked
 						Point pointCopy = mousePoint.getCopy();
 
-						Point tempLastLocation = lastLocation.getCopy();
-						item.getFigure().getParent().translateToRelative(tempLastLocation);
-						item.getFigure().getParent().translateFromParent(tempLastLocation);
+						Point relativeLocation = (Point) locationsIterator.next();
 
 						item.getFigure().getParent().translateToRelative(pointCopy);
 						item.getFigure().getParent().translateFromParent(pointCopy);
-						Point delta = new Point(pointCopy.x - tempLastLocation.x, pointCopy.y - tempLastLocation.y);
-						if (item.getItemType() == GraphItem.NODE || item.getItemType() == GraphItem.CONTAINER) {
-							GraphNode node = (GraphNode) item;
-							node.setLocation(node.getLocation().x + delta.x, node.getLocation().y + delta.y);
 
-						}
+						((GraphNode) item).setLocation(relativeLocation.x + pointCopy.x, relativeLocation.y + pointCopy.y);
 					} else {
 						// There is no movement for connection
 					}
@@ -513,7 +527,7 @@ public class Graph extends FigureCanvas {
 				if (fisheyedFigure != null) {
 					Point pointCopy = mousePoint.getCopy();
 
-					Point tempLastLocation = lastLocation.getCopy();
+					Point tempLastLocation = dragStartLocation.getCopy();
 					fisheyedFigure.translateToRelative(tempLastLocation);
 					fisheyedFigure.translateFromParent(tempLastLocation);
 
@@ -525,7 +539,6 @@ public class Graph extends FigureCanvas {
 					fishEyeLayer.getUpdateManager().performUpdate();
 				}
 			}
-			lastLocation = tempPoint;
 		}
 
 		public void mouseEntered(org.eclipse.draw2d.MouseEvent me) {
@@ -585,7 +598,7 @@ public class Graph extends FigureCanvas {
 		public void mousePressed(org.eclipse.draw2d.MouseEvent me) {
 			isDragging = true;
 			Point mousePoint = new Point(me.x, me.y);
-			lastLocation = mousePoint.getCopy();
+			dragStartLocation = mousePoint.getCopy();
 
 			getRootLayer().translateToRelative(mousePoint);
 
@@ -597,7 +610,6 @@ public class Graph extends FigureCanvas {
 				Point delta = new Point(newMousePoint.x - mousePoint.x, newMousePoint.y - mousePoint.y);
 				Point newViewLocation = getViewport().getViewLocation().getCopy().translate(delta);
 				getViewport().setViewLocation(newViewLocation);
-				lastLocation.scale(scale);
 
 				clearSelection();
 				return;
@@ -684,7 +696,7 @@ public class Graph extends FigureCanvas {
 
 		public void mouseReleased(org.eclipse.draw2d.MouseEvent me) {
 			isDragging = false;
-
+			relativeLocations.clear();
 		}
 
 	}
@@ -831,6 +843,14 @@ public class Graph extends FigureCanvas {
 
 		zestRootLayer.addLayoutListener(LayoutAnimator.getDefault());
 		fishEyeLayer.addLayoutListener(LayoutAnimator.getDefault());
+
+		rootlayer.addCoordinateListener(new CoordinateListener() {
+			public void coordinateSystemChanged(IFigure source) {
+				if (preferredSize.width == -1 && preferredSize.height == -1)
+					getLayoutContext().fireBoundsChangedEvent();
+			}
+		});
+
 		return rootlayer;
 	}
 
