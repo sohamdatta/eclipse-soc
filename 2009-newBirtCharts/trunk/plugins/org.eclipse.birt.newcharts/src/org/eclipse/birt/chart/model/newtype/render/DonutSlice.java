@@ -98,43 +98,49 @@ public class DonutSlice {
 	}
 
 	public void setBounds(Bounds cellBounds) {
-		this.bounds = cellBounds;
-		bounds.setHeight(cellBounds.getHeight());
+		this.bounds = cellBounds.copyInstance();
 
-		if (cellBounds.getHeight() < cellBounds.getWidth()) {
+		double ratio = 0.5;
+		double offset = 20;
+		if (cellBounds.getHeight() > cellBounds.getWidth()) {
 			// SET RADIUS
 			// IF 3D HEIGHT != WIDTH
-			if (sliceDepth != 0)
-				setHeight(bounds.getHeight() - 2 * sliceDepth);
-			else
-				setHeight(bounds.getHeight());
-
-			setWidth(getHeight());
-
-			// SETS THE FIX POINT TO THE TOP & LEFT OF THE DONUT
-			setXc(bounds.getLeft() + (bounds.getWidth() - getWidth()) / 2);
-			setYc(bounds.getTop() + sliceDepth + 20);
-		} else {
-			// SET RADIUS
-			// IF 3D HEIGHT != WIDTH
-			setWidth(bounds.getWidth());
-			if (sliceDepth != 0)
-				setHeight(bounds.getWidth() - sliceDepth);
-			else
-				setHeight(bounds.getWidth());
+			
+			//Width gets full bounds.getWidth()
+			if (sliceDepth != 0){
+				setWidth(bounds.getWidth());
+				setHeight(getWidth()*ratio - 2 * sliceDepth);
+			}
+			else{
+				setWidth(bounds.getWidth());
+				setHeight(getWidth());
+			}
 
 			// SETS THE FIX POINT TO THE TOP & LEFT OF THE DONUT
 			setXc(bounds.getLeft());
-			setYc(bounds.getTop() + (bounds.getHeight() - getHeight()) / 2
-					+ sliceDepth);
-		}
-		if (getRatio() > 0 && getWidth() > 0) {
-			if (getHeight() / getWidth() > getRatio()) {
-				setHeight(getWidth()*getRatio());
-			} else if (getHeight() / getWidth() < getRatio()) {
-				setWidth(getHeight() / getRatio());
+			setYc(bounds.getTop() +(getHeight()-getWidth())/2+offset);
+		} else {
+			// SET RADIUS
+			// IF 3D HEIGHT != WIDTH
+			if (sliceDepth != 0){
+				setWidth(bounds.getWidth());
+				setHeight(bounds.getHeight()*(1-ratio) - 2*sliceDepth);
 			}
+			else{
+				setHeight(bounds.getHeight());
+				setWidth(getHeight());
+			}
+			// SETS THE FIX POINT TO THE TOP & LEFT OF THE DONUT
+			setYc(bounds.getTop()+getHeight()/2 +offset);
+			setXc(bounds.getLeft());
 		}
+//		if (getRatio() > 0 && getWidth() > 0) {
+//			if (getHeight() / getWidth() > getRatio()) {
+//				setHeight(getWidth()*getRatio());
+//			} else if (getHeight() / getWidth() < getRatio()) {
+//				setWidth(getHeight() / getRatio());
+//			}
+//		}
 
 		// detect invalid size.
 		if (getWidth() <= 0 || getHeight() <= 0) {

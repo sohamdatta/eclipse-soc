@@ -1,5 +1,9 @@
 package org.eclipse.birt.chart.model.newtype.render;
 
+import java.util.ArrayList;
+
+import javax.jws.soap.SOAPBinding.Style;
+
 import org.eclipse.birt.chart.computation.BoundingBox;
 import org.eclipse.birt.chart.computation.DataPointHints;
 import org.eclipse.birt.chart.computation.GObjectFactory;
@@ -12,8 +16,10 @@ import org.eclipse.birt.chart.device.IStructureDefinitionListener;
 import org.eclipse.birt.chart.event.Arc3DRenderEvent;
 import org.eclipse.birt.chart.event.ArcRenderEvent;
 import org.eclipse.birt.chart.event.AreaRenderEvent;
+import org.eclipse.birt.chart.event.ClipRenderEvent;
 import org.eclipse.birt.chart.event.EventObjectCache;
 import org.eclipse.birt.chart.event.LineRenderEvent;
+import org.eclipse.birt.chart.event.PolygonRenderEvent;
 import org.eclipse.birt.chart.event.RectangleRenderEvent;
 import org.eclipse.birt.chart.event.TextRenderEvent;
 import org.eclipse.birt.chart.event.WrappedStructureSource;
@@ -32,11 +38,13 @@ import org.eclipse.birt.chart.model.attribute.Location;
 import org.eclipse.birt.chart.model.attribute.Location3D;
 import org.eclipse.birt.chart.model.attribute.Palette;
 import org.eclipse.birt.chart.model.attribute.Position;
+import org.eclipse.birt.chart.model.attribute.StyledComponent;
 import org.eclipse.birt.chart.model.attribute.Text;
 import org.eclipse.birt.chart.model.attribute.impl.BoundsImpl;
 import org.eclipse.birt.chart.model.attribute.impl.ColorDefinitionImpl;
 import org.eclipse.birt.chart.model.attribute.impl.FontDefinitionImpl;
 import org.eclipse.birt.chart.model.attribute.impl.LineAttributesImpl;
+import org.eclipse.birt.chart.model.attribute.impl.StyleImpl;
 import org.eclipse.birt.chart.model.attribute.impl.TextAlignmentImpl;
 import org.eclipse.birt.chart.model.attribute.impl.TextImpl;
 import org.eclipse.birt.chart.model.component.Label;
@@ -249,54 +257,160 @@ public class DonutRenderer {
 		}
 	}
 
-	public void render(IDeviceRenderer idr, Fill bgcolor) throws ChartException {
+	public void debugRender(IDeviceRenderer idr, Fill bgcolor)
+			throws ChartException {
 
+		for (int k = 0; k < sliceList.length; k++) {
+			
+		DonutSlice slice = sliceList[k];
+
+		DataPointHints dph = slice.getDataPoint();
+
+//		Location[] upperLocs = new Location[] {
+//				goFactory.createLocation(250 + 150, 150 + 75), 
+//		goFactory.createLocation(250 + 300, 150 + 75),
+//		goFactory.createLocation(250 + 300, 150),
+//				goFactory.createLocation(250 + 150, 150)};
+
+		double mx = slice.getWidth()/2 + slice.getXc();
+		double my = slice.getHeight()/2 + slice.getYc();
 		
-		for (int i = 0; i < sliceList.length; i++) {
-
-			DonutSlice slice = sliceList[i];
-			DataPointHints dph = slice.getDataPoint();
-			ArcRenderEvent coloredarc = new ArcRenderEvent(
-					WrappedStructureSource.createSeriesDataPoint(donutseries,
-							dph));
-
-//			Fill fPaletteEntry = slice.getFillColor();
-			ColorDefinition color = (ColorDefinition)slice.getFillColor();
-			coloredarc.setBackground(color.darker());
-			coloredarc.setOutline(LineAttributesImpl.create(ColorDefinitionImpl
-					.BLACK(), LineStyle.SOLID_LITERAL, 2));
-
-			coloredarc.getOutline().setVisible(true);
-			coloredarc.getOutline().setColor(ColorDefinitionImpl.BLACK());
-			coloredarc.getOutline().setThickness(1);
-
-			coloredarc.setStartAngle(slice.getStartAngle());
-			coloredarc.setAngleExtent(slice.getAngleExtent()-slice.getExplosion());
-
-			Location sliceLocation = goFactory.createLocation(slice.getXc(),
-					slice.getYc()+10);
-			coloredarc.setTopLeft(sliceLocation);
-
-			coloredarc.setWidth(slice.getWidth());
-			slice.setHeight(slice.getHeight()-100);
-			coloredarc.setHeight(slice.getHeight());
-
-			ArcRenderEvent backgroundArc = (ArcRenderEvent) coloredarc.copy();
-
-			Location sliceLocationInner = goFactory.createLocation(slice.getXc()+frameThickness, slice.getYc()+10+frameThickness);
-			backgroundArc.setTopLeft(sliceLocationInner);
-			backgroundArc.setWidth(coloredarc.getWidth() - 2*frameThickness);
-			backgroundArc.setHeight(coloredarc.getHeight() - 2*frameThickness);
-			backgroundArc.setStartAngle(coloredarc.getStartAngle()-6);
-			backgroundArc.setAngleExtent(coloredarc.getAngleExtent()+12);
-			backgroundArc.setBackground(bgcolor);
-
-//			idr.drawArc(coloredarc);
-			idr.fillArc(coloredarc);
-			idr.fillArc(backgroundArc);
-//			drawLabel(slice, sliceLocation, idr);
+		int locationpoints = (int) (slice.getAngleExtent()*2); 
+		
+		slice.setAngleExtent(slice.getAngleExtent()-slice.getExplosion());
+		
+		Location[] allLocs = new Location[(int) (slice.getAngleExtent()*2)+2];
+		Location[] allLocsLow = new Location[(int) (slice.getAngleExtent()*2)+2];
+		
+		for (int i = 0; i < (int)slice.getAngleExtent()+1; i++) {
+			double x = Math.cos(Math.toRadians(slice.getStartAngle() + i)) * slice.getWidth()/2;
+			double y = Math.sin(Math.toRadians(slice.getStartAngle()+ i)) * slice.getHeight()/2;
+			allLocs[i] = goFactory.createLocation(slice.getXc()+slice.getWidth()/2 + x, slice.getYc()+slice.getHeight()/2 - y);
+			allLocsLow[i] = goFactory.createLocation(slice.getXc()+slice.getWidth()/2 + x, slice.getYc()+sliceDepth+slice.getHeight()/2 - y);
 		}
 		
+		for (int i = 0; i < (int)slice.getAngleExtent()+1; i++) {
+			double x = Math.cos(Math.toRadians(slice.getStartAngle()+slice.getAngleExtent() - i)) * (slice.getWidth()/2-frameThickness);
+			double y = Math.sin(Math.toRadians(slice.getStartAngle()+slice.getAngleExtent() - i)) * (slice.getHeight()/2-frameThickness);
+			allLocs[(int)slice.getAngleExtent()+i+1] = goFactory.createLocation(slice.getXc()+slice.getWidth()/2 + x, slice.getYc()+slice.getHeight()/2 - y);
+			allLocsLow[(int)slice.getAngleExtent()+i+1] = goFactory.createLocation(slice.getXc()+slice.getWidth()/2 + x, slice.getYc()+sliceDepth+slice.getHeight()/2 - y);
+		}
+		
+
+		PolygonRenderEvent poly = new PolygonRenderEvent(WrappedStructureSource
+				.createSeriesDataPoint(donutseries, dph));
+		poly.setPoints(allLocs);
+		
+		poly.setBackground(slice.getFillColor());
+		
+		PolygonRenderEvent polyLow = (PolygonRenderEvent) poly.copy();
+		polyLow.setPoints(allLocsLow);
+		polyLow.setBackground(((ColorDefinition) slice.getFillColor()).darker());
+//		ClipRenderEvent cre = new ClipRenderEvent(WrappedStructureSource
+//				.createSeriesDataPoint(donutseries, dph));
+
+//		cre.setVertices(upperLocs);
+
+		
+//		idr.setClip(cre);
+//		idr.fillArc(coloredarc);
+		idr.fillPolygon(polyLow);
+		idr.fillPolygon(poly);
+//		cre.reset();
+//		idr.setClip(cre);
+		drawLabel(slice, goFactory.createLocation(slice.getXc(), slice.getYc()), idr);
+		}		
+	}
+
+	public void render(IDeviceRenderer idr, Fill bgcolor) throws ChartException {
+
+		if (sliceDepth != 0) {
+			for (int i = 0; i < sliceList.length; i++) {
+
+				DonutSlice slice = sliceList[i];
+				DataPointHints dph = slice.getDataPoint();
+				ArcRenderEvent coloredarc = new ArcRenderEvent(
+						WrappedStructureSource.createSeriesDataPoint(
+								donutseries, dph));
+
+				// Fill fPaletteEntry = slice.getFillColor();
+				ColorDefinition color = (ColorDefinition) slice.getFillColor();
+				coloredarc.setBackground(color.darker());
+				coloredarc.setOutline(LineAttributesImpl
+						.create(ColorDefinitionImpl.BLACK(),
+								LineStyle.SOLID_LITERAL, 2));
+
+				coloredarc.getOutline().setVisible(true);
+				coloredarc.getOutline().setColor(ColorDefinitionImpl.BLACK());
+				coloredarc.getOutline().setThickness(1);
+
+				coloredarc.setStartAngle(slice.getStartAngle());
+				coloredarc.setAngleExtent(slice.getAngleExtent()
+						- slice.getExplosion());
+
+				Location sliceLocation = goFactory.createLocation(
+						slice.getXc(), slice.getYc() + sliceDepth);
+				coloredarc.setTopLeft(sliceLocation);
+
+				coloredarc.setWidth(slice.getWidth());
+				coloredarc.setHeight(slice.getHeight());
+
+				ClipRenderEvent cre = new ClipRenderEvent(
+						WrappedStructureSource.createSeriesDataPoint(
+								donutseries, dph));
+				Location[] allUpperLocs = createLocationPoints(slice
+						.getStartAngle(), slice.getAngleExtent(), slice
+						.getWidth() / 2, slice.getHeight() / 2, 0, 0);
+				Location[] allLowerLocs = createLocationPoints(
+						slice.getStartAngle(),
+						slice.getAngleExtent(),
+						(coloredarc.getWidth() - 30 * (coloredarc.getWidth() / 100)) / 2,
+						(coloredarc.getHeight() - 30 * (coloredarc.getHeight() / 100) / 2),
+						0, 0);
+
+				Location[] allLocs = new Location[allUpperLocs.length
+						+ allLowerLocs.length];
+				for (int j = 0; j < allUpperLocs.length; j++) {
+					allLocs[j] = allUpperLocs[j];
+				}
+				for (int j = 0; j < allLowerLocs.length; j++) {
+					allLocs[j + allUpperLocs.length] = allLowerLocs[j];
+				}
+
+				cre.setVertices(allLocs);
+
+				// idr.drawArc(coloredarc);
+				coloredarc.setStyle(ArcRenderEvent.SECTOR);
+				idr.fillArc(coloredarc);
+				idr.setClip(cre);
+
+				cre.reset();
+
+				// backgroundArc.setStyle(ArcRenderEvent.SECTOR);
+				// idr.fillArc(backgroundArc);
+
+				// ArcRenderEvent backgroundArc = (ArcRenderEvent) coloredarc
+				// .copy();
+				// Location sliceLocationInner = goFactory.createLocation(slice
+				// .getXc()
+				// + 15 * (coloredarc.getWidth() / 100), slice.getYc()
+				// + sliceDepth + 15 * (coloredarc.getHeight() / 100));
+				// backgroundArc.setTopLeft(sliceLocationInner);
+				// backgroundArc.setWidth(coloredarc.getWidth() - 30
+				// * (coloredarc.getWidth() / 100));
+				// backgroundArc.setHeight(coloredarc.getHeight() - 30
+				// * (coloredarc.getHeight() / 100));
+				// backgroundArc.setStartAngle(coloredarc.getStartAngle() - 5);
+				// backgroundArc.setAngleExtent(coloredarc.getAngleExtent() +
+				// 10);
+				// backgroundArc.setBackground(bgcolor);
+				//
+				// Location[] allLocs = createLocationPoints(
+				// slice.getStartAngle(), slice.getAngleExtent(), slice
+				// .getWidth() / 2, slice.getHeight() / 2);
+				// drawLabel(slice, sliceLocation, idr);
+			}
+		}
 		for (int i = 0; i < sliceList.length; i++) {
 
 			DonutSlice slice = sliceList[i];
@@ -305,7 +419,7 @@ public class DonutRenderer {
 					WrappedStructureSource.createSeriesDataPoint(donutseries,
 							dph));
 
-			ColorDefinition color = (ColorDefinition)slice.getFillColor();
+			ColorDefinition color = (ColorDefinition) slice.getFillColor();
 			coloredarc.setBackground(color);
 			coloredarc.setOutline(LineAttributesImpl.create(ColorDefinitionImpl
 					.BLACK(), LineStyle.SOLID_LITERAL, 2));
@@ -315,63 +429,137 @@ public class DonutRenderer {
 			coloredarc.getOutline().setThickness(1);
 
 			coloredarc.setStartAngle(slice.getStartAngle());
-			coloredarc.setAngleExtent(slice.getAngleExtent()-slice.getExplosion());
+			coloredarc.setAngleExtent(slice.getAngleExtent()
+					- slice.getExplosion());
 
 			Location sliceLocation = goFactory.createLocation(slice.getXc(),
 					slice.getYc());
 			coloredarc.setTopLeft(sliceLocation);
-
 			coloredarc.setWidth(slice.getWidth());
 			coloredarc.setHeight(slice.getHeight());
 
 			ArcRenderEvent backgroundArc = (ArcRenderEvent) coloredarc.copy();
-
-			Location sliceLocationInner = goFactory.createLocation(slice.getXc()+frameThickness, slice.getYc()+frameThickness);
+			Location sliceLocationInner = goFactory.createLocation(slice
+					.getXc()
+					+ 15 * (coloredarc.getWidth() / 100), slice.getYc() + 15
+					* (coloredarc.getHeight() / 100));
 			backgroundArc.setTopLeft(sliceLocationInner);
-			backgroundArc.setWidth(coloredarc.getWidth() - 2*frameThickness);
-			backgroundArc.setHeight(coloredarc.getHeight() - 2*frameThickness);
-			backgroundArc.setStartAngle(coloredarc.getStartAngle()-6);
-			backgroundArc.setAngleExtent(coloredarc.getAngleExtent()+12);
+			backgroundArc.setWidth(coloredarc.getWidth() - 30
+					* (coloredarc.getWidth() / 100));
+			backgroundArc.setHeight(coloredarc.getHeight() - 30
+					* (coloredarc.getHeight() / 100));
+			backgroundArc.setStartAngle(coloredarc.getStartAngle() - 5);
+			backgroundArc.setAngleExtent(coloredarc.getAngleExtent() + 10);
 			backgroundArc.setBackground(bgcolor);
 
-			idr.fillArc(coloredarc);
+			ClipRenderEvent cre = new ClipRenderEvent(WrappedStructureSource
+					.createSeriesDataPoint(donutseries, dph));
 
-//			idr.drawArc(coloredarc);
-			idr.fillArc(backgroundArc);
-			drawLabel(slice, sliceLocation, idr);
+			int points = 100;
+			Location[] allLocs = new Location[points];
+
+			for (int j = 0; j < points; j++) {
+
+				if (slice.getAngleExtent() < points) {
+					double a = slice.getWidth() / 2;
+					double b = slice.getHeight() / 2;
+
+					double x = Math.cos(Math.toRadians(slice.getStartAngle()
+							+ i))
+							* a;
+					double y = Math.sin(Math.toRadians(slice.getStartAngle()
+							+ i))
+							* b;
+
+					allLocs[i] = goFactory.createLocation(x, y);
+				}
+
+			}
+
+			// Location[] abc = new Location[4];
+			// abc[0] = goFactory.createLocation(slice.getXc(),slice.getYc());
+			// abc[1] =
+			// goFactory.createLocation(slice.getXc()+200,slice.getYc());
+			// abc[2] =
+			// goFactory.createLocation(slice.getXc()+200,slice.getYc()+200);
+			// abc[3] =
+			// goFactory.createLocation(slice.getXc(),slice.getYc()+200);
+			// cre.setVertices(allLocs);
+
+			// idr.fillArc(coloredarc);
+			// cre.fill(idr);
+			// idr.fillArc(backgroundArc);
+			// ArcRenderEvent backgroundArc2 = (ArcRenderEvent)
+			// coloredarc.copy();
+			// Location sliceLocationInner2 = goFactory.createLocation(slice
+			// .getXc()
+			// + frameThickness + sliceDepth, slice.getYc()
+			// + frameThickness + sliceDepth);
+			// backgroundArc2.setTopLeft(sliceLocationInner2);
+			// backgroundArc2.setWidth(coloredarc.getWidth() - 2 *
+			// (frameThickness+sliceDepth));
+			// backgroundArc2
+			// .setHeight(coloredarc.getHeight() - 2 *
+			// (frameThickness+sliceDepth));
+			// backgroundArc2.setStartAngle(coloredarc.getStartAngle() - 4);
+			// backgroundArc2.setAngleExtent(coloredarc.getAngleExtent() + 8);
+			// backgroundArc2.setBackground(bgcolor);
+
+			// idr.fillArc(backgroundArc2);
+			// drawLabel(slice, sliceLocation, idr);
 		}
 
 		// DonutSlice slice = sliceList[0];
 		// DataPointHints dph = slice.getDataPoint();
-		// ArcRenderEvent coloredarc = new ArcRenderEvent(WrappedStructureSource
+		//		 
+		// LineRenderEvent lre = new LineRenderEvent(null);
+		// lre.
 		// .createSeriesDataPoint(donutseries, dph));
 		// Fill fPaletteEntry = slice.getFillColor();
 		// coloredarc.setBackground(fPaletteEntry);
 		// coloredarc.setOutline(LineAttributesImpl.create(ColorDefinitionImpl
 		// .BLACK(), LineStyle.SOLID_LITERAL, 1));
-		//
+		//		
 		// coloredarc.getOutline().setVisible(true);
 		// coloredarc.getOutline().setColor(ColorDefinitionImpl.BLACK());
 		// coloredarc.getOutline().setThickness(1);
-		//
+		//		
 		// coloredarc.setStartAngle(50);
 		// coloredarc.setAngleExtent(90);
-		//
+		//		
 		// Location sliceLocation = goFactory.createLocation(200, 100);
 		// coloredarc.setTopLeft(sliceLocation);
-		//
+		//		
 		// coloredarc.setWidth(400);
 		// coloredarc.setHeight(200);
-		//
+		//		
 		// coloredarc.setBackground(slice.getFillColor());
-		//
+		//		
 		// ArcRenderEvent depthArc = (ArcRenderEvent) coloredarc.copy();
 		// depthArc.getTopLeft().translate(0, 25);
-		//
+		//		
 		// depthArc.setBackground(ColorDefinitionImpl.GREY());
 		// depthArc.setWidth(400);
 		// depthArc.setHeight(200);
+		//
+		//		 
+		// idr.fillArc(coloredarc);
+		//		 
+	}
 
+	private Location[] createLocationPoints(double startAngle,
+			double angleExtent, double a, double b, double mx, double my) {
+
+		Location[] allLocs = new Location[(int) angleExtent + 1];
+		for (int i = 0; i < (int) angleExtent; i++) {
+			double x = Math.cos(Math.toRadians(startAngle + i)) * a;
+			double y = Math.sin(Math.toRadians(startAngle + i)) * b;
+
+			allLocs[i] = goFactory.createLocation(mx + x, my + y);
+		}
+		allLocs[allLocs.length - 1] = goFactory.createLocation(mx, my);
+
+		return allLocs;
 	}
 
 	private void drawLabel(DonutSlice slice, Location sliceLocation,

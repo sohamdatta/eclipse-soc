@@ -85,7 +85,7 @@ public class Donut extends BaseRenderer {
 		Fill bgcolor = p.getClientArea().getBackground() != null ? p
 				.getClientArea().getBackground() : ColorDefinitionImpl.WHITE();
 				
-		donutRenderer.render(idr,bgcolor);
+		donutRenderer.debugRender(idr,bgcolor);
 		
 		Label laText = LabelImpl.create();
 
