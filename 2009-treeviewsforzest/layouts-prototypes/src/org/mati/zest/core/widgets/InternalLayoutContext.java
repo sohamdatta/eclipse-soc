@@ -23,7 +23,7 @@ import org.eclipse.zest.layout.interfaces.NodeLayout;
 import org.eclipse.zest.layout.interfaces.PruningListener;
 import org.eclipse.zest.layout.interfaces.SubgraphLayout;
 
-class InternalLayoutContext implements LayoutContext {
+public class InternalLayoutContext implements LayoutContext {
 
 	final NodeContainerAdapter container;
 	private final List filters = new ArrayList();
@@ -33,7 +33,7 @@ class InternalLayoutContext implements LayoutContext {
 	private final List pruningListeners = new ArrayList();
 	private LayoutAlgorithm mainAlgorithm;
 	private ExpandCollapseManager expandCollapseManager;
-	private SubgraphFactory subgraphFactory = InternalSubgraphLayout.FACTORY;
+	private SubgraphFactory subgraphFactory = DummySubgraphLayout.FACTORY;
 	private final HashSet subgraphs = new HashSet();
 	private boolean eventsOn = true;
 
@@ -83,7 +83,7 @@ class InternalLayoutContext implements LayoutContext {
 		return subgraph;
 	}
 
-	void removeSubgrah(InternalSubgraphLayout subgraph) {
+	void removeSubgrah(DummySubgraphLayout subgraph) {
 		subgraphs.remove(subgraph);
 	}
 
@@ -104,7 +104,7 @@ class InternalLayoutContext implements LayoutContext {
 			connection.applyLayoutChanges();
 		}
 		for (Iterator iterator = subgraphs.iterator(); iterator.hasNext();) {
-			InternalSubgraphLayout subgraph = (InternalSubgraphLayout) iterator.next();
+			DummySubgraphLayout subgraph = (DummySubgraphLayout) iterator.next();
 			subgraph.applyLayoutChanges();
 		}
 		if (animationHint) {

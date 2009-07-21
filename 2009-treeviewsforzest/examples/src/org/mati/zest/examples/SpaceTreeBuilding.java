@@ -9,7 +9,7 @@ import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.zest.layout.algorithms.SpaceTreeLayoutAlgorithm;
-import org.mati.zest.core.widgets.ExperimentalSubgraphLayout;
+import org.mati.zest.core.widgets.LabelSubgraphLayout;
 import org.mati.zest.core.widgets.Graph;
 import org.mati.zest.core.widgets.GraphConnection;
 import org.mati.zest.core.widgets.GraphItem;
@@ -37,7 +37,7 @@ public class SpaceTreeBuilding {
 
 		g.setLayoutAlgorithm(new SpaceTreeLayoutAlgorithm(), false);
 		
-		g.setSubgraphFactory(ExperimentalSubgraphLayout.FACTORY);
+		g.setSubgraphFactory(LabelSubgraphLayout.FACTORY);
 
 		for (int i = 0; i < 20; i++) {
 			GraphNode graphNode = new GraphNode(g, SWT.NONE);

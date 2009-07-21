@@ -17,19 +17,19 @@ import org.eclipse.zest.layout.interfaces.SubgraphLayout;
  * additional graphic elements are added to the graph, but subclasses may add
  * them.
  */
-public class InternalSubgraphLayout implements SubgraphLayout {
+public class DummySubgraphLayout implements SubgraphLayout {
 
 	/**
-	 * Default factory for {@link InternalSubgraphLayout}. It creates one subgraph for a
+	 * Default factory for {@link DummySubgraphLayout}. It creates one subgraph for a
 	 * whole graph and throws every node into it.
 	 */
 	public final static SubgraphFactory FACTORY = new SubgraphFactory() {
 		private HashMap contextToSubgraph = new HashMap();
 
 		public SubgraphLayout createSubgraph(NodeLayout[] nodes, InternalLayoutContext context) {
-			InternalSubgraphLayout subgraph = (InternalSubgraphLayout) contextToSubgraph.get(context);
+			DummySubgraphLayout subgraph = (DummySubgraphLayout) contextToSubgraph.get(context);
 			if (subgraph == null) {
-				subgraph = new InternalSubgraphLayout(context);
+				subgraph = new DummySubgraphLayout(context);
 				contextToSubgraph.put(context, subgraph);
 			}
 			subgraph.addNodes(nodes);
@@ -44,7 +44,7 @@ public class InternalSubgraphLayout implements SubgraphLayout {
 
 	protected boolean disposed = false;
 
-	protected InternalSubgraphLayout(InternalLayoutContext context) {
+	protected DummySubgraphLayout(InternalLayoutContext context) {
 		this.context = context;
 	}
 
@@ -97,6 +97,14 @@ public class InternalSubgraphLayout implements SubgraphLayout {
 	}
 
 	public void setMinimized(boolean minimized) {
+		// do nothing
+	}
+
+	public boolean isDirectionDependant() {
+		return false;
+	}
+
+	public void setDirection(int direction) {
 		// do nothing
 	}
 

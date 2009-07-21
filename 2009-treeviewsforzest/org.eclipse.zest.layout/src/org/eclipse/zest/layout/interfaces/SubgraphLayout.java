@@ -10,6 +10,26 @@ package org.eclipse.zest.layout.interfaces;
 public interface SubgraphLayout extends EntityLayout {
 
 	/**
+	 * Constant for top-down direction (default).
+	 */
+	public final int TOP_DOWN = 1;
+
+	/**
+	 * Constant for bottom-up direction.
+	 */
+	public final int BOTTOM_UP = 2;
+
+	/**
+	 * Constant for direction from left to right.
+	 */
+	public final int LEFT_RIGHT = 3;
+
+	/**
+	 * Constant for direction from right to left.
+	 */
+	public final int RIGHT_LEFT = 4;
+
+	/**
 	 * Returns all the nodes belonging to this subgraph. Replacing elements in
 	 * the returned array does not affect this subgraph.
 	 * 
@@ -43,11 +63,28 @@ public interface SubgraphLayout extends EntityLayout {
 	/**
 	 * Returns true if this subgraph is visualized as a particular object on the
 	 * graph. If this method returns false, it means that this subgraph will not
-	 * be visible so all methods related to location and size should be ignored.
+	 * be visible so all methods related to location, size and direction should
+	 * be ignored.
 	 * 
 	 * @return whether or not this subgraph is a graph entity that should be
 	 *         laid out.
 	 */
 	public boolean isGraphEntity();
+	
+	/**
+	 * @return true if this subgraph is visualized differently depending on
+	 *         direction
+	 */
+	public boolean isDirectionDependant();
+
+	/**
+	 * Sets the direction of this subgraph (does nothing in case of subgraphs
+	 * that don't depend on direction)
+	 * 
+	 * @param direction
+	 *            one of constants: {@link #TOP_DOWN}, {@link #BOTTOM_UP},
+	 *            {@link #LEFT_RIGHT}, {@link #RIGHT_LEFT}
+	 */
+	public void setDirection(int direction);
 
 }

@@ -2,47 +2,37 @@ package org.mati.zest.core.widgets;
 
 import java.util.Iterator;
 
-import org.eclipse.draw2d.ColorConstants;
+import org.eclipse.draw2d.Figure;
 import org.eclipse.draw2d.IFigure;
-import org.eclipse.draw2d.Label;
 import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.draw2d.geometry.Point;
-import org.eclipse.zest.core.widgets.internal.GraphLabel;
 import org.eclipse.zest.layout.dataStructures.DisplayIndependentDimension;
 import org.eclipse.zest.layout.dataStructures.DisplayIndependentPoint;
 import org.eclipse.zest.layout.interfaces.NodeLayout;
-import org.eclipse.zest.layout.interfaces.SubgraphLayout;
 import org.mati.zest.core.widgets.internal.ZestRootLayer;
 
-public class ExperimentalSubgraphLayout extends InternalSubgraphLayout {
+/**
+ * A subgraph layout that represents a subgraph as a single figure.
+ */
+public abstract class FigureSubgraphLayout extends DummySubgraphLayout {
 
-	public final static SubgraphFactory FACTORY = new SubgraphFactory() {
-		public SubgraphLayout createSubgraph(NodeLayout[] nodes, InternalLayoutContext context) {
-			return new ExperimentalSubgraphLayout(nodes, context);
-		}
-	};
-
-	private Label figure;
+	protected Figure figure;
 	private DisplayIndependentPoint location;
 
-	protected void createFigure() {
-		figure = new GraphLabel("HI!", false);
-		figure.setLocation(new Point(20, 20));
-		figure.setForegroundColor(ColorConstants.black);
-		figure.setBackgroundColor(ColorConstants.yellow);
-		updateFigure();
-	}
+	/**
+	 * Creates a figure for this subgraph and stores it in {@link #figure}. All
+	 * nodes contained in this subgraph are moved to the center of the figure
+	 * (so that collapsing and expanding animation looks cool).
+	 */
+	protected abstract void createFigure();
 
-	protected void updateFigure() {
-		if (figure != null) {
-			if (disposed)
-				figure.setText("##");
-			else
-				figure.setText("" + nodes.size());
-		}
-	}
+	/**
+	 * Updates the figure stored in {@link #figure} depending on current nodes
+	 * contained in this subgraph.
+	 */
+	protected abstract void updateFigure();
 
-	protected ExperimentalSubgraphLayout(NodeLayout[] nodes, InternalLayoutContext context) {
+	protected FigureSubgraphLayout(NodeLayout[] nodes, InternalLayoutContext context) {
 		super(context);
 		addNodes(nodes);
 		createFigure();
@@ -50,17 +40,22 @@ public class ExperimentalSubgraphLayout extends InternalSubgraphLayout {
 	}
 
 	public void addNodes(NodeLayout[] nodes) {
+		int initialCount = this.nodes.size();
 		super.addNodes(nodes);
-		updateFigure();
-		if (location != null)
-			for (int i = 0; i < nodes.length; i++) {
-				nodes[i].setLocation(location.x, location.y);
-			}
+		if (this.nodes.size() > initialCount && figure != null) {
+			updateFigure();
+			if (location != null)
+				for (int i = 0; i < nodes.length; i++) {
+					nodes[i].setLocation(location.x, location.y);
+				}
+		}
 	}
 
 	public void removeNodes(NodeLayout[] nodes) {
+		int initialCount = this.nodes.size();
 		super.removeNodes(nodes);
-		updateFigure();
+		if (this.nodes.size() < initialCount && !disposed)
+			updateFigure();
 	}
 
 	public DisplayIndependentDimension getSize() {

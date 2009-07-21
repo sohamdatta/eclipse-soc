@@ -361,7 +361,7 @@ public class ExpandableTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCol
 		if (direction == TOP_DOWN || direction == BOTTOM_UP || direction == LEFT_RIGHT || direction == RIGHT_LEFT)
 			this.direction = direction;
 		else
-			throw new RuntimeException("Invalid direction: " + direction);
+			throw new IllegalArgumentException("Invalid direction: " + direction);
 	}
 
 	/**
