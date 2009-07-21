@@ -29,7 +29,7 @@ public class SpaceTreeExample {
 		g.setLayoutAlgorithm(new SpaceTreeLayoutAlgorithm(), false);
 		g.setSubgraphFactory(TriangleSubgraphLayout.FACTORY);
 		
-		createTree(g, "!", 4, 3);
+		createTree(g, "!", 5, 5);
 
 		hookMenu(g);
 
@@ -45,8 +45,8 @@ public class SpaceTreeExample {
 		GraphNode root = new GraphNode(g, SWT.NONE, rootTitle);
 		if (depth > 0) {
 			for (int i = 0; i < breadth; i++) {
-				GraphNode child = createTree(g, rootTitle + i, depth - 1,
-						breadth);
+				GraphNode child = createTree(g, rootTitle + i, depth - 1 - i,
+						breadth - i);
 				new GraphConnection(g, SWT.NONE, root, child);
 			}
 		}
