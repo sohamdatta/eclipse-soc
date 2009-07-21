@@ -14,11 +14,11 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.zest.layout.algorithms.ExpandableTreeLayoutAlgorithm;
 import org.eclipse.zest.layout.algorithms.TreeLayoutAlgorithm;
-import org.mati.zest.core.widgets.ExperimentalSubgraphLayout;
 import org.mati.zest.core.widgets.Graph;
 import org.mati.zest.core.widgets.GraphConnection;
 import org.mati.zest.core.widgets.GraphItem;
 import org.mati.zest.core.widgets.GraphNode;
+import org.mati.zest.core.widgets.LabelSubgraphLayout;
 
 public class TreeLayoutExample {
 	/**
@@ -48,7 +48,7 @@ public class TreeLayoutExample {
 		}
 
 		final ExpandableTreeLayoutAlgorithm algorithm = new ExpandableTreeLayoutAlgorithm();
-		g.setSubgraphFactory(ExperimentalSubgraphLayout.FACTORY);
+		g.setSubgraphFactory(LabelSubgraphLayout.FACTORY);
 		g.setLayoutAlgorithm(algorithm, false);
 		hookMenu(g);
 

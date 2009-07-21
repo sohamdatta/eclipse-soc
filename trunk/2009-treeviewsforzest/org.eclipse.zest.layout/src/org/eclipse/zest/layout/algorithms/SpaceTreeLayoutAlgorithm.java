@@ -25,7 +25,6 @@ import org.eclipse.zest.layout.dataStructures.DisplayIndependentPoint;
 import org.eclipse.zest.layout.dataStructures.DisplayIndependentRectangle;
 import org.eclipse.zest.layout.interfaces.ConnectionLayout;
 import org.eclipse.zest.layout.interfaces.ContextListener;
-import org.eclipse.zest.layout.interfaces.EntityLayout;
 import org.eclipse.zest.layout.interfaces.ExpandCollapseManager;
 import org.eclipse.zest.layout.interfaces.GraphStructureListener;
 import org.eclipse.zest.layout.interfaces.LayoutAlgorithm;
@@ -83,10 +82,15 @@ public class SpaceTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCollapse
 		public boolean expanded = false;
 		public double positionInLayer;
 
-		public SpaceTreeNode(NodeLayout node) {
+		/**
+		 * This constructor should not be used. Use
+		 * {@link SpaceTreeLayoutAlgorithm#createSpaceTreeNode(NodeLayout)}
+		 * instead.
+		 * 
+		 * @param node
+		 */
+		private SpaceTreeNode(NodeLayout node) {
 			this.node = node;
-			if (node != null)
-				layoutToSpaceTree.put(node, this);
 		}
 
 		public void addChild(SpaceTreeNode child) {
@@ -394,14 +398,6 @@ public class SpaceTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCollapse
 		 * @return true if location of at least one node has changed
 		 */
 		public boolean flushLocationChanges(double thicknessSoFar) {
-			if (Double.isNaN(thicknessSoFar)) {
-				thicknessSoFar = 0;
-				for (int i = 0; i < depth; i++) {
-					thicknessSoFar += ((SpaceTreeLayer) spaceTreeLayers.get(i)).thickness;
-				}
-				thicknessSoFar += (depth + 1) * layerGap;
-			}
-
 			boolean madeChanges = false;
 			if (node != null) {
 				DisplayIndependentDimension nodeSize = node.getSize();
@@ -420,7 +416,7 @@ public class SpaceTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCollapse
 					y = bounds.y + positionInLayer;
 					break;
 				case RIGHT_LEFT:
-					x = bounds.x + bounds.width - thicknessSoFar + nodeSize.height / 2;
+					x = bounds.x + bounds.width - thicknessSoFar - nodeSize.height / 2;
 					y = bounds.y + positionInLayer;
 					break;
 				}
@@ -751,7 +747,7 @@ public class SpaceTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCollapse
 		}
 
 		public boolean nodeAdded(LayoutContext context, NodeLayout node) {
-			superRoot.addChild(new SpaceTreeNode(node));
+			superRoot.addChild(createSpaceTreeNode(node));
 			superRoot.precomputeTree();
 			refreshLayout(true);
 			return false;
@@ -868,12 +864,18 @@ public class SpaceTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCollapse
 		if (direction == TOP_DOWN || direction == BOTTOM_UP || direction == LEFT_RIGHT || direction == RIGHT_LEFT)
 			this.direction = direction;
 		else
-			throw new RuntimeException("Invalid direction: " + direction);
+			throw new IllegalArgumentException("Invalid direction: " + direction);
 	}
 
 	public void applyLayout() {
+		if (bounds.width * bounds.height == 0)
+			return;
 
-		internalApplyLayout();
+		superRoot = createSpaceTreeNode(null);
+		createTrees(context.getNodes());
+		superRoot.maximizeExpansion();
+		superRoot.flushExpansionChanges();
+		superRoot.flushLocationChanges(0);
 	}
 
 	public void setLayoutContext(LayoutContext context) {
@@ -918,13 +920,15 @@ public class SpaceTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCollapse
 		}
 	}
 
-	void internalApplyLayout() {
-		if (bounds.width * bounds.height == 0)
-			return;
-
-		superRoot.maximizeExpansion();
-		superRoot.flushExpansionChanges();
-		superRoot.flushLocationChanges(0);
+	private SpaceTreeNode createSpaceTreeNode(NodeLayout node) {
+		SpaceTreeNode spaceTreeNode = (SpaceTreeNode) layoutToSpaceTree.get(node);
+		if (spaceTreeNode == null) {
+			spaceTreeNode = new SpaceTreeNode(node);
+			layoutToSpaceTree.put(node, spaceTreeNode);
+		}
+		spaceTreeNode.children.clear();
+		spaceTreeNode.subgraph = null;
+		return spaceTreeNode;
 	}
 
 	private boolean isBetterParent(SpaceTreeNode base, SpaceTreeNode better) {
@@ -939,13 +943,13 @@ public class SpaceTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCollapse
 	 * Builds a tree structure using BFS method. Created trees are children of
 	 * {@link #superRoot}.
 	 * 
-	 * @param entities
+	 * @param nodes
 	 */
-	private void createTrees(NodeLayout[] entities) {
+	private void createTrees(NodeLayout[] nodes) {
 		HashSet alreadyVisited = new HashSet();
 		LinkedList nodesToAdd = new LinkedList();
-		for (int i = 0; i < entities.length; i++) {
-			EntityLayout root = findRoot(entities[i], alreadyVisited);
+		for (int i = 0; i < nodes.length; i++) {
+			NodeLayout root = findRoot(nodes[i], alreadyVisited);
 			if (root != null) {
 				alreadyVisited.add(root);
 				nodesToAdd.addLast(new Object[] { root, superRoot });
@@ -953,11 +957,11 @@ public class SpaceTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCollapse
 		}
 		while (!nodesToAdd.isEmpty()) {
 			Object[] dequeued = (Object[]) nodesToAdd.removeFirst();
-			SpaceTreeNode currentNode = new SpaceTreeNode((NodeLayout) dequeued[0]);
+			SpaceTreeNode currentNode = createSpaceTreeNode((NodeLayout) dequeued[0]);
 			SpaceTreeNode currentRoot = (SpaceTreeNode) dequeued[1];
 
 			currentRoot.addChild(currentNode);
-			NodeLayout[] children = currentNode.node.getSuccessingEntities();
+			NodeLayout[] children = currentNode.node.getSuccessingNodes();
 			for (int i = 0; i < children.length; i++) {
 				if (!alreadyVisited.contains(children[i])) {
 					alreadyVisited.add(children[i]);
@@ -969,32 +973,32 @@ public class SpaceTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCollapse
 	}
 
 	/**
-	 * Searches for a root of a tree containing given entity by continuously
-	 * grabbing a predecessor of current entity. If it reaches an entity that
-	 * exists in alreadyVisited set, it returns null. If it detects a cycle, it
-	 * returns the first found entity of that cycle. If it reaches an entity
-	 * that has no predecessors, it returns that entity.
+	 * Searches for a root of a tree containing given node by continuously
+	 * grabbing a predecessor of current node. If it reaches an node that exists
+	 * in alreadyVisited set, it returns null. If it detects a cycle, it returns
+	 * the first found node of that cycle. If it reaches a node that has no
+	 * predecessors, it returns that node.
 	 * 
-	 * @param entityLayout
-	 *            starting entity
+	 * @param nodeLayout
+	 *            starting node
 	 * @param alreadyVisited
-	 *            set of entities that can't lay on path to the root (if one
-	 *            does, method stops and returns null).
+	 *            set of nodes that can't lay on path to the root (if one does,
+	 *            method stops and returns null).
 	 * @return
 	 */
-	private EntityLayout findRoot(EntityLayout entityLayout, Set alreadyVisited) {
+	private NodeLayout findRoot(NodeLayout nodeLayout, Set alreadyVisited) {
 		HashSet alreadyVisitedRoot = new HashSet();
 		while (true) {
-			if (alreadyVisited.contains(entityLayout))
+			if (alreadyVisited.contains(nodeLayout))
 				return null;
-			if (alreadyVisitedRoot.contains(entityLayout))
-				return entityLayout;
-			alreadyVisitedRoot.add(entityLayout);
-			NodeLayout[] predecessingEntities = entityLayout.getPredecessingEntities();
-			if (predecessingEntities.length > 0) {
-				entityLayout = predecessingEntities[0];
+			if (alreadyVisitedRoot.contains(nodeLayout))
+				return nodeLayout;
+			alreadyVisitedRoot.add(nodeLayout);
+			NodeLayout[] predecessingNodes = nodeLayout.getPredecessingNodes();
+			if (predecessingNodes.length > 0) {
+				nodeLayout = predecessingNodes[0];
 			} else {
-				return entityLayout;
+				return nodeLayout;
 			}
 		}
 	}

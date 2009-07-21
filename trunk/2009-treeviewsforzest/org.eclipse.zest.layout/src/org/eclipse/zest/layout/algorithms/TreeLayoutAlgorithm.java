@@ -20,7 +20,6 @@ import org.eclipse.zest.layout.dataStructures.DisplayIndependentRectangle;
 import org.eclipse.zest.layout.interfaces.EntityLayout;
 import org.eclipse.zest.layout.interfaces.LayoutAlgorithm;
 import org.eclipse.zest.layout.interfaces.LayoutContext;
-import org.eclipse.zest.layout.interfaces.NodeLayout;
 
 import sun.misc.Queue;
 
@@ -115,7 +114,7 @@ public class TreeLayoutAlgorithm implements LayoutAlgorithm {
 		if (direction == TOP_DOWN || direction == BOTTOM_UP || direction == LEFT_RIGHT || direction == RIGHT_LEFT)
 			this.direction = direction;
 		else
-			throw new RuntimeException("Invalid direction: " + direction);
+			throw new IllegalArgumentException("Invalid direction: " + direction);
 	}
 
 	/**
@@ -200,7 +199,7 @@ public class TreeLayoutAlgorithm implements LayoutAlgorithm {
 			}
 			EntityInfo currentEntityInfo = new EntityInfo(entity);
 			parentEntityInfo.addChild(currentEntityInfo);
-			NodeLayout[] children = entity.getSuccessingEntities();
+			EntityLayout[] children = entity.getSuccessingEntities();
 			for (int i = 0; i < children.length; i++) {
 				if (!alreadyVisited.contains(children[i])) {
 					alreadyVisited.add(children[i]);
@@ -233,7 +232,7 @@ public class TreeLayoutAlgorithm implements LayoutAlgorithm {
 			if (alreadyVisitedRoot.contains(entityLayout))
 				return entityLayout;
 			alreadyVisitedRoot.add(entityLayout);
-			NodeLayout[] predecessingEntities = entityLayout.getPredecessingEntities();
+			EntityLayout[] predecessingEntities = entityLayout.getPredecessingEntities();
 			if (predecessingEntities.length > 0) {
 				entityLayout = predecessingEntities[0];
 			} else {
