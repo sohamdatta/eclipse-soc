@@ -261,6 +261,8 @@ public class SpaceTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCollapse
 		}
 
 		public double spaceRequiredForChildren() {
+			if (children.isEmpty())
+				return 0;
 			double result = 0;
 			for (Iterator iterator = children.iterator(); iterator.hasNext();) {
 				SpaceTreeNode child = (SpaceTreeNode) iterator.next();
@@ -285,13 +287,21 @@ public class SpaceTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCollapse
 				nodesInThisLayer = nodesInNextLayer;
 				nodesInNextLayer = new ArrayList();
 				
+				int numOfNodesWithChildren = 0;
 				for (Iterator iterator = nodesInThisLayer.iterator(); iterator.hasNext();) {
 					SpaceTreeNode node = (SpaceTreeNode) iterator.next();
-					node.expanded = true;
-					spaceRequiredInNextLayer += node.spaceRequiredForChildren();
-					nodesInNextLayer.addAll(node.children);
+					if (!node.children.isEmpty()) {
+						node.expanded = true;
+						spaceRequiredInNextLayer += node.spaceRequiredForChildren();
+						nodesInNextLayer.addAll(node.children);
+						numOfNodesWithChildren++;
+					}
 				}
-				spaceRequiredInNextLayer += branchGap * (nodesInThisLayer.size() - 1);
+
+				if (numOfNodesWithChildren == 0)
+					break;
+
+				spaceRequiredInNextLayer += branchGap * (numOfNodesWithChildren - 1);
 
 				if (spaceRequiredInNextLayer > requiredSpace && spaceRequiredInNextLayer > availableSpace && layer > (this == superRoot ? 1 : 0)) {
 					for (Iterator iterator = nodesInThisLayer.iterator(); iterator.hasNext();) {
@@ -310,16 +320,22 @@ public class SpaceTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCollapse
 			// center nodes at the bottom
 			ArrayList nodesToCenter = nodesInNextLayer.isEmpty() ? (nodesInThisLayer.isEmpty() ? null : nodesInThisLayer) : nodesInNextLayer;
 			if (nodesToCenter != null) {
-				SpaceTreeNode firstNode = (SpaceTreeNode) nodesToCenter.get(0);
-				SpaceTreeNode lastNode = ((SpaceTreeNode) nodesToCenter.get(nodesToCenter.size() - 1));
-				protectedNode = commonAncestor(firstNode, lastNode);
-				requiredSpace -= firstNode.spaceRequiredForNode() / 2 + firstNode.spaceRequiredForNode() / 2;
+				protectedNode = this;
+				requiredSpace = 0;
+				Iterator iterator = nodesToCenter.iterator();
+				SpaceTreeNode previousNode = (SpaceTreeNode) iterator.next();
+				for (; iterator.hasNext();) {
+					SpaceTreeNode node = (SpaceTreeNode) iterator.next();
+					requiredSpace += expectedDistance(previousNode, node);
+					previousNode = node;
+				}
 				double centerPosition = getAvailableSpace() / 2;
-				((SpaceTreeLayer) spaceTreeLayers.get(lastNode.depth)).fitNodesWithinBounds(nodesToCenter, centerPosition - requiredSpace / 2,
+				((SpaceTreeLayer) spaceTreeLayers.get(previousNode.depth)).fitNodesWithinBounds(nodesToCenter, centerPosition - requiredSpace / 2,
 						centerPosition + requiredSpace / 2);
 			}
 
 			centerParentsBottomUp();
+			centerParentsTopDown();
 		}
 
 		public void centerParentsBottomUp() {
@@ -338,6 +354,9 @@ public class SpaceTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCollapse
 		}
 
 		public void centerParentsTopDown() {
+			if (this == superRoot) {
+				this.positionInLayer = getAvailableSpace() / 2;
+			}
 			if (!children.isEmpty() && expanded) {
 				SpaceTreeNode firstChild = (SpaceTreeNode) children.get(0);
 				SpaceTreeNode lastChild = (SpaceTreeNode) children.get(children.size() - 1);
@@ -708,12 +727,6 @@ public class SpaceTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCollapse
 			}
 		}
 
-		private double expectedDistance(SpaceTreeNode node, SpaceTreeNode neighbor) {
-			double expectedDistance = (node.spaceRequiredForNode() + neighbor.spaceRequiredForNode()) / 2;
-			expectedDistance += (node.parent == neighbor.parent) ? leafGap : branchGap;
-			return expectedDistance;
-		}
-
 		public String toString() {
 			StringBuffer buffer = new StringBuffer();
 			buffer.append("Layer ").append(depth).append(": ");
@@ -1007,15 +1020,9 @@ public class SpaceTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCollapse
 		return (direction == TOP_DOWN || direction == BOTTOM_UP) ? bounds.width : bounds.height;
 	}
 
-	private SpaceTreeNode commonAncestor(SpaceTreeNode node1, SpaceTreeNode node2) {
-		while (node1.depth < node2.depth)
-			node1 = node1.parent;
-		while (node2.depth < node1.depth)
-			node2 = node2.parent;
-		while (node1 != node2 && node1 != null && node2 != null) {
-			node1 = node1.parent;
-			node2 = node2.parent;
-		}
-		return node1;
+	private double expectedDistance(SpaceTreeNode node, SpaceTreeNode neighbor) {
+		double expectedDistance = (node.spaceRequiredForNode() + neighbor.spaceRequiredForNode()) / 2;
+		expectedDistance += (node.parent == neighbor.parent) ? leafGap : branchGap;
+		return expectedDistance;
 	}
 }
