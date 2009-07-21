@@ -261,65 +261,84 @@ public class DonutRenderer {
 			throws ChartException {
 
 		for (int k = 0; k < sliceList.length; k++) {
-			
-		DonutSlice slice = sliceList[k];
 
-		DataPointHints dph = slice.getDataPoint();
+			DonutSlice slice = sliceList[k];
 
-//		Location[] upperLocs = new Location[] {
-//				goFactory.createLocation(250 + 150, 150 + 75), 
-//		goFactory.createLocation(250 + 300, 150 + 75),
-//		goFactory.createLocation(250 + 300, 150),
-//				goFactory.createLocation(250 + 150, 150)};
+			DataPointHints dph = slice.getDataPoint();
 
-		double mx = slice.getWidth()/2 + slice.getXc();
-		double my = slice.getHeight()/2 + slice.getYc();
-		
-		int locationpoints = (int) (slice.getAngleExtent()*2); 
-		
-		slice.setAngleExtent(slice.getAngleExtent()-slice.getExplosion());
-		
-		Location[] allLocs = new Location[(int) (slice.getAngleExtent()*2)+2];
-		Location[] allLocsLow = new Location[(int) (slice.getAngleExtent()*2)+2];
-		
-		for (int i = 0; i < (int)slice.getAngleExtent()+1; i++) {
-			double x = Math.cos(Math.toRadians(slice.getStartAngle() + i)) * slice.getWidth()/2;
-			double y = Math.sin(Math.toRadians(slice.getStartAngle()+ i)) * slice.getHeight()/2;
-			allLocs[i] = goFactory.createLocation(slice.getXc()+slice.getWidth()/2 + x, slice.getYc()+slice.getHeight()/2 - y);
-			allLocsLow[i] = goFactory.createLocation(slice.getXc()+slice.getWidth()/2 + x, slice.getYc()+sliceDepth+slice.getHeight()/2 - y);
+			// Location[] upperLocs = new Location[] {
+			// goFactory.createLocation(250 + 150, 150 + 75),
+			// goFactory.createLocation(250 + 300, 150 + 75),
+			// goFactory.createLocation(250 + 300, 150),
+			// goFactory.createLocation(250 + 150, 150)};
+
+			double mx = slice.getWidth() / 2 + slice.getXc();
+			double my = slice.getHeight() / 2 + slice.getYc();
+
+			int locationpoints = (int) (slice.getAngleExtent() * 2);
+
+			slice.setAngleExtent(slice.getAngleExtent() - slice.getExplosion());
+
+			Location[] allLocs = new Location[(int) Math.round(slice
+					.getAngleExtent()) * 2];
+			Location[] allLocsLow = new Location[(int) Math.round(slice
+					.getAngleExtent()) * 2];
+
+			for (int i = 0; i < allLocs.length / 2; i++) {
+				double x = Math.cos(Math.toRadians(slice.getStartAngle() + i))
+						* slice.getWidth() / 2;
+				double y = Math.sin(Math.toRadians(slice.getStartAngle() + i))
+						* slice.getHeight() / 2;
+				allLocs[i] = goFactory.createLocation(slice.getXc()
+						+ slice.getWidth() / 2 + x, slice.getYc()
+						+ slice.getHeight() / 2 - y);
+
+					allLocsLow[i] = goFactory.createLocation(slice.getXc()
+							+ slice.getWidth() / 2 + x, slice.getYc()
+							+ sliceDepth + slice.getHeight() / 2 - y);
+			}
+
+			for (int i = 0; i < allLocs.length-allLocs.length / 2; i++) {
+				double x = Math.cos(Math.toRadians(slice.getStartAngle()
+						+ slice.getAngleExtent() - i))
+						* (slice.getWidth() / 2 - frameThickness);
+				double y = Math.sin(Math.toRadians(slice.getStartAngle()
+						+ slice.getAngleExtent() - i))
+						* (slice.getHeight() / 2 - frameThickness);
+				allLocs[allLocs.length / 2 + i] = goFactory.createLocation(
+						slice.getXc() + slice.getWidth() / 2 + x, slice.getYc()
+								+ slice.getHeight() / 2 - y);
+					allLocsLow[allLocs.length / 2 + i] = goFactory
+							.createLocation(slice.getXc() + slice.getWidth()
+									/ 2 + x, slice.getYc() + sliceDepth
+									+ slice.getHeight() / 2 - y);
+			}
+
+			PolygonRenderEvent poly = new PolygonRenderEvent(
+					WrappedStructureSource.createSeriesDataPoint(donutseries,
+							dph));
+			poly.setPoints(allLocs);
+
+			poly.setBackground(slice.getFillColor());
+
+			PolygonRenderEvent polyLow = (PolygonRenderEvent) poly.copy();
+			polyLow.setPoints(allLocsLow);
+			polyLow.setBackground(((ColorDefinition) slice.getFillColor())
+					.darker());
+			// ClipRenderEvent cre = new ClipRenderEvent(WrappedStructureSource
+			// .createSeriesDataPoint(donutseries, dph));
+
+			// cre.setVertices(upperLocs);
+
+			// idr.setClip(cre);
+			// idr.fillArc(coloredarc);
+			idr.fillPolygon(polyLow);
+			idr.fillPolygon(poly);
+			// cre.reset();
+			// idr.setClip(cre);
+			drawLabel(slice, goFactory.createLocation(slice.getXc(), slice
+					.getYc()), idr);
 		}
-		
-		for (int i = 0; i < (int)slice.getAngleExtent()+1; i++) {
-			double x = Math.cos(Math.toRadians(slice.getStartAngle()+slice.getAngleExtent() - i)) * (slice.getWidth()/2-frameThickness);
-			double y = Math.sin(Math.toRadians(slice.getStartAngle()+slice.getAngleExtent() - i)) * (slice.getHeight()/2-frameThickness);
-			allLocs[(int)slice.getAngleExtent()+i+1] = goFactory.createLocation(slice.getXc()+slice.getWidth()/2 + x, slice.getYc()+slice.getHeight()/2 - y);
-			allLocsLow[(int)slice.getAngleExtent()+i+1] = goFactory.createLocation(slice.getXc()+slice.getWidth()/2 + x, slice.getYc()+sliceDepth+slice.getHeight()/2 - y);
-		}
-		
-
-		PolygonRenderEvent poly = new PolygonRenderEvent(WrappedStructureSource
-				.createSeriesDataPoint(donutseries, dph));
-		poly.setPoints(allLocs);
-		
-		poly.setBackground(slice.getFillColor());
-		
-		PolygonRenderEvent polyLow = (PolygonRenderEvent) poly.copy();
-		polyLow.setPoints(allLocsLow);
-		polyLow.setBackground(((ColorDefinition) slice.getFillColor()).darker());
-//		ClipRenderEvent cre = new ClipRenderEvent(WrappedStructureSource
-//				.createSeriesDataPoint(donutseries, dph));
-
-//		cre.setVertices(upperLocs);
-
-		
-//		idr.setClip(cre);
-//		idr.fillArc(coloredarc);
-		idr.fillPolygon(polyLow);
-		idr.fillPolygon(poly);
-//		cre.reset();
-//		idr.setClip(cre);
-		drawLabel(slice, goFactory.createLocation(slice.getXc(), slice.getYc()), idr);
-		}		
 	}
 
 	public void render(IDeviceRenderer idr, Fill bgcolor) throws ChartException {

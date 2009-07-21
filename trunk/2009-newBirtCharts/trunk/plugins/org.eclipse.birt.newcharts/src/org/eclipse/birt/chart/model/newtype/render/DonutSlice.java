@@ -110,29 +110,40 @@ public class DonutSlice {
 			if (sliceDepth != 0){
 				setWidth(bounds.getWidth());
 				setHeight(getWidth()*ratio - 2 * sliceDepth);
+				
+				setXc(bounds.getLeft());
+				setYc(bounds.getTop()+getHeight()/2 +offset);
 			}
 			else{
 				setWidth(bounds.getWidth());
 				setHeight(getWidth());
+				
+				setXc(bounds.getLeft());
+				setYc(bounds.getTop() +offset);
 			}
 
 			// SETS THE FIX POINT TO THE TOP & LEFT OF THE DONUT
-			setXc(bounds.getLeft());
-			setYc(bounds.getTop() +(getHeight()-getWidth())/2+offset);
+			
 		} else {
 			// SET RADIUS
 			// IF 3D HEIGHT != WIDTH
 			if (sliceDepth != 0){
 				setWidth(bounds.getWidth());
 				setHeight(bounds.getHeight()*(1-ratio) - 2*sliceDepth);
+				
+				// SETS THE FIX POINT TO THE TOP & LEFT OF THE DONUT
+				setYc(bounds.getTop()+getHeight()/2 +offset);
+				setXc(bounds.getLeft());
 			}
 			else{
 				setHeight(bounds.getHeight());
 				setWidth(getHeight());
+				
+				// SETS THE FIX POINT TO THE TOP & LEFT OF THE DONUT
+				setYc(bounds.getTop() +offset);
+				setXc(bounds.getLeft());
 			}
-			// SETS THE FIX POINT TO THE TOP & LEFT OF THE DONUT
-			setYc(bounds.getTop()+getHeight()/2 +offset);
-			setXc(bounds.getLeft());
+			
 		}
 //		if (getRatio() > 0 && getWidth() > 0) {
 //			if (getHeight() / getWidth() > getRatio()) {

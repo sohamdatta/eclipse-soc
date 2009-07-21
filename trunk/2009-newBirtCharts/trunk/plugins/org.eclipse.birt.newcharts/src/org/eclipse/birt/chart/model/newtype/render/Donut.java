@@ -84,7 +84,7 @@ public class Donut extends BaseRenderer {
 		IDeviceRenderer idr = getDevice();
 		Fill bgcolor = p.getClientArea().getBackground() != null ? p
 				.getClientArea().getBackground() : ColorDefinitionImpl.WHITE();
-				
+		
 		donutRenderer.debugRender(idr,bgcolor);
 		
 		Label laText = LabelImpl.create();
