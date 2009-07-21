@@ -69,7 +69,7 @@ public class NewChartsView extends ViewPart {
 
   private Chart createDonutChart() {
     ChartWithoutAxes chart = ChartWithoutAxesImpl.create();
-    chart.setDimension( ChartDimension.TWO_DIMENSIONAL_WITH_DEPTH_LITERAL );
+    chart.setDimension( ChartDimension.TWO_DIMENSIONAL_LITERAL );
     Text caption = chart.getTitle().getLabel().getCaption();
     caption.setValue( "First base frame of new chart type" );
     adjustFont( caption.getFont() );
@@ -80,7 +80,7 @@ public class NewChartsView extends ViewPart {
     TextDataSet categoryValues = TextDataSetImpl.create( new String[]{
       "category1", "category2", "category3", "category4"} );//$NON-NLS-1$ //$NON-NLS-2$
     NumberDataSet seriesOneValues = NumberDataSetImpl.create( new double[]{
-      30,30,30,30
+      176,14,48,85
     } );
     // Base Series
     SeriesDefinition sd = SeriesDefinitionImpl.create();
