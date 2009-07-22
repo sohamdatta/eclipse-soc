@@ -275,16 +275,23 @@ public class DonutRenderer {
 			double mx = slice.getWidth() / 2 + slice.getXc();
 			double my = slice.getHeight() / 2 + slice.getYc();
 
-			int locationpoints = (int) (slice.getAngleExtent() * 2);
+			// int locationpoints = (int) (slice.getAngleExtent() * 2);
 
-			slice.setAngleExtent(slice.getAngleExtent() - slice.getExplosion());
+			slice.setAngleExtent(slice.getAngleExtent() - slice.getExplosion()
+					/ 2);
 
-			Location[] allLocs = new Location[(int) Math.round(slice
-					.getAngleExtent()) * 2];
-			Location[] allLocsLow = new Location[(int) Math.round(slice
-					.getAngleExtent()) * 2];
+			Location[] allLocsLow = null;
+			Location[] allLocs = null;
+			try {
+				allLocs = new Location[(int)slice.getAngleExtent() * 2+4];
+				allLocsLow = new Location[allLocs.length];
+			} catch (NegativeArraySizeException naze) {
+				// If explosion is bigger than
+				allLocs = new Location[4];
+				allLocsLow = new Location[4];
+			}
 
-			for (int i = 0; i < allLocs.length / 2; i++) {
+			for (int i = 0; i <= (int)slice.getAngleExtent()+1; i++) {
 				double x = Math.cos(Math.toRadians(slice.getStartAngle() + i))
 						* slice.getWidth() / 2;
 				double y = Math.sin(Math.toRadians(slice.getStartAngle() + i))
@@ -292,26 +299,29 @@ public class DonutRenderer {
 				allLocs[i] = goFactory.createLocation(slice.getXc()
 						+ slice.getWidth() / 2 + x, slice.getYc()
 						+ slice.getHeight() / 2 - y);
-
+				if (slice.getDepth() != 0) {
 					allLocsLow[i] = goFactory.createLocation(slice.getXc()
 							+ slice.getWidth() / 2 + x, slice.getYc()
 							+ sliceDepth + slice.getHeight() / 2 - y);
+				}
 			}
 
-			for (int i = 0; i < allLocs.length-allLocs.length / 2; i++) {
+			for (int i = 0; i <= (int)slice.getAngleExtent()+1; i++) {
 				double x = Math.cos(Math.toRadians(slice.getStartAngle()
 						+ slice.getAngleExtent() - i))
 						* (slice.getWidth() / 2 - frameThickness);
 				double y = Math.sin(Math.toRadians(slice.getStartAngle()
 						+ slice.getAngleExtent() - i))
 						* (slice.getHeight() / 2 - frameThickness);
-				allLocs[allLocs.length / 2 + i] = goFactory.createLocation(
+				allLocs[(int) (slice.getAngleExtent()+i+2)] = goFactory.createLocation(
 						slice.getXc() + slice.getWidth() / 2 + x, slice.getYc()
 								+ slice.getHeight() / 2 - y);
-					allLocsLow[allLocs.length / 2 + i] = goFactory
+				if (slice.getDepth() != 0) {
+					allLocsLow[(int) (slice.getAngleExtent() + i+2)] = goFactory
 							.createLocation(slice.getXc() + slice.getWidth()
 									/ 2 + x, slice.getYc() + sliceDepth
 									+ slice.getHeight() / 2 - y);
+				}
 			}
 
 			PolygonRenderEvent poly = new PolygonRenderEvent(
@@ -332,7 +342,9 @@ public class DonutRenderer {
 
 			// idr.setClip(cre);
 			// idr.fillArc(coloredarc);
-			idr.fillPolygon(polyLow);
+			if (slice.getDepth() != 0) {
+				idr.fillPolygon(polyLow);
+			}
 			idr.fillPolygon(poly);
 			// cre.reset();
 			// idr.setClip(cre);
@@ -796,7 +808,7 @@ public class DonutRenderer {
 
 		cellBounds.setHeight(cellBounds.getHeight());
 		for (DonutSlice slice : sliceList) {
-			slice.setBounds(cellBounds);
+			slice.setBounds(cellBounds, explosion);
 		}
 	}
 
@@ -815,9 +827,11 @@ public class DonutRenderer {
 
 			titleContainerBounds = goFactory.createBounds(0, 0, 0, 0);
 
+			int labelOffset = 50;
 			switch (titleLabelPos.getValue()) {
 			case Position.BELOW:
-				cellBounds.setHeight(cellBounds.getHeight() - bb.getHeight());
+				cellBounds.setHeight(cellBounds.getHeight() - bb.getHeight()
+						+ labelOffset);
 				titleContainerBounds.set(cellBounds.getLeft(), cellBounds
 						.getTop()
 						+ cellBounds.getHeight(), cellBounds.getWidth(),
@@ -826,7 +840,8 @@ public class DonutRenderer {
 			case Position.ABOVE:
 				titleContainerBounds.set(cellBounds.getLeft(), cellBounds
 						.getTop(), cellBounds.getWidth(), bb.getHeight());
-				cellBounds.setTop(cellBounds.getTop() + bb.getHeight());
+				cellBounds.setTop(cellBounds.getTop() + bb.getHeight()
+						- labelOffset);
 				cellBounds.setHeight(cellBounds.getHeight() - bb.getHeight());
 				break;
 			case Position.LEFT:
@@ -905,7 +920,7 @@ public class DonutRenderer {
 				+ dataPointLabelOffset);
 
 		for (DonutSlice slice : sliceList) {
-			slice.setBounds(cellBounds);
+			slice.setBounds(cellBounds, explosion);
 			// FIRST SET LABELBOUNDS _ THEN COMPUTE CELLBOUNDS AS RESULT OF
 			// CELLBOUNDS-SLICELABELBOUNDS
 			slice.computeLabelBoundOutside(leaderLineStyle, leaderLinesLength,
