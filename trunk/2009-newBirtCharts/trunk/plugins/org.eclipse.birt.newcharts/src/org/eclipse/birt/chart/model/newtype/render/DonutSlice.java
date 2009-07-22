@@ -97,7 +97,7 @@ public class DonutSlice {
 		return startAngle;
 	}
 
-	public void setBounds(Bounds cellBounds) {
+	public void setBounds(Bounds cellBounds, double explosion) {
 		this.bounds = cellBounds.copyInstance();
 
 		double ratio = 0.5;
@@ -105,53 +105,52 @@ public class DonutSlice {
 		if (cellBounds.getHeight() > cellBounds.getWidth()) {
 			// SET RADIUS
 			// IF 3D HEIGHT != WIDTH
-			
-			//Width gets full bounds.getWidth()
-			if (sliceDepth != 0){
-				setWidth(bounds.getWidth());
-				setHeight(getWidth()*ratio - 2 * sliceDepth);
-				
-				setXc(bounds.getLeft());
-				setYc(bounds.getTop()+getHeight()/2 +offset);
-			}
-			else{
-				setWidth(bounds.getWidth());
+
+			// Width gets full bounds.getWidth()
+			if (sliceDepth != 0) {
+				setWidth(bounds.getWidth() - explosion);
+				setHeight(getWidth() * ratio - 2 * sliceDepth);
+
+			} else {
+				setWidth(bounds.getWidth() - explosion);
 				setHeight(getWidth());
-				
-				setXc(bounds.getLeft());
-				setYc(bounds.getTop() +offset);
+
 			}
 
-			// SETS THE FIX POINT TO THE TOP & LEFT OF THE DONUT
-			
+
+
 		} else {
 			// SET RADIUS
 			// IF 3D HEIGHT != WIDTH
-			if (sliceDepth != 0){
-				setWidth(bounds.getWidth());
-				setHeight(bounds.getHeight()*(1-ratio) - 2*sliceDepth);
-				
-				// SETS THE FIX POINT TO THE TOP & LEFT OF THE DONUT
-				setYc(bounds.getTop()+getHeight()/2 +offset);
-				setXc(bounds.getLeft());
-			}
-			else{
-				setHeight(bounds.getHeight());
+			if (sliceDepth != 0) {
+				setWidth(bounds.getWidth()-explosion);
+				setHeight(bounds.getHeight() * (1 - ratio) - 2 * sliceDepth);
+			} else {
+				setHeight(bounds.getHeight()-explosion);
 				setWidth(getHeight());
-				
-				// SETS THE FIX POINT TO THE TOP & LEFT OF THE DONUT
-				setYc(bounds.getTop() +offset);
-				setXc(bounds.getLeft());
 			}
-			
+//			// SETS THE FIX POINT TO THE TOP & LEFT OF THE DONUT
+//			setXc(bounds.getLeft());
+//			setYc(bounds.getTop() + (bounds.getHeight() - getHeight()) / 2);
+
 		}
-//		if (getRatio() > 0 && getWidth() > 0) {
-//			if (getHeight() / getWidth() > getRatio()) {
-//				setHeight(getWidth()*getRatio());
-//			} else if (getHeight() / getWidth() < getRatio()) {
-//				setWidth(getHeight() / getRatio());
-//			}
-//		}
+		// SETS THE FIX POINT TO THE TOP & LEFT OF THE DONUT
+		if (getQuadrant() == 1) {
+			setXc(bounds.getLeft()+explosion/2);
+			setYc(bounds.getTop() + (bounds.getHeight() - getHeight()) / 2 -explosion/2);
+		}
+		if (getQuadrant() == 2) {
+			setXc(bounds.getLeft()-explosion/2);
+			setYc(bounds.getTop() + (bounds.getHeight() - getHeight()) / 2 -explosion/2);
+		}
+		if (getQuadrant() == 3) {
+			setXc(bounds.getLeft()-explosion/2);
+			setYc(bounds.getTop() + (bounds.getHeight() - getHeight()) / 2 +explosion/2);
+		}
+		if (getQuadrant() == 4) {
+			setXc(bounds.getLeft()+explosion/2);
+			setYc(bounds.getTop() + (bounds.getHeight() - getHeight()) / 2 +explosion/2);
+		}
 
 		// detect invalid size.
 		if (getWidth() <= 0 || getHeight() <= 0) {
