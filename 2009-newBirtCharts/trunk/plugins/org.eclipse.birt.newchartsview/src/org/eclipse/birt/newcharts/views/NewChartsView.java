@@ -80,7 +80,7 @@ public class NewChartsView extends ViewPart {
     TextDataSet categoryValues = TextDataSetImpl.create( new String[]{
       "category1", "category2", "category3", "category4"} );//$NON-NLS-1$ //$NON-NLS-2$
     NumberDataSet seriesOneValues = NumberDataSetImpl.create( new double[]{
-      176,14,48,85
+      135,14,48,85
     } );
     // Base Series
     SeriesDefinition sd = SeriesDefinitionImpl.create();
@@ -92,9 +92,9 @@ public class NewChartsView extends ViewPart {
     sd.getSeries().add( seBase );
     // new colors
     final Fill[] fiaBase = {
-      ColorDefinitionImpl.BLUE(),
-      ColorDefinitionImpl.RED(),
       ColorDefinitionImpl.GREY(),
+      ColorDefinitionImpl.RED(),
+      ColorDefinitionImpl.BLACK(),
       ColorDefinitionImpl.ORANGE()
     };
     sd.getSeriesPalette().getEntries().clear();
@@ -110,13 +110,13 @@ public class NewChartsView extends ViewPart {
     seDonut.getLabel().setVisible( true );
     // Test properties
     seDonut.setRotation( 0 );
-    seDonut.setExplosion(5 );
+    seDonut.setExplosion(0 );
     seDonut.setThickness( 30 );
     seDonut.getLeaderLineAttributes().setVisible( true );
     seDonut.getLeaderLineAttributes().setThickness( 1 );
     seDonut.getLeaderLineAttributes().setColor( ColorDefinitionImpl.BLACK() );
     seDonut.getLeaderLineAttributes().setStyle( LineStyle.SOLID_LITERAL );
-    seDonut.setLeaderLineLength( 40 );
+    seDonut.setLeaderLineLength( 50 );
     
     sdCity.getSeries().add( seDonut );
     return chart;
@@ -159,7 +159,7 @@ public class NewChartsView extends ViewPart {
     sePie.setTitlePosition( Position.ABOVE_LITERAL );
     sePie.getTitle().setVisible( true );
     sePie.setDataSet( seriesOneValues );
-    sePie.setExplosion( 50 );
+    sePie.setExplosion( 5000 );
     sePie.setRotation( 40 );
     sePie.getLabel().setVisible( true );
     sePie.getLabel().getCaption().setValue( "LABEL" );
