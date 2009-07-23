@@ -76,6 +76,17 @@ public class NewtypeFactoryImpl extends EFactoryImpl implements NewtypeFactory {
 		return donutSeries;
 	}
 
+	
+	/**
+	 * <!-- begin-user-doc -->
+	 * <!-- end-user-doc -->
+	 * @generated
+	 */
+	public VennSeries createVennSeries() {
+		VennSeriesImpl vennSeries = new VennSeriesImpl();
+		return vennSeries;
+	}
+	
 	/**
 	 * <!-- begin-user-doc -->
 	 * <!-- end-user-doc -->

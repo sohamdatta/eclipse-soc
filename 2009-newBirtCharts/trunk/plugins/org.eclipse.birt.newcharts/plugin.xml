@@ -9,10 +9,24 @@
             series="org.eclipse.birt.chart.model.newtype.impl.DonutSeriesImpl"></modelRenderer>
    </extension>
    <extension
+         point="org.eclipse.birt.chart.engine.modelrenderers">
+      <modelRenderer
+            renderer="org.eclipse.birt.chart.model.newtype.render.Venn"
+            series="org.eclipse.birt.chart.model.newtype.impl.VennSeriesImpl  ">
+      </modelRenderer>
+   </extension>
+   <extension
          point="org.eclipse.birt.chart.engine.datasetprocessors">
       <datasetProcessor
             processor="org.eclipse.birt.chart.datafeed.DataSetProcessorImpl"
             series="org.eclipse.birt.chart.model.newtype.impl.DonutSeriesImpl">
+      </datasetProcessor>
+   </extension>
+   <extension
+         point="org.eclipse.birt.chart.engine.datasetprocessors">
+      <datasetProcessor
+            processor="org.eclipse.birt.chart.datafeed.DataSetProcessorImpl"
+            series="org.eclipse.birt.chart.model.newtype.impl.VennSeriesImpl  ">
       </datasetProcessor>
    </extension>
 
