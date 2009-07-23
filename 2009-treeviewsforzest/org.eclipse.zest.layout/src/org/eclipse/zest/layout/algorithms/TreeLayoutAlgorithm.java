@@ -13,6 +13,7 @@ package org.eclipse.zest.layout.algorithms;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
@@ -20,8 +21,6 @@ import org.eclipse.zest.layout.dataStructures.DisplayIndependentRectangle;
 import org.eclipse.zest.layout.interfaces.EntityLayout;
 import org.eclipse.zest.layout.interfaces.LayoutAlgorithm;
 import org.eclipse.zest.layout.interfaces.LayoutContext;
-
-import sun.misc.Queue;
 
 /**
  * The TreeLayoutAlgorithm class implements a simple algorithm to arrange graph
@@ -102,7 +101,7 @@ public class TreeLayoutAlgorithm implements LayoutAlgorithm {
 	public TreeLayoutAlgorithm() {
 	}
 
-	TreeLayoutAlgorithm(int direction) {
+	public TreeLayoutAlgorithm(int direction) {
 		setDirection(direction);
 	}
 
@@ -179,31 +178,25 @@ public class TreeLayoutAlgorithm implements LayoutAlgorithm {
 	 */
 	private void createTrees(EntityLayout[] entities) {
 		HashSet alreadyVisited = new HashSet();
-		Queue nodesToAdd = new Queue();
+		LinkedList nodesToAdd = new LinkedList();
 		for (int i = 0; i < entities.length; i++) {
 			EntityLayout root = findRoot(entities[i], alreadyVisited);
 			if (root != null) {
 				alreadyVisited.add(root);
-				nodesToAdd.enqueue(new Object[] { root, superRoot });
+				nodesToAdd.addLast(new Object[] { root, superRoot });
 			}
 		}
 		while (!nodesToAdd.isEmpty()) {
-			EntityLayout entity;
-			EntityInfo parentEntityInfo;
-			try {
-				Object[] dequeued = (Object[]) nodesToAdd.dequeue();
-				entity = (EntityLayout) dequeued[0];
-				parentEntityInfo = (EntityInfo) dequeued[1];
-			} catch (InterruptedException e) {
-				throw new RuntimeException("This should never happen");
-			}
+			Object[] dequeued = (Object[]) nodesToAdd.removeFirst();
+			EntityLayout entity = (EntityLayout) dequeued[0];
+			EntityInfo parentEntityInfo = (EntityInfo) dequeued[1];
 			EntityInfo currentEntityInfo = new EntityInfo(entity);
 			parentEntityInfo.addChild(currentEntityInfo);
 			EntityLayout[] children = entity.getSuccessingEntities();
 			for (int i = 0; i < children.length; i++) {
 				if (!alreadyVisited.contains(children[i])) {
 					alreadyVisited.add(children[i]);
-					nodesToAdd.enqueue(new Object[] { children[i], currentEntityInfo });
+					nodesToAdd.addLast(new Object[] { children[i], currentEntityInfo });
 				}
 			}
 		}
