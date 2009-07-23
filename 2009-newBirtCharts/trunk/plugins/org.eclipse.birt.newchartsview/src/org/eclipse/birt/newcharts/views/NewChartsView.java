@@ -30,12 +30,15 @@ import org.eclipse.birt.chart.model.type.PieSeries;
 import org.eclipse.birt.chart.model.type.impl.BarSeriesImpl;
 import org.eclipse.birt.chart.model.type.impl.PieSeriesImpl;
 import org.eclipse.birt.chart.model.newtype.DonutSeries;
+import org.eclipse.birt.chart.model.newtype.VennSeries;
 import org.eclipse.birt.chart.model.newtype.impl.DonutSeriesImpl;
+import org.eclipse.birt.chart.model.newtype.impl.VennSeriesImpl;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.TabFolder;
 import org.eclipse.swt.widgets.TabItem;
+import org.eclipse.ui.internal.dnd.SwtUtil;
 import org.eclipse.ui.part.ViewPart;
 
 public class NewChartsView extends ViewPart {
@@ -50,11 +53,19 @@ public class NewChartsView extends ViewPart {
 
   private void createChartFolder( Composite parent ) {
     tabFolder = new TabFolder( parent, SWT.TOP );
+    
+    ChartCanvas vennChart = new ChartCanvas( tabFolder, SWT.NONE );
+    vennChart.setChart( createVennChart() );
+    TabItem vennTabItem = new TabItem(tabFolder, SWT.NONE);
+    vennTabItem.setText( "Venn Chart" );
+    vennTabItem.setControl( vennChart );
+    
     ChartCanvas donutChart = new ChartCanvas( tabFolder, SWT.NONE );
     donutChart.setChart( createDonutChart() );
     TabItem donutTabItem = new TabItem( tabFolder, SWT.NONE );
     donutTabItem.setText( "Donut Chart" );
     donutTabItem.setControl( donutChart );
+    
     ChartCanvas pieChart = new ChartCanvas( tabFolder, SWT.NONE );
     pieChart.setChart( createPieChart() );
     TabItem pieTabItem = new TabItem( tabFolder, SWT.NONE );
@@ -65,6 +76,49 @@ public class NewChartsView extends ViewPart {
     TabItem barTabItem = new TabItem( tabFolder, SWT.NONE );
     barTabItem.setText( "Bar Chart" );
     barTabItem.setControl( barChart );
+  }
+
+  private Chart createVennChart() {
+    
+    ChartWithoutAxes chart = ChartWithoutAxesImpl.create();
+    chart.setDimension( ChartDimension.TWO_DIMENSIONAL_LITERAL );
+    
+    chart.getTitle().getLabel().getCaption().setValue( "First venn diagram try" );
+    adjustFont( chart.getTitle().getLabel().getCaption().getFont() );
+    
+    Legend legend = chart.getLegend();
+    legend.setItemType( LegendItemType.CATEGORIES_LITERAL );
+    legend.setVisible( true );
+    adjustFont( legend.getText().getFont() );
+    
+    TextDataSet categoryValues = TextDataSetImpl.create( new String[]{
+      "amount1", "amount2"} );//$NON-NLS-1$ //$NON-NLS-2$
+    
+    NumberDataSet seriesOneValues = NumberDataSetImpl.create( new double[]{1,3,5} );
+    NumberDataSet seriesTwoValues = NumberDataSetImpl.create( new double[]{2,3,7} );
+    
+    
+    // Base Series
+    SeriesDefinition baseSeriesDefinition = SeriesDefinitionImpl.create();
+    chart.getSeriesDefinitions().add( baseSeriesDefinition );
+    
+    Series seBase = SeriesImpl.create();
+    seBase.setDataSet( categoryValues );
+    baseSeriesDefinition.getSeries().add( seBase );
+    
+    // Add new Venn Series
+    SeriesDefinition baseSeriesDefinition1 = SeriesDefinitionImpl.create();
+    baseSeriesDefinition.getSeriesDefinitions().add( baseSeriesDefinition1 );
+    
+    VennSeries seVenn1 = ( VennSeries )VennSeriesImpl.create();
+    seVenn1.setDataSet( seriesOneValues );
+    
+    VennSeries seVenn2 = (VennSeries) VennSeriesImpl.create( );
+    seVenn2.setDataSet( seriesTwoValues );
+    
+    baseSeriesDefinition1.getSeries().add( seVenn1 );
+    baseSeriesDefinition1.getSeries().add( seVenn2 );
+    return chart;
   }
 
   private Chart createDonutChart() {
