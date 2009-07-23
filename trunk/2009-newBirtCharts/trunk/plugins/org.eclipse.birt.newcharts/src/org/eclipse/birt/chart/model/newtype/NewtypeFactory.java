@@ -35,6 +35,15 @@ public interface NewtypeFactory extends EFactory {
 	DonutSeries createDonutSeries();
 
 	/**
+	 * Returns a new object of class '<em>Venn Series</em>'.
+	 * <!-- begin-user-doc -->
+	 * <!-- end-user-doc -->
+	 * @return a new object of class '<em>Venn Series</em>'.
+	 * @generated
+	 */
+	VennSeries createVennSeries();
+	
+	/**
 	 * Returns the package supported by this factory.
 	 * <!-- begin-user-doc -->
 	 * <!-- end-user-doc -->
