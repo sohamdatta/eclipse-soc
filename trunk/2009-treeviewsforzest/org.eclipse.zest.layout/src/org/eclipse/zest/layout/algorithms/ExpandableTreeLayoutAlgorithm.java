@@ -67,14 +67,14 @@ public class ExpandableTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCol
 	 */
 	public final static int RIGHT_LEFT = 4;
 
-	private class SpaceTreeNode {
+	private class ExpandableTreeNode {
 		final public NodeLayout node;
 		public int height = 0;
 		public int depth = -1;
 		public int numOfLeaves = 0;
 		public boolean expanded = false;
 		public final List children = new ArrayList();
-		public SpaceTreeNode parent;
+		public ExpandableTreeNode parent;
 
 		/**
 		 * If node is collapsed and not pruned, all it's children are placed in
@@ -82,13 +82,13 @@ public class ExpandableTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCol
 		 */
 		public SubgraphLayout subgraph = null;
 
-		public SpaceTreeNode(NodeLayout node) {
+		public ExpandableTreeNode(NodeLayout node) {
 			this.node = node;
 			if (node != null)
 				layoutToSpaceTree.put(node, this);
 		}
 
-		public void addChild(SpaceTreeNode child) {
+		public void addChild(ExpandableTreeNode child) {
 			children.add(child);
 			child.parent = this;
 
@@ -122,7 +122,7 @@ public class ExpandableTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCol
 				numOfLeaves = 0;
 				height = 0;
 				for (Iterator iterator = children.iterator(); iterator.hasNext();) {
-					SpaceTreeNode child = (SpaceTreeNode) iterator.next();
+					ExpandableTreeNode child = (ExpandableTreeNode) iterator.next();
 					child.depth = this.depth + 1;
 					child.precomputeTree();
 					this.numOfLeaves += child.numOfLeaves;
@@ -134,7 +134,7 @@ public class ExpandableTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCol
 		public void delete() {
 			parent.children.remove(this);
 			for (Iterator iterator = children.iterator(); iterator.hasNext();) {
-				SpaceTreeNode child = (SpaceTreeNode) iterator.next();
+				ExpandableTreeNode child = (ExpandableTreeNode) iterator.next();
 				superRoot.addChild(child);
 			}
 		}
@@ -153,7 +153,7 @@ public class ExpandableTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCol
 		private void expand() {
 			setSubgraph(null);
 			for (Iterator iterator = children.iterator(); iterator.hasNext();) {
-				SpaceTreeNode child = (SpaceTreeNode) iterator.next();
+				ExpandableTreeNode child = (ExpandableTreeNode) iterator.next();
 				child.node.prune(null);
 				if (child.expanded) {
 					child.expand();
@@ -175,9 +175,9 @@ public class ExpandableTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCol
 			LinkedList nodesToVisit = new LinkedList();
 			nodesToVisit.addLast(this);
 			while (!nodesToVisit.isEmpty()) {
-				SpaceTreeNode currentNode = (SpaceTreeNode) nodesToVisit.removeFirst();
+				ExpandableTreeNode currentNode = (ExpandableTreeNode) nodesToVisit.removeFirst();
 				for (Iterator iterator = currentNode.children.iterator(); iterator.hasNext();) {
-					SpaceTreeNode child = (SpaceTreeNode) iterator.next();
+					ExpandableTreeNode child = (ExpandableTreeNode) iterator.next();
 					result.add(child.node);
 					nodesToVisit.addLast(child);
 				}
@@ -189,11 +189,11 @@ public class ExpandableTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCol
 			if (parent != null)
 				parent.children.remove(this);
 			NodeLayout[] predecessingNodes = node.getPredecessingNodes();
-			SpaceTreeNode bestParent;
+			ExpandableTreeNode bestParent;
 			if (predecessingNodes.length > 0) {
-				bestParent = (SpaceTreeNode) layoutToSpaceTree.get(predecessingNodes[0]);
+				bestParent = (ExpandableTreeNode) layoutToSpaceTree.get(predecessingNodes[0]);
 				for (int i = 1; i < predecessingNodes.length; i++) {
-					SpaceTreeNode potentialParent = (SpaceTreeNode) layoutToSpaceTree.get(predecessingNodes[i]);
+					ExpandableTreeNode potentialParent = (ExpandableTreeNode) layoutToSpaceTree.get(predecessingNodes[i]);
 					if (isBetterParent(bestParent, potentialParent))
 						bestParent = potentialParent;
 				}
@@ -238,7 +238,7 @@ public class ExpandableTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCol
 				sb.append(node.toString());
 			sb.append('\n');
 			for (Iterator iterator = children.iterator(); iterator.hasNext();) {
-				SpaceTreeNode child = (SpaceTreeNode) iterator.next();
+				ExpandableTreeNode child = (ExpandableTreeNode) iterator.next();
 				sb.append(child.toString());
 			}
 			return sb.toString();
@@ -248,7 +248,7 @@ public class ExpandableTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCol
 	private GraphStructureListener structureListener = new GraphStructureListener() {
 
 		public boolean nodeRemoved(LayoutContext context, NodeLayout node) {
-			SpaceTreeNode spaceTreeNode = (SpaceTreeNode) layoutToSpaceTree.get(node);
+			ExpandableTreeNode spaceTreeNode = (ExpandableTreeNode) layoutToSpaceTree.get(node);
 			spaceTreeNode.delete();
 			superRoot.precomputeTree();
 			refreshLayout(true);
@@ -256,15 +256,15 @@ public class ExpandableTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCol
 		}
 
 		public boolean nodeAdded(LayoutContext context, NodeLayout node) {
-			superRoot.addChild(new SpaceTreeNode(node));
+			superRoot.addChild(new ExpandableTreeNode(node));
 			superRoot.precomputeTree();
 			refreshLayout(true);
 			return false;
 		}
 
 		public boolean connectionRemoved(LayoutContext context, ConnectionLayout connection) {
-			SpaceTreeNode node1 = (SpaceTreeNode) layoutToSpaceTree.get(connection.getSource());
-			SpaceTreeNode node2 = (SpaceTreeNode) layoutToSpaceTree.get(connection.getTarget());
+			ExpandableTreeNode node1 = (ExpandableTreeNode) layoutToSpaceTree.get(connection.getSource());
+			ExpandableTreeNode node2 = (ExpandableTreeNode) layoutToSpaceTree.get(connection.getTarget());
 			if (node1.parent == node2) {
 				node1.findNewParent();
 			}
@@ -277,8 +277,8 @@ public class ExpandableTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCol
 		}
 
 		public boolean connectionAdded(LayoutContext context, ConnectionLayout connection) {
-			SpaceTreeNode source = (SpaceTreeNode) layoutToSpaceTree.get(connection.getSource());
-			SpaceTreeNode target = (SpaceTreeNode) layoutToSpaceTree.get(connection.getTarget());
+			ExpandableTreeNode source = (ExpandableTreeNode) layoutToSpaceTree.get(connection.getSource());
+			ExpandableTreeNode target = (ExpandableTreeNode) layoutToSpaceTree.get(connection.getTarget());
 			if (source == target)
 				return false;
 			if (isBetterParent(target.parent, source)) {
@@ -324,7 +324,7 @@ public class ExpandableTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCol
 		}
 
 		private boolean defaultHandle(LayoutContext context, NodeLayout node) {
-			((SpaceTreeNode) layoutToSpaceTree.get(node)).refreshSubgraphLocation();
+			((ExpandableTreeNode) layoutToSpaceTree.get(node)).refreshSubgraphLocation();
 			context.flushChanges(false);
 			return false;
 		}
@@ -342,7 +342,7 @@ public class ExpandableTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCol
 
 	private double leafSize, layerSize;
 
-	private SpaceTreeNode superRoot;
+	private ExpandableTreeNode superRoot;
 
 	private HashMap layoutToSpaceTree = new HashMap();
 
@@ -398,13 +398,13 @@ public class ExpandableTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCol
 		context.addContextListener(contextListener);
 		context.addLayoutListener(layoutListener);
 
-		superRoot = new SpaceTreeNode(null);
+		superRoot = new ExpandableTreeNode(null);
 		createTrees(context.getNodes());
 		collapseAll();
 	}
 
 	public void setExpanded(NodeLayout node, boolean expanded) {
-		SpaceTreeNode spaceTreeNode = (SpaceTreeNode) layoutToSpaceTree.get(node);
+		ExpandableTreeNode spaceTreeNode = (ExpandableTreeNode) layoutToSpaceTree.get(node);
 		spaceTreeNode.setExpanded(expanded);
 		refreshLayout(false);
 	}
@@ -427,13 +427,13 @@ public class ExpandableTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCol
 		}
 		int leafCountSoFar = 0;
 		for (Iterator iterator = superRoot.children.iterator(); iterator.hasNext();) {
-			SpaceTreeNode root = (SpaceTreeNode) iterator.next();
+			ExpandableTreeNode root = (ExpandableTreeNode) iterator.next();
 			computePositionRecursively(root, leafCountSoFar);
 			leafCountSoFar = leafCountSoFar + root.numOfLeaves;
 		}
 	}
 
-	private static boolean isBetterParent(SpaceTreeNode base, SpaceTreeNode better) {
+	private static boolean isBetterParent(ExpandableTreeNode base, ExpandableTreeNode better) {
 		if (better.depth < base.depth && better.depth != -1)
 			return true;
 		if (base.depth == -1 && better.depth >= 0)
@@ -459,8 +459,8 @@ public class ExpandableTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCol
 		}
 		while (!nodesToAdd.isEmpty()) {
 			Object[] dequeued = (Object[]) nodesToAdd.removeFirst();
-			SpaceTreeNode currentNode = new SpaceTreeNode((NodeLayout) dequeued[0]);
-			SpaceTreeNode currentRoot = (SpaceTreeNode) dequeued[1];
+			ExpandableTreeNode currentNode = new ExpandableTreeNode((NodeLayout) dequeued[0]);
+			ExpandableTreeNode currentRoot = (ExpandableTreeNode) dequeued[1];
 
 			currentRoot.addChild(currentNode);
 			NodeLayout[] children = currentNode.node.getSuccessingEntities();
@@ -507,7 +507,7 @@ public class ExpandableTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCol
 
 	private void collapseAll() {
 		for (Iterator iterator = superRoot.children.iterator(); iterator.hasNext();) {
-			SpaceTreeNode root = (SpaceTreeNode) iterator.next();
+			ExpandableTreeNode root = (ExpandableTreeNode) iterator.next();
 			root.collapse();
 		}
 	}
@@ -515,7 +515,7 @@ public class ExpandableTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCol
 	/**
 	 * Computes positions recursively until the leaf nodes are reached.
 	 */
-	private void computePositionRecursively(SpaceTreeNode node, int relativePosition) {
+	private void computePositionRecursively(ExpandableTreeNode node, int relativePosition) {
 		double breadthPosition = relativePosition + node.numOfLeaves / 2.0;
 		double depthPosition = (node.depth + 0.5);
 
@@ -539,7 +539,7 @@ public class ExpandableTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCol
 			return;
 
 		for (Iterator iterator = node.children.iterator(); iterator.hasNext();) {
-			SpaceTreeNode child = (SpaceTreeNode) iterator.next();
+			ExpandableTreeNode child = (ExpandableTreeNode) iterator.next();
 			computePositionRecursively(child, relativePosition);
 			relativePosition += child.numOfLeaves;
 		}

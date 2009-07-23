@@ -764,6 +764,7 @@ public class Graph extends FigureCanvas {
 		}
 		this.getNodes().remove(node);
 		figure2ItemMap.remove(figure);
+		node.getLayout().prune(null);
 		getLayoutContext().fireNodeRemovedEvent(node.getLayout());
 	}
 

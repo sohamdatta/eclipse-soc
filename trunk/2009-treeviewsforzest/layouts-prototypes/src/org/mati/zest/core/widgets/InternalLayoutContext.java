@@ -247,19 +247,21 @@ public class InternalLayoutContext implements LayoutContext {
 
 	void fireNodeAddedEvent(NodeLayout node) {
 		boolean intercepted = !eventsOn;
-		for (Iterator iterator = graphStructureListeners.iterator(); iterator.hasNext() && !intercepted;) {
-			GraphStructureListener listener = (GraphStructureListener) iterator.next();
-			intercepted = listener.nodeAdded(this, node);
+		GraphStructureListener[] listeners = (GraphStructureListener[]) graphStructureListeners
+				.toArray(new GraphStructureListener[graphStructureListeners.size()]);
+		for (int i = 0; i < listeners.length && !intercepted; i++) {
+			intercepted = listeners[i].nodeAdded(this, node);
 		}
-		if (!intercepted && mainAlgorithm != null)
-			mainAlgorithm.applyLayout();
+		if (!intercepted)
+			applyMainAlgorithm();
 	}
 
 	void fireNodeRemovedEvent(NodeLayout node) {
 		boolean intercepted = !eventsOn;
-		for (Iterator iterator = graphStructureListeners.iterator(); iterator.hasNext() && !intercepted;) {
-			GraphStructureListener listener = (GraphStructureListener) iterator.next();
-			intercepted = listener.nodeRemoved(this, node);
+		GraphStructureListener[] listeners = (GraphStructureListener[]) graphStructureListeners
+				.toArray(new GraphStructureListener[graphStructureListeners.size()]);
+		for (int i = 0; i < listeners.length && !intercepted; i++) {
+			intercepted = listeners[i].nodeRemoved(this, node);
 		}
 		if (!intercepted)
 			applyMainAlgorithm();
@@ -272,9 +274,10 @@ public class InternalLayoutContext implements LayoutContext {
 			return;
 		if (sourceContext == this) {
 			boolean intercepted = !eventsOn;
-			for (Iterator iterator = graphStructureListeners.iterator(); iterator.hasNext() && !intercepted;) {
-				GraphStructureListener listener = (GraphStructureListener) iterator.next();
-				intercepted = listener.connectionAdded(this, connection);
+			GraphStructureListener[] listeners = (GraphStructureListener[]) graphStructureListeners
+					.toArray(new GraphStructureListener[graphStructureListeners.size()]);
+			for (int i = 0; i < listeners.length && !intercepted; i++) {
+				intercepted = listeners[i].connectionAdded(this, connection);
 			}
 			if (!intercepted)
 				applyMainAlgorithm();
@@ -290,9 +293,10 @@ public class InternalLayoutContext implements LayoutContext {
 			return;
 		if (sourceContext == this) {
 			boolean intercepted = !eventsOn;
-			for (Iterator iterator = graphStructureListeners.iterator(); iterator.hasNext() && !intercepted;) {
-				GraphStructureListener listener = (GraphStructureListener) iterator.next();
-				intercepted = listener.connectionRemoved(this, connection);
+			GraphStructureListener[] listeners = (GraphStructureListener[]) graphStructureListeners
+					.toArray(new GraphStructureListener[graphStructureListeners.size()]);
+			for (int i = 0; i < listeners.length && !intercepted; i++) {
+				intercepted = listeners[i].connectionRemoved(this, connection);
 			}
 			if (!intercepted)
 				applyMainAlgorithm();
@@ -303,9 +307,9 @@ public class InternalLayoutContext implements LayoutContext {
 
 	void fireBoundsChangedEvent() {
 		boolean intercepted = !eventsOn;
-		for (Iterator iterator = contextListeners.iterator(); iterator.hasNext() && !intercepted;) {
-			ContextListener listener = (ContextListener) iterator.next();
-			intercepted = listener.boundsChanged(this);
+		ContextListener[] listeners = (ContextListener[]) contextListeners.toArray(new ContextListener[contextListeners.size()]);
+		for (int i = 0; i < listeners.length && !intercepted; i++) {
+			intercepted = listeners[i].boundsChanged(this);
 		}
 		if (!intercepted)
 			applyMainAlgorithm();
@@ -315,9 +319,9 @@ public class InternalLayoutContext implements LayoutContext {
 		if (eventsOn)
 			node.refreshLocation();
 		boolean intercepted = !eventsOn;
-		for (Iterator iterator = layoutListeners.iterator(); iterator.hasNext() && !intercepted;) {
-			LayoutListener listener = (LayoutListener) iterator.next();
-			intercepted = listener.nodeMoved(this, node);
+		LayoutListener[] listeners = (LayoutListener[]) layoutListeners.toArray(new LayoutListener[layoutListeners.size()]);
+		for (int i = 0; i < listeners.length && !intercepted; i++) {
+			intercepted = listeners[i].nodeMoved(this, node);
 		}
 		if (!intercepted)
 			applyMainAlgorithm();
@@ -327,9 +331,9 @@ public class InternalLayoutContext implements LayoutContext {
 		if (eventsOn)
 			node.refreshSize();
 		boolean intercepted = !eventsOn;
-		for (Iterator iterator = layoutListeners.iterator(); iterator.hasNext() && !intercepted;) {
-			LayoutListener listener = (LayoutListener) iterator.next();
-			intercepted = listener.nodeResized(this, node);
+		LayoutListener[] listeners = (LayoutListener[]) layoutListeners.toArray(new LayoutListener[layoutListeners.size()]);
+		for (int i = 0; i < listeners.length && !intercepted; i++) {
+			intercepted = listeners[i].nodeResized(this, node);
 		}
 		if (!intercepted)
 			applyMainAlgorithm();
