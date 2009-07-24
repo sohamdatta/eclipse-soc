@@ -85,7 +85,7 @@ public class ExpandableTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCol
 		public ExpandableTreeNode(NodeLayout node) {
 			this.node = node;
 			if (node != null)
-				layoutToSpaceTree.put(node, this);
+				layoutToTree.put(node, this);
 		}
 
 		public void addChild(ExpandableTreeNode child) {
@@ -191,9 +191,9 @@ public class ExpandableTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCol
 			NodeLayout[] predecessingNodes = node.getPredecessingNodes();
 			ExpandableTreeNode bestParent;
 			if (predecessingNodes.length > 0) {
-				bestParent = (ExpandableTreeNode) layoutToSpaceTree.get(predecessingNodes[0]);
+				bestParent = (ExpandableTreeNode) layoutToTree.get(predecessingNodes[0]);
 				for (int i = 1; i < predecessingNodes.length; i++) {
-					ExpandableTreeNode potentialParent = (ExpandableTreeNode) layoutToSpaceTree.get(predecessingNodes[i]);
+					ExpandableTreeNode potentialParent = (ExpandableTreeNode) layoutToTree.get(predecessingNodes[i]);
 					if (isBetterParent(bestParent, potentialParent))
 						bestParent = potentialParent;
 				}
@@ -248,7 +248,7 @@ public class ExpandableTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCol
 	private GraphStructureListener structureListener = new GraphStructureListener() {
 
 		public boolean nodeRemoved(LayoutContext context, NodeLayout node) {
-			ExpandableTreeNode spaceTreeNode = (ExpandableTreeNode) layoutToSpaceTree.get(node);
+			ExpandableTreeNode spaceTreeNode = (ExpandableTreeNode) layoutToTree.get(node);
 			spaceTreeNode.delete();
 			superRoot.precomputeTree();
 			refreshLayout(true);
@@ -263,8 +263,8 @@ public class ExpandableTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCol
 		}
 
 		public boolean connectionRemoved(LayoutContext context, ConnectionLayout connection) {
-			ExpandableTreeNode node1 = (ExpandableTreeNode) layoutToSpaceTree.get(connection.getSource());
-			ExpandableTreeNode node2 = (ExpandableTreeNode) layoutToSpaceTree.get(connection.getTarget());
+			ExpandableTreeNode node1 = (ExpandableTreeNode) layoutToTree.get(connection.getSource());
+			ExpandableTreeNode node2 = (ExpandableTreeNode) layoutToTree.get(connection.getTarget());
 			if (node1.parent == node2) {
 				node1.findNewParent();
 			}
@@ -277,8 +277,8 @@ public class ExpandableTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCol
 		}
 
 		public boolean connectionAdded(LayoutContext context, ConnectionLayout connection) {
-			ExpandableTreeNode source = (ExpandableTreeNode) layoutToSpaceTree.get(connection.getSource());
-			ExpandableTreeNode target = (ExpandableTreeNode) layoutToSpaceTree.get(connection.getTarget());
+			ExpandableTreeNode source = (ExpandableTreeNode) layoutToTree.get(connection.getSource());
+			ExpandableTreeNode target = (ExpandableTreeNode) layoutToTree.get(connection.getTarget());
 			if (source == target)
 				return false;
 			if (isBetterParent(target.parent, source)) {
@@ -324,7 +324,7 @@ public class ExpandableTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCol
 		}
 
 		private boolean defaultHandle(LayoutContext context, NodeLayout node) {
-			((ExpandableTreeNode) layoutToSpaceTree.get(node)).refreshSubgraphLocation();
+			((ExpandableTreeNode) layoutToTree.get(node)).refreshSubgraphLocation();
 			context.flushChanges(false);
 			return false;
 		}
@@ -344,7 +344,7 @@ public class ExpandableTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCol
 
 	private ExpandableTreeNode superRoot;
 
-	private HashMap layoutToSpaceTree = new HashMap();
+	private HashMap layoutToTree = new HashMap();
 
 	public ExpandableTreeLayoutAlgorithm() {
 	}
@@ -403,10 +403,26 @@ public class ExpandableTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCol
 		collapseAll();
 	}
 
-	public void setExpanded(NodeLayout node, boolean expanded) {
-		ExpandableTreeNode spaceTreeNode = (ExpandableTreeNode) layoutToSpaceTree.get(node);
+	public void setExpanded(LayoutContext context, NodeLayout node, boolean expanded) {
+		ExpandableTreeNode spaceTreeNode = (ExpandableTreeNode) layoutToTree.get(node);
 		spaceTreeNode.setExpanded(expanded);
 		refreshLayout(false);
+	}
+
+	public boolean canExpand(LayoutContext context, NodeLayout node) {
+		ExpandableTreeNode spaceTree = (ExpandableTreeNode) layoutToTree.get(node);
+		if (spaceTree != null) {
+			return !spaceTree.expanded && !spaceTree.children.isEmpty();
+		}
+		return false;
+	}
+
+	public boolean canCollapse(LayoutContext context, NodeLayout node) {
+		ExpandableTreeNode spaceTree = (ExpandableTreeNode) layoutToTree.get(node);
+		if (spaceTree != null) {
+			return spaceTree.expanded && !spaceTree.children.isEmpty();
+		}
+		return false;
 	}
 
 	protected void refreshLayout(boolean animation) {

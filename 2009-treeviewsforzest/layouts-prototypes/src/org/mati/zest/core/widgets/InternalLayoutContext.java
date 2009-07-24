@@ -231,7 +231,15 @@ public class InternalLayoutContext implements LayoutContext {
 
 	void setExpanded(NodeLayout node, boolean expanded) {
 		if (expandCollapseManager != null)
-			expandCollapseManager.setExpanded(node, expanded);
+			expandCollapseManager.setExpanded(this, node, expanded);
+	}
+
+	boolean canExpand(NodeLayout node) {
+		return expandCollapseManager != null && expandCollapseManager.canExpand(this, node);
+	}
+
+	boolean canCollapse(NodeLayout node) {
+		return expandCollapseManager != null && expandCollapseManager.canCollapse(this, node);
 	}
 
 	void setSubgraphFactory(SubgraphFactory factory) {
