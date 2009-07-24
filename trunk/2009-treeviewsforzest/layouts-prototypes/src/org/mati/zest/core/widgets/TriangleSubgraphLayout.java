@@ -48,6 +48,12 @@ import org.eclipse.zest.layout.interfaces.SubgraphLayout;
  * child. The root of the subtree (which is not directly added to this subgraph)
  * is also accounted.</li>
  * </ul>
+ * 
+ * When the first subgraph of this class is created for a layout context, a
+ * GraphStructureListener is registered in the context. Triangle subgraphs must
+ * keep track of changes in the graph structure, so events related to it should
+ * not be intercepted by other listeners before they reach the subgraph's
+ * listener.
  */
 public class TriangleSubgraphLayout extends FigureSubgraphLayout {
 

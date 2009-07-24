@@ -743,6 +743,7 @@ public class Graph extends FigureCanvas {
 		PolylineConnection targetContainerConnectionFigure = connection.getTargetContainerConnectionFigure();
 		connection.removeFigure();
 		this.getConnections().remove(connection);
+		this.selectedItems.remove(connection);
 		figure2ItemMap.remove(figure);
 		if (sourceContainerConnectionFigure != null) {
 			figure2ItemMap.remove(sourceContainerConnectionFigure);
@@ -763,6 +764,7 @@ public class Graph extends FigureCanvas {
 			}
 		}
 		this.getNodes().remove(node);
+		this.selectedItems.remove(node);
 		figure2ItemMap.remove(figure);
 		node.getLayout().prune(null);
 		getLayoutContext().fireNodeRemovedEvent(node.getLayout());
@@ -964,5 +966,13 @@ public class Graph extends FigureCanvas {
 
 	public void setExpanded(GraphNode node, boolean expanded) {
 		layoutContext.setExpanded(node.getLayout(), expanded);
+	}
+
+	public boolean canExpand(GraphNode node) {
+		return layoutContext.canExpand(node.getLayout());
+	}
+
+	public boolean canCollapse(GraphNode node) {
+		return layoutContext.canCollapse(node.getLayout());
 	}
 }
