@@ -5,7 +5,6 @@ import java.util.Iterator;
 
 import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.draw2d.geometry.Point;
-import org.eclipse.zest.core.widgets.ZestStyles;
 import org.eclipse.zest.layout.dataStructures.DisplayIndependentDimension;
 import org.eclipse.zest.layout.dataStructures.DisplayIndependentPoint;
 import org.eclipse.zest.layout.interfaces.ConnectionLayout;
@@ -172,10 +171,14 @@ class InternalNodeLayout implements NodeLayout {
 			if (location != null)
 				node.setLocation(location.x, location.y);
 		} else {
+			node.setSize(-1, -1);
 			if (location != null)
 				node.setLocation(location.x - getSize().width / 2, location.y - size.height / 2);
-			if (size != null)
-				node.setSize(size.width, size.height);
+			if (size != null) {
+				Dimension currentSize = node.getSize();
+				if (size.width != currentSize.width || size.height != currentSize.height)
+					node.setSize(size.width, size.height);
+			}
 		}
 	}
 

@@ -39,7 +39,7 @@ abstract class NodeContainerAdapter {
 			graph.addNode(graphNode);
 		}
 
-		public void addFigure(IFigure figure) {
+		public void addSubgraphFigure(IFigure figure) {
 			graph.addSubgraphFigure(figure);
 		}
 
@@ -84,7 +84,7 @@ abstract class NodeContainerAdapter {
 			container.addNode(graphNode);
 		}
 
-		public void addFigure(IFigure figure) {
+		public void addSubgraphFigure(IFigure figure) {
 			container.addSubgraphFigure(figure);
 		}
 
@@ -140,13 +140,7 @@ abstract class NodeContainerAdapter {
 
 	public abstract void addNode(GraphNode graphNode);
 
-	/**
-	 * Adds a custom figure to be displayed on top of nodes. Can be used to add
-	 * subgraph figures.
-	 * 
-	 * @param figure
-	 */
-	public abstract void addFigure(IFigure figure);
+	public abstract void addSubgraphFigure(IFigure figure);
 
 	public abstract int getItemType();
 

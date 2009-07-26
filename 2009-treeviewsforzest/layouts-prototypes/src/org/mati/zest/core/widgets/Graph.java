@@ -37,9 +37,8 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Item;
-import org.eclipse.zest.core.widgets.ZestStyles;
-import org.eclipse.zest.core.widgets.internal.ContainerFigure;
 import org.eclipse.zest.layout.interfaces.LayoutAlgorithm;
+import org.mati.zest.core.widgets.internal.ContainerFigure;
 import org.mati.zest.core.widgets.internal.ZestRootLayer;
 
 public class Graph extends FigureCanvas {
@@ -480,6 +479,7 @@ public class Graph extends FigureCanvas {
 		Point dragStartLocation = null;
 		/** locations of dragged items relative to cursor position */
 		ArrayList relativeLocations = new ArrayList();
+		Point relativeFisheyedItemLocation = null;
 		GraphItem fisheyedItem = null;
 		boolean isDragging = false;
 
@@ -495,7 +495,7 @@ public class Graph extends FigureCanvas {
 						GraphItem item = (GraphItem) iterator.next();
 						if ((item.getItemType() == GraphItem.NODE) || (item.getItemType() == GraphItem.CONTAINER)) {
 							Point location = ((GraphNode) item).getLocation().getCopy();
-							Point mousePointCopy = mousePoint.getCopy();
+							Point mousePointCopy = dragStartLocation.getCopy();
 							item.getFigure().getParent().translateToRelative(mousePointCopy);
 							item.getFigure().getParent().translateFromParent(mousePointCopy);
 							location.x -= mousePointCopy.x;
@@ -510,10 +510,7 @@ public class Graph extends FigureCanvas {
 				while (selectionIterator.hasNext()) {
 					GraphItem item = (GraphItem) selectionIterator.next();
 					if ((item.getItemType() == GraphItem.NODE) || (item.getItemType() == GraphItem.CONTAINER)) {
-						// @tag Zest.selection Zest.move : This is where the
-						// node movement is tracked
 						Point pointCopy = mousePoint.getCopy();
-
 						Point relativeLocation = (Point) locationsIterator.next();
 
 						item.getFigure().getParent().translateToRelative(pointCopy);
@@ -525,18 +522,23 @@ public class Graph extends FigureCanvas {
 					}
 				}
 				if (fisheyedFigure != null) {
-					Point pointCopy = mousePoint.getCopy();
+					if (relativeFisheyedItemLocation == null) {
+						relativeFisheyedItemLocation = fisheyedFigure.getBounds().getTopLeft();
+						Point mousePointCopy = dragStartLocation.getCopy();
+						fisheyedFigure.getParent().translateToRelative(mousePointCopy);
+						fisheyedFigure.getParent().translateFromParent(mousePointCopy);
+						relativeFisheyedItemLocation.x -= mousePointCopy.x;
+						relativeFisheyedItemLocation.y -= mousePointCopy.y;
+					}
 
-					Point tempLastLocation = dragStartLocation.getCopy();
-					fisheyedFigure.translateToRelative(tempLastLocation);
-					fisheyedFigure.translateFromParent(tempLastLocation);
+					Point mousePointCopy = mousePoint.getCopy();
+					fisheyedFigure.translateToRelative(mousePointCopy);
+					fisheyedFigure.translateFromParent(mousePointCopy);
 
-					fisheyedFigure.translateToRelative(pointCopy);
-					fisheyedFigure.translateFromParent(pointCopy);
-					Point delta = new Point(pointCopy.x - tempLastLocation.x, pointCopy.y - tempLastLocation.y);
-					Point point = new Point(fisheyedFigure.getBounds().x + delta.x, fisheyedFigure.getBounds().y + delta.y);
-					fishEyeLayer.setConstraint(fisheyedFigure, new Rectangle(point, fisheyedFigure.getSize()));
-					fishEyeLayer.getUpdateManager().performUpdate();
+					mousePointCopy.x += relativeFisheyedItemLocation.x;
+					mousePointCopy.y += relativeFisheyedItemLocation.y;
+
+					fishEyeLayer.setConstraint(fisheyedFigure, new Rectangle(mousePointCopy, fisheyedFigure.getSize()));
 				}
 			}
 		}
@@ -697,6 +699,7 @@ public class Graph extends FigureCanvas {
 		public void mouseReleased(org.eclipse.draw2d.MouseEvent me) {
 			isDragging = false;
 			relativeLocations.clear();
+			relativeFisheyedItemLocation = null;
 		}
 
 	}
@@ -757,11 +760,7 @@ public class Graph extends FigureCanvas {
 	void removeNode(GraphNode node) {
 		IFigure figure = node.getNodeFigure();
 		if (figure.getParent() != null) {
-			if (figure.getParent() instanceof ZestRootLayer) {
-				((ZestRootLayer) figure.getParent()).removeNode(figure);
-			} else {
-				figure.getParent().remove(figure);
-			}
+			figure.getParent().remove(figure);
 		}
 		this.getNodes().remove(node);
 		this.selectedItems.remove(node);

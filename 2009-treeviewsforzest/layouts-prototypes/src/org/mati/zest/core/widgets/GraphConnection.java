@@ -15,12 +15,11 @@ import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.zest.core.widgets.ZestStyles;
-import org.eclipse.zest.core.widgets.internal.LoopAnchor;
-import org.eclipse.zest.core.widgets.internal.PolylineArcConnection;
-import org.eclipse.zest.core.widgets.internal.RoundedChopboxAnchor;
 import org.eclipse.zest.layout.interfaces.ConnectionLayout;
 import org.eclipse.zest.layout.interfaces.NodeLayout;
+import org.mati.zest.core.widgets.internal.LoopAnchor;
+import org.mati.zest.core.widgets.internal.PolylineArcConnection;
+import org.mati.zest.core.widgets.internal.RoundedChopboxAnchor;
 import org.mati.zest.core.widgets.internal.ZestRootLayer;
 
 /*
@@ -106,7 +105,7 @@ public class GraphConnection extends GraphItem {
 			// If the container of the source is a container, we need to draw another
 			// arc on that arc layer
 			sourceContainerConnectionFigure = doCreateFigure();
-			((GraphContainer) source.getParent().getAdaptee()).addSubgraphFigure((PolylineConnection) sourceContainerConnectionFigure);
+			((GraphContainer) source.getParent().getAdaptee()).addConnectionFigure((PolylineConnection) sourceContainerConnectionFigure);
 			this.setVisible(false);
 		}
 
@@ -114,7 +113,7 @@ public class GraphConnection extends GraphItem {
 			// If the container of the source is a container, we need to draw another
 			// arc on that arc layer
 			targetContainerConnectionFigure = doCreateFigure();
-			((GraphContainer) destination.getParent().getAdaptee()).addSubgraphFigure((PolylineConnection) targetContainerConnectionFigure);
+			((GraphContainer) destination.getParent().getAdaptee()).addConnectionFigure((PolylineConnection) targetContainerConnectionFigure);
 			this.setVisible(false);
 		}
 		graph.registerItem(this);
@@ -122,11 +121,7 @@ public class GraphConnection extends GraphItem {
 
 	void removeFigure() {
 		if (connectionFigure.getParent() != null) {
-			if (connectionFigure.getParent() instanceof ZestRootLayer) {
-				((ZestRootLayer) connectionFigure.getParent()).removeConnection(connectionFigure);
-			} else {
-				connectionFigure.getParent().remove(connectionFigure);
-			}
+			connectionFigure.getParent().remove(connectionFigure);
 		}
 		connectionFigure = null;
 		if (sourceContainerConnectionFigure != null) {

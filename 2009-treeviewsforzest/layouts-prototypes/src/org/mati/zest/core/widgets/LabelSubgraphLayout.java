@@ -3,9 +3,9 @@ package org.mati.zest.core.widgets;
 import org.eclipse.draw2d.ColorConstants;
 import org.eclipse.draw2d.Label;
 import org.eclipse.swt.graphics.Color;
-import org.eclipse.zest.core.widgets.internal.GraphLabel;
 import org.eclipse.zest.layout.interfaces.NodeLayout;
 import org.eclipse.zest.layout.interfaces.SubgraphLayout;
+import org.mati.zest.core.widgets.internal.GraphLabel;
 
 /**
  * A subgraph layout that displays a label showing number of items pruned within

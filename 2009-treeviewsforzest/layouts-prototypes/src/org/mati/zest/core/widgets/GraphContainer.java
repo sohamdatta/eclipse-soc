@@ -31,11 +31,11 @@ import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.zest.core.widgets.internal.AspectRatioFreeformLayer;
-import org.eclipse.zest.core.widgets.internal.ContainerFigure;
 import org.eclipse.zest.layout.algorithms.TreeLayoutAlgorithm;
 import org.eclipse.zest.layout.dataStructures.DisplayIndependentRectangle;
 import org.eclipse.zest.layout.interfaces.LayoutAlgorithm;
+import org.mati.zest.core.widgets.internal.AspectRatioFreeformLayer;
+import org.mati.zest.core.widgets.internal.ContainerFigure;
 import org.mati.zest.core.widgets.internal.ZestRootLayer;
 
 /**
@@ -796,13 +796,6 @@ public class GraphContainer extends GraphNode {
 			expandGraphLabel.setForegroundColor(getForegroundColor());
 			expandGraphLabel.setBackgroundColor(getHighlightColor());
 		}
-		// @tag ADJACENT : Removed highlight adjacent
-		/*
-		else if (highlighted == HIGHLIGHT_ADJACENT) {
-			expandGraphLabel.setForegroundColor(getForegroundColor());
-			expandGraphLabel.setBackgroundColor(getHighlightAdjacentColor());
-		}
-		*/
 		else {
 			expandGraphLabel.setForegroundColor(getForegroundColor());
 			expandGraphLabel.setBackgroundColor(getBackgroundColor());
@@ -812,26 +805,12 @@ public class GraphContainer extends GraphNode {
 
 		expandGraphLabel.setSize(containerDimension.width, containerDimension.labelHeight);
 		if (isExpanded) {
-			//setSize(expandGraphLabel.getSize().width, expandGraphLabel.getSize().height + expandedHeight - SUBLAYER_OFFSET);
 			setSize(containerDimension.width, containerDimension.expandedHeight);
 		} else {
 			setSize(containerDimension.width, containerDimension.labelHeight);
 		}
 		scrollPane.setLocation(new Point(expandGraphLabel.getLocation().x, expandGraphLabel.getLocation().y + containerDimension.labelHeight - SUBLAYER_OFFSET));
-		//scrollPane.setLocation(new Point(0, labelHeight - SUBLAYER_OFFSET));
-		//Rectangle bounds = expandGraphLabel.getBounds().getCopy();
-		//Rectangle newBounds = new Rectangle(new Point(bounds.x, bounds.y + labelHeight - SUBLAYER_OFFSET), scrollPane.getSize());
-		//figure.setConstraint(scrollPane, newBounds);
-		/*
-		size.width = labelWidth;
-		if (scrollPane.getSize().height > 0) {
-			size.height = labelHeight + scrollPane.getSize().height - SUBLAYER_OFFSET;
-		} else {
-			size.height = labelHeight;
-		}
-		refreshLocation();
-		figure.getUpdateManager().performValidation();
-		*/
+
 	}
 
 	protected void refreshLocation() {
@@ -862,6 +841,10 @@ public class GraphContainer extends GraphNode {
 
 	void addSubgraphFigure(IFigure figure) {
 		zestLayer.addSubgraph(figure);
+	}
+
+	void addConnectionFigure(IFigure figure) {
+		nodeFigure.add(figure);
 	}
 
 	void addNode(GraphNode node) {

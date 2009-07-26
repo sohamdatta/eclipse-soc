@@ -1,8 +1,12 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: widgets
-Bundle-SymbolicName: widgets
+Bundle-SymbolicName: widgets;singleton:=true
+Bundle-Vendor: Mati
+Bundle-Localization: plugin
 Bundle-Version: 1.0.0.qualifier
-Export-Package: org.mati.zest.core.widgets
 Require-Bundle: org.eclipse.draw2d,
  org.eclipse.zest.layout
+Eclipse-LazyStart: false
+Export-Package: org.mati.zest.core.widgets
+Bundle-RequiredExecutionEnvironment: J2SE-1.4
