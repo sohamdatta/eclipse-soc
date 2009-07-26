@@ -9,7 +9,6 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.eclipse.draw2d.Animation;
-import org.eclipse.zest.core.widgets.ZestStyles;
 import org.eclipse.zest.layout.dataStructures.DisplayIndependentRectangle;
 import org.eclipse.zest.layout.interfaces.ConnectionLayout;
 import org.eclipse.zest.layout.interfaces.ContextListener;
@@ -336,8 +335,10 @@ public class InternalLayoutContext implements LayoutContext {
 	}
 
 	void fireNodeResizedEvent(InternalNodeLayout node) {
-		if (eventsOn)
+		if (eventsOn) {
 			node.refreshSize();
+			node.refreshLocation();
+		}
 		boolean intercepted = !eventsOn;
 		LayoutListener[] listeners = (LayoutListener[]) layoutListeners.toArray(new LayoutListener[layoutListeners.size()]);
 		for (int i = 0; i < listeners.length && !intercepted; i++) {

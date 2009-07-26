@@ -14,11 +14,12 @@ import org.eclipse.draw2d.IFigure;
 
 /**
  * The root figure for Zest. The figure is broken up into following segments:
- * 
- * 1. The Connections 2. The Subgraphs 3. The Nodes 4. The Highlighted
- * Connections 5. The Highlighted Nodes
- * 
- * @author Ian Bull
+ * <ol>
+ * <li>The Connections</li>
+ * <li>The Subgraphs</li>
+ * <li>The Nodes</li>
+ * <li>The Highlighted Connections</li>
+ * <li>The Highlighted Nodes</li></ol>
  * 
  */
 public class ZestRootLayer extends FreeformLayer {
@@ -35,7 +36,7 @@ public class ZestRootLayer extends FreeformLayer {
 	
 	public static final int NUMBER_OF_LAYERS = 5;
 	
-	private int[] itemsInLayer = new int[NUMBER_OF_LAYERS];
+	private final int[] itemsInLayer = new int[NUMBER_OF_LAYERS];
 
 	/**
 	 * Adds a node to the ZestRootLayer
@@ -43,18 +44,6 @@ public class ZestRootLayer extends FreeformLayer {
 	 */
 	public void addNode(IFigure nodeFigure) {
 		addFigure(nodeFigure, NODES_LAYER);
-	}
-
-	/**
-	 * Removes a node from the layer
-	 * @param nodeFigure
-	 */
-	public void removeNode(IFigure nodeFigure) {
-		removeFigure(nodeFigure);
-	}
-
-	public void removeConnection(IFigure connectionFigure) {
-		removeFigure(connectionFigure);
 	}
 
 	public void addConnection(IFigure connectionFigure) {
@@ -65,33 +54,29 @@ public class ZestRootLayer extends FreeformLayer {
 		addFigure(subgraphFigrue, SUBGRAPHS_LAYER);
 	}
 
-	public void removeSubgraph(IFigure subgraphFigure) {
-		removeFigure(subgraphFigure);
-	}
-
 	public void highlightNode(IFigure nodeFigure) {
-		removeFigure(nodeFigure);
+		remove(nodeFigure);
 		addFigure(nodeFigure, NODES_HIGHLIGHTED_LAYER);
 		this.invalidate();
 		this.repaint();
 	}
 
 	public void highlightConnection(IFigure connectionFigure) {
-		removeFigure(connectionFigure);
+		remove(connectionFigure);
 		addFigure(connectionFigure, CONNECTIONS_HIGHLIGHTED_LAYER);
 		this.invalidate();
 		this.repaint();
 	}
 
 	public void unHighlightNode(IFigure nodeFigure) {
-		removeFigure(nodeFigure);
+		remove(nodeFigure);
 		addFigure(nodeFigure, NODES_LAYER);
 		this.invalidate();
 		this.repaint();
 	}
 
 	public void unHighlightConnection(IFigure connectionFigure) {
-		removeFigure(connectionFigure);
+		remove(connectionFigure);
 		addFigure(connectionFigure, CONNECTIONS_LAYER);
 		this.invalidate();
 		this.repaint();
@@ -115,8 +100,8 @@ public class ZestRootLayer extends FreeformLayer {
 		add(figure, position);
 	}
 
-	public void removeFigure(IFigure figure) {
-		int position = this.getChildren().indexOf(figure);
+	public void remove(IFigure child) {
+		int position = this.getChildren().indexOf(child);
 		if (position == -1)
 			throw new RuntimeException("Can't remove a figure that is not on ZestRootLayer");
 		int layer = 0;
@@ -126,6 +111,6 @@ public class ZestRootLayer extends FreeformLayer {
 			positionInLayer += itemsInLayer[layer];
 		}
 		itemsInLayer[layer]--;
-		this.remove(figure);
+		super.remove(child);
 	}
 }

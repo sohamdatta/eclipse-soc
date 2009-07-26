@@ -16,8 +16,7 @@ import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.zest.core.widgets.ZestStyles;
-import org.eclipse.zest.core.widgets.internal.GraphLabel;
+import org.mati.zest.core.widgets.internal.GraphLabel;
 import org.mati.zest.core.widgets.internal.ZestRootLayer;
 
 /**
@@ -494,26 +493,15 @@ public class GraphNode extends GraphItem {
 		this.cacheLabel = ((this.nodeStyle & ZestStyles.NODES_CACHE_LABEL) > 0) ? true : false;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.eclipse.mylar.zest.core.internal.graphmodel.IGraphModelNode#setSize(double,
-	 *      double)
-	 */
 	public void setSize(double width, double height) {
 		if ((width != size.width) || (height != size.height)) {
 			size.width = (int) width;
 			size.height = (int) height;
 			refreshLocation();
-			parent.getLayoutContext().fireNodeMovedEvent(this.getLayout());
+			parent.getLayoutContext().fireNodeResizedEvent(this.getLayout());
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.eclipse.mylar.zest.core.internal.graphmodel.IGraphModelNode#getBorderHighlightColor()
-	 */
 	public Color getBorderHighlightColor() {
 		return borderHighlightColor;
 	}

@@ -123,6 +123,7 @@ public class DummySubgraphLayout implements SubgraphLayout {
 	}
 
 	public NodeLayout[] getNodes() {
+		// TODO perform filtering
 		return (NodeLayout[]) nodes.toArray(new NodeLayout[nodes.size()]);
 	}
 

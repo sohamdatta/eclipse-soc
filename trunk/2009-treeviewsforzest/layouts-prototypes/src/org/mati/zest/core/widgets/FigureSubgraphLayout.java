@@ -9,7 +9,6 @@ import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.zest.layout.dataStructures.DisplayIndependentDimension;
 import org.eclipse.zest.layout.dataStructures.DisplayIndependentPoint;
 import org.eclipse.zest.layout.interfaces.NodeLayout;
-import org.mati.zest.core.widgets.internal.ZestRootLayer;
 
 /**
  * A subgraph layout that represents a subgraph as a single figure.
@@ -36,7 +35,7 @@ public abstract class FigureSubgraphLayout extends DummySubgraphLayout {
 		super(context);
 		addNodes(nodes);
 		createFigure();
-		context.container.addFigure(figure);
+		context.container.addSubgraphFigure(figure);
 	}
 
 	public void addNodes(NodeLayout[] nodes) {
@@ -100,11 +99,7 @@ public abstract class FigureSubgraphLayout extends DummySubgraphLayout {
 		if (!disposed) {
 			super.dispose();
 			IFigure parent = figure.getParent();
-			if (parent instanceof ZestRootLayer) {
-				((ZestRootLayer) parent).removeSubgraph(figure);
-			} else {
-				parent.remove(figure);
-			}
+			parent.remove(figure);
 		}
 	}
 
