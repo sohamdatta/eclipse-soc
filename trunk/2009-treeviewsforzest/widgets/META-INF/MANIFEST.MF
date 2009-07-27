@@ -8,5 +8,5 @@ Bundle-Version: 1.0.0.qualifier
 Require-Bundle: org.eclipse.draw2d,
  org.eclipse.zest.layout
 Eclipse-LazyStart: false
-Export-Package: org.mati.zest.core.widgets
+Export-Package: org.eclipse.zest.core.widgets
 Bundle-RequiredExecutionEnvironment: J2SE-1.4
