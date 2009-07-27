@@ -9,9 +9,11 @@ import org.eclipse.birt.chart.model.component.Label;
 import org.eclipse.birt.chart.model.component.Series;
 import org.eclipse.birt.chart.model.component.impl.LabelImpl;
 import org.eclipse.birt.chart.model.component.impl.SeriesImpl;
+import org.eclipse.birt.chart.model.data.DataSet;
 import org.eclipse.birt.chart.model.newtype.DonutSeries;
 import org.eclipse.birt.chart.model.newtype.NewtypeFactory;
 import org.eclipse.birt.chart.model.newtype.VennSeries;
+import org.eclipse.emf.common.util.EMap;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EReference;
 
@@ -40,7 +42,6 @@ public class VennSeriesImpl extends SeriesImpl implements VennSeries{
 	{
 		super.set( src );
 		src.setTitle(this.getTitle());
-		
 	}
 
 	@Override

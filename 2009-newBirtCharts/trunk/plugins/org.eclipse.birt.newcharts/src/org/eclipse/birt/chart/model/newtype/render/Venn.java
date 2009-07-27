@@ -13,6 +13,7 @@ import org.eclipse.birt.chart.event.ArcRenderEvent;
 import org.eclipse.birt.chart.event.EventObjectCache;
 import org.eclipse.birt.chart.event.LineRenderEvent;
 import org.eclipse.birt.chart.event.PolygonRenderEvent;
+import org.eclipse.birt.chart.event.PrimitiveRenderEvent;
 import org.eclipse.birt.chart.event.RectangleRenderEvent;
 import org.eclipse.birt.chart.event.TextRenderEvent;
 import org.eclipse.birt.chart.event.WrappedStructureSource;
@@ -29,11 +30,14 @@ import org.eclipse.birt.chart.model.attribute.impl.ColorDefinitionImpl;
 import org.eclipse.birt.chart.model.attribute.impl.DataPointImpl;
 import org.eclipse.birt.chart.model.attribute.impl.LineAttributesImpl;
 import org.eclipse.birt.chart.model.component.Series;
+import org.eclipse.birt.chart.model.data.DataSet;
+import org.eclipse.birt.chart.model.data.NumberDataSet;
 import org.eclipse.birt.chart.model.data.SeriesDefinition;
 import org.eclipse.birt.chart.model.layout.ClientArea;
 import org.eclipse.birt.chart.model.layout.Legend;
 import org.eclipse.birt.chart.model.layout.Plot;
 import org.eclipse.birt.chart.model.newtype.VennSeries;
+import org.eclipse.birt.chart.model.newtype.data.VennDataSet;
 import org.eclipse.birt.chart.render.BaseRenderer;
 import org.eclipse.birt.chart.render.ISeriesRenderingHints;
 
@@ -57,28 +61,23 @@ public class Venn extends BaseRenderer {
 
 		vennseries = (VennSeries) getSeries();
 
+		assignedSeriesDefinition = new ArrayList<double[]>();
+		NumberDataSet allVennDataSets = (NumberDataSet) vennseries.getDataSet();
+		
+
 		bounds = getCellBounds()
 				.adjustedInstance(p.getClientArea().getInsets());
 		final SeriesDefinition sd = getSeriesDefinition();
 
-		assignedSeriesDefinition = new ArrayList<double[]>();
-
-		for (SeriesDefinition sdtmp : sd.getSeriesDefinitions()) {
-			for (Series series : sdtmp.getSeries()) {
-				assignedSeriesDefinition.add((double[]) series.getDataSet()
-						.getValues());
-			}
-		}
-
 		duplicateValues = new Hashtable<Double, Double>();
 
-		for (double d1 : assignedSeriesDefinition.get(0)) {
-			for (double d2 : assignedSeriesDefinition.get(1)) {
-				if (d1 == d2) {
-					duplicateValues.put(d1, d2);
-				}
-			}
-		}
+//		for (double d1 : assignedSeriesDefinition.get(0)) {
+//			for (double d2 : assignedSeriesDefinition.get(1)) {
+//				if (d1 == d2) {
+//					duplicateValues.put(d1, d2);
+//				}
+//			}
+//		}
 	}
 
 	@Override
@@ -134,9 +133,6 @@ public class Venn extends BaseRenderer {
 		circle2.setWidth(2 * r2);
 		circle2.setHeight(2 * r2);
 
-		idr.fillArc(circle1);
-		idr.fillArc(circle2);
-
 		double delta_mx1r1 = xm1 + r1;
 		double delta_mx2r2 = xm2 - r2;
 		double middleX = xm1 + r1 - (delta_mx1r1 - delta_mx2r2) / 2;
@@ -157,7 +153,7 @@ public class Venn extends BaseRenderer {
 		middleLine.setStart(goFactory.createLocation(middleX, middleY1));
 		middleLine.setEnd(goFactory.createLocation(middleX, middleY2));
 
-//		idr.drawLine(middleLine);
+		// idr.drawLine(middleLine);
 
 		ArrayList<Location> allLocs = new ArrayList<Location>();
 
@@ -179,23 +175,23 @@ public class Venn extends BaseRenderer {
 			allLocs.add(loc);
 		}
 
-		 double startAngle2 = Math.toDegrees(Math.asin(h / -r2));
-		 double angleExtent2 = Math.abs(2 * startAngle2);
-		
-		 for (int i = 0; i < angleExtent2; i++) {
-		
-		 double u;
-		 double v;
-		
+		double startAngle2 = Math.toDegrees(Math.asin(h / -r2));
+		double angleExtent2 = Math.abs(2 * startAngle2);
+
+		for (int i = 0; i < angleExtent2; i++) {
+
+			double u;
+			double v;
+
 			u = xm2 + Math.cos(Math.toRadians(startAngle2 + i)) * -r2;
 			v = ym2 - Math.sin(Math.toRadians(startAngle2 + i)) * -r2;
-		
-		 Location loc = goFactory.createLocation(u, v);
-		 allLocs.add(loc);
-		 }
 
-		 allLocs.add(allLocs.get(0));
-		 
+			Location loc = goFactory.createLocation(u, v);
+			allLocs.add(loc);
+		}
+
+		allLocs.add(allLocs.get(0));
+
 		Location[] allPoints = (Location[]) allLocs.toArray(new Location[] {});
 		PolygonRenderEvent poly = (PolygonRenderEvent) ((EventObjectCache) idr)
 				.getEventObject(
@@ -208,6 +204,27 @@ public class Venn extends BaseRenderer {
 
 		poly.setPoints(allPoints);
 
+
+		ArcRenderEvent circle1Low = (ArcRenderEvent) circle1.copy();
+		circle1Low.getTopLeft().translate(10, 10);
+		circle1Low.setBackground(((ColorDefinitionImpl)circle1Low.getBackground()).darker());
+
+		ArcRenderEvent circle2Low = (ArcRenderEvent) circle2.copy();
+		circle2Low.getTopLeft().translate(10, 10);
+		circle2Low.setBackground(((ColorDefinitionImpl)circle2Low.getBackground()).darker());
+		
+		PolygonRenderEvent polyLow = (PolygonRenderEvent) poly.copy();
+		for (Location location : polyLow.getPoints()) {
+			location.translate(10, 10);
+		}
+		polyLow.setBackground(((ColorDefinitionImpl)polyLow.getBackground()).darker());
+		
+		idr.fillArc(circle1Low);
+		idr.fillArc(circle2Low);
+		idr.fillPolygon(polyLow);
+		
+		idr.fillArc(circle1);
+		idr.fillArc(circle2);
 		idr.fillPolygon(poly);
 
 	}
