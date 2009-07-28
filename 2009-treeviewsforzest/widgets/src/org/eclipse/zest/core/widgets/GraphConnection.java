@@ -667,6 +667,7 @@ public class GraphConnection extends GraphItem {
 		}
 
 		public void setVisible(boolean visible) {
+			graph.getLayoutContext().checkChangesAllowed();
 			this.visible = visible;
 		}
 

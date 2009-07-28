@@ -4,12 +4,12 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.zest.core.widgets.Graph;
+import org.eclipse.zest.core.widgets.GraphConnection;
+import org.eclipse.zest.core.widgets.GraphNode;
 import org.eclipse.zest.layout.interfaces.EntityLayout;
 import org.eclipse.zest.layout.interfaces.LayoutAlgorithm;
 import org.eclipse.zest.layout.interfaces.LayoutContext;
-import org.mati.zest.core.widgets.Graph;
-import org.mati.zest.core.widgets.GraphConnection;
-import org.mati.zest.core.widgets.GraphNode;
 
 /**
  * This snippet shows how to create a custom layout. This layout simply lays the nodes out vertically
@@ -42,7 +42,7 @@ public class CustomLayout {
 				this.context = context;
 			}
 			
-			public void applyLayout() {
+			public void applyLayout(boolean clean) {
 				EntityLayout[] entitiesToLayout = context.getEntities();
 				int totalSteps = entitiesToLayout.length;
 				double distance = context.getBounds().width / totalSteps;

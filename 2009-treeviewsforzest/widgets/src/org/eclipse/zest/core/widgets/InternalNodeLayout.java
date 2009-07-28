@@ -17,7 +17,8 @@ class InternalNodeLayout implements NodeLayout {
 	private boolean minimized = false;
 	private final GraphNode node;
 	private final InternalLayoutContext ownerLayoutContext;
-	private SubgraphLayout subgraph;
+	private InternalSubgraphLayout subgraph;
+	private boolean isDisposed = false;
 
 	public InternalNodeLayout(GraphNode graphNode) {
 		this.node = graphNode;
@@ -59,6 +60,9 @@ class InternalNodeLayout implements NodeLayout {
 	}
 
 	public void prune(SubgraphLayout subgraph) {
+		if (subgraph != null && !(subgraph instanceof InternalSubgraphLayout))
+			throw new RuntimeException("InternalNodeLayout can pruned only to InternalSubgarphLayout.");
+		ownerLayoutContext.checkChangesAllowed();
 		if (subgraph == this.subgraph)
 			return;
 		if (this.subgraph != null) {
@@ -67,12 +71,17 @@ class InternalNodeLayout implements NodeLayout {
 			subgraph2.removeNodes(new NodeLayout[] { this });
 		}
 		if (subgraph != null) {
-			this.subgraph = subgraph;
+			this.subgraph = (InternalSubgraphLayout) subgraph;
 			subgraph.addNodes(new NodeLayout[] { this });
 		}
 	}
 
 	public void setLocation(double x, double y) {
+		ownerLayoutContext.checkChangesAllowed();
+		internalSetLocation(x, y);
+	}
+
+	private void internalSetLocation(double x, double y) {
 		if (location != null) {
 			location.x = x;
 			location.y = y;
@@ -82,6 +91,11 @@ class InternalNodeLayout implements NodeLayout {
 	}
 
 	public void setSize(double width, double height) {
+		ownerLayoutContext.checkChangesAllowed();
+		internalSetSize(width, height);
+	}
+
+	private void internalSetSize(double width, double height) {
 		if (size != null) {
 			size.width = width;
 			size.height = height;
@@ -91,6 +105,7 @@ class InternalNodeLayout implements NodeLayout {
 	}
 
 	public void setMinimized(boolean minimized) {
+		ownerLayoutContext.checkChangesAllowed();
 		getSize();
 		this.minimized = minimized;
 	}
@@ -188,15 +203,26 @@ class InternalNodeLayout implements NodeLayout {
 
 	void refreshSize() {
 		Dimension size2 = node.getSize();
-		setSize(size2.width, size2.height);
+		internalSetSize(size2.width, size2.height);
 	}
 
 	void refreshLocation() {
 		Point location2 = node.getLocation();
-		setLocation(location2.x + getSize().width / 2, location2.y + size.height / 2);
+		internalSetLocation(location2.x + getSize().width / 2, location2.y + size.height / 2);
 	}
 
 	public String toString() {
 		return node.toString() + "(layout)";
+	}
+
+	void dispose() {
+		isDisposed = true;
+		if (subgraph != null)
+			subgraph.removeDisposedNodes();
+		ownerLayoutContext.fireNodeRemovedEvent(node.getLayout());
+	}
+
+	boolean isDisposed() {
+		return isDisposed;
 	}
 }

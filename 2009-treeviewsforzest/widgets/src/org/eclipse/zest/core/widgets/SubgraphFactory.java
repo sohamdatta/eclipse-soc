@@ -1,8 +1,7 @@
 package org.eclipse.zest.core.widgets;
 
-import org.eclipse.zest.layout.interfaces.NodeLayout;
 import org.eclipse.zest.layout.interfaces.SubgraphLayout;
 
 public interface SubgraphFactory {
-	SubgraphLayout createSubgraph(NodeLayout[] nodes, InternalLayoutContext context);
+	SubgraphLayout createSubgraph(InternalNodeLayout[] nodes, InternalLayoutContext context);
 }

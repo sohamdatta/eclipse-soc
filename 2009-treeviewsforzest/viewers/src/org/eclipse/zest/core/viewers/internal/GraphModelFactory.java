@@ -157,10 +157,6 @@ public class GraphModelFactory extends AbstractStylingModelFactory {
 			} else if (updateLabels) {
 				styleItem(internalDest);
 			}
-
-			// @tag TODO: Remove these lines
-			// conn.disconnect();
-			// conn.reconnect(internalSource, internalDest);
 			if (updateLabels) {
 				styleItem(conn);
 			}

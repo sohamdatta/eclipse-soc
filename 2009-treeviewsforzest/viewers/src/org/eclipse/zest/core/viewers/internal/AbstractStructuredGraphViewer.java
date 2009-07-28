@@ -474,8 +474,6 @@ public abstract class AbstractStructuredGraphViewer extends AbstractZoomableView
 				}
 			}
 		}
-
-		applyLayout();
 	}
 
 	/**

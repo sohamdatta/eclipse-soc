@@ -16,6 +16,11 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.zest.core.widgets.Graph;
+import org.eclipse.zest.core.widgets.GraphConnection;
+import org.eclipse.zest.core.widgets.GraphContainer;
+import org.eclipse.zest.core.widgets.GraphItem;
+import org.eclipse.zest.core.widgets.GraphNode;
 import org.eclipse.zest.core.widgets.ZestStyles;
 import org.eclipse.zest.layout.algorithms.CompositeLayoutAlgorithm;
 import org.eclipse.zest.layout.algorithms.GridLayoutAlgorithm;
@@ -23,11 +28,6 @@ import org.eclipse.zest.layout.algorithms.HorizontalShiftAlgorithm;
 import org.eclipse.zest.layout.algorithms.RadialLayoutAlgorithm;
 import org.eclipse.zest.layout.algorithms.TreeLayoutAlgorithm;
 import org.eclipse.zest.layout.interfaces.LayoutAlgorithm;
-import org.mati.zest.core.widgets.Graph;
-import org.mati.zest.core.widgets.GraphConnection;
-import org.mati.zest.core.widgets.GraphContainer;
-import org.mati.zest.core.widgets.GraphItem;
-import org.mati.zest.core.widgets.GraphNode;
 
 public class ContainerResizeGraphSnippet {
 

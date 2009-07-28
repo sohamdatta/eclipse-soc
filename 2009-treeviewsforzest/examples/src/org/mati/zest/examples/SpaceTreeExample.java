@@ -10,11 +10,11 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.zest.core.widgets.Graph;
+import org.eclipse.zest.core.widgets.GraphConnection;
+import org.eclipse.zest.core.widgets.GraphNode;
+import org.eclipse.zest.core.widgets.LabelSubgraphLayout;
 import org.eclipse.zest.layout.algorithms.SpaceTreeLayoutAlgorithm;
-import org.mati.zest.core.widgets.Graph;
-import org.mati.zest.core.widgets.GraphConnection;
-import org.mati.zest.core.widgets.GraphNode;
-import org.mati.zest.core.widgets.LabelSubgraphLayout;
 
 public class SpaceTreeExample {
 
@@ -23,6 +23,8 @@ public class SpaceTreeExample {
 	static GraphNode source;
 
 	static GraphNode target;
+
+	static boolean changesSeries = false;
 
 	public static void main(String[] args) {
 		Display d = new Display();
@@ -140,6 +142,26 @@ public class SpaceTreeExample {
 			};
 			addNode.setText("add node");
 			menuMgr.add(addNode);
+
+			if (!changesSeries) {
+				Action startChangesSeries = new Action() {
+					public void run() {
+						g.setDynamicLayout(false);
+						changesSeries = true;
+					}
+				};
+				startChangesSeries.setText("start changes");
+				menuMgr.add(startChangesSeries);
+			} else {
+				Action endChangesSeries = new Action() {
+					public void run() {
+						g.setDynamicLayout(true);
+						changesSeries = false;
+					}
+				};
+				endChangesSeries.setText("end changes");
+				menuMgr.add(endChangesSeries);
+			}
 		}
 	}
 

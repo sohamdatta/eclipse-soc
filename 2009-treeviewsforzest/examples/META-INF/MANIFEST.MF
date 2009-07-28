@@ -5,8 +5,8 @@ Bundle-SymbolicName: examples
 Bundle-Version: 1.0.0.qualifier
 Export-Package: org.mati.zest.examples
 Require-Bundle: org.eclipse.zest.layout,
- widgets,
  org.eclipse.swt,
  org.eclipse.draw2d,
  org.eclipse.jface,
- org.eclipse.equinox.common
+ widgets,
+ viewers

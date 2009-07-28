@@ -419,7 +419,7 @@ public class GraphNode extends GraphItem {
 		}
 		nodeFigure.getParent().setConstraint(nodeFigure, bounds);
 
-		if (fishEyeFigure != null) {
+		if (isFisheyeEnabled) {
 			Rectangle fishEyeBounds = calculateFishEyeBounds();
 			if (fishEyeBounds != null)
 				fishEyeFigure.getParent().setConstraint(fishEyeFigure, fishEyeBounds);

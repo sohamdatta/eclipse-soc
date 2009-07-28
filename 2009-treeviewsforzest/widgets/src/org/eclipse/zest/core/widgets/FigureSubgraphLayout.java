@@ -72,6 +72,7 @@ public abstract class FigureSubgraphLayout extends DummySubgraphLayout {
 	}
 
 	public void setLocation(double x, double y) {
+		super.setLocation(x, y);
 		for (Iterator iterator = nodes.iterator(); iterator.hasNext();) {
 			NodeLayout node = (NodeLayout) iterator.next();
 			node.setLocation(x, y);

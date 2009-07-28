@@ -31,10 +31,13 @@ public class InternalLayoutContext implements LayoutContext {
 	private final List layoutListeners = new ArrayList();
 	private final List pruningListeners = new ArrayList();
 	private LayoutAlgorithm mainAlgorithm;
+	private LayoutAlgorithm layoutAlgorithm;
 	private ExpandCollapseManager expandCollapseManager;
 	private SubgraphFactory subgraphFactory = DummySubgraphLayout.FACTORY;
 	private final HashSet subgraphs = new HashSet();
 	private boolean eventsOn = true;
+	private boolean backgorundLayoutEnabled = true;
+	private boolean externalLayoutInvocation = false;
 
 	private final LayoutFilter defaultFilter = new LayoutFilter() {
 		public boolean isObjectFiltered(GraphItem item) {
@@ -77,7 +80,12 @@ public class InternalLayoutContext implements LayoutContext {
 	}
 
 	public SubgraphLayout createSubgraph(NodeLayout[] nodes) {
-		SubgraphLayout subgraph = subgraphFactory.createSubgraph(nodes, this);
+		checkChangesAllowed();
+		InternalNodeLayout[] internalNodes = new InternalNodeLayout[nodes.length];
+		for (int i = 0; i < nodes.length; i++) {
+			internalNodes[i] = (InternalNodeLayout) nodes[i];
+		}
+		SubgraphLayout subgraph = subgraphFactory.createSubgraph(internalNodes, this);
 		subgraphs.add(subgraph);
 		return subgraph;
 	}
@@ -148,8 +156,16 @@ public class InternalLayoutContext implements LayoutContext {
 		return false;
 	}
 
-	public boolean isContinuousLayoutEnabled() {
-		return false;
+	public boolean isBackgroundLayoutEnabled() {
+		return backgorundLayoutEnabled;
+	}
+
+	void setBackgroundLayoutEnabled(boolean enabled) {
+		if (this.backgorundLayoutEnabled != enabled) {
+			this.backgorundLayoutEnabled = enabled;
+			fireBackgroundEnableChangedEvent();
+		}
+
 	}
 
 	public boolean isPruningEnabled() {
@@ -229,8 +245,10 @@ public class InternalLayoutContext implements LayoutContext {
 	}
 
 	void setExpanded(NodeLayout node, boolean expanded) {
+		externalLayoutInvocation = true;
 		if (expandCollapseManager != null)
 			expandCollapseManager.setExpanded(this, node, expanded);
+		externalLayoutInvocation = false;
 	}
 
 	boolean canExpand(NodeLayout node) {
@@ -246,10 +264,41 @@ public class InternalLayoutContext implements LayoutContext {
 	}
 
 	void applyMainAlgorithm() {
-		if (mainAlgorithm != null) {
-			mainAlgorithm.applyLayout();
+		if (backgorundLayoutEnabled && mainAlgorithm != null) {
+			mainAlgorithm.applyLayout(true);
 			flushChanges(false);
 		}
+	}
+
+	/**
+	 * Sets layout algorithm for this context. It differs from
+	 * {@link #setMainLayoutAlgorithm(LayoutAlgorithm) main algorithm} in that
+	 * it's always used when {@link #applyLayoutAlgorithm(boolean)} and not
+	 * after firing of events.
+	 */
+	void setLayoutAlgorithm(LayoutAlgorithm algorithm) {
+		if (this.layoutAlgorithm != null) {
+			this.layoutAlgorithm.setLayoutContext(null);
+		}
+		this.layoutAlgorithm = algorithm;
+		this.layoutAlgorithm.setLayoutContext(this);
+	}
+
+	LayoutAlgorithm getLayoutAlgorithm() {
+		return layoutAlgorithm;
+	}
+
+	void applyLayout(boolean clean) {
+		if (layoutAlgorithm != null) {
+			externalLayoutInvocation = true;
+			layoutAlgorithm.applyLayout(clean);
+			externalLayoutInvocation = false;
+		}
+	}
+
+	void checkChangesAllowed() {
+		if (!backgorundLayoutEnabled && !externalLayoutInvocation)
+			throw new RuntimeException("Layout not allowed to perform changes in layout context!");
 	}
 
 	void fireNodeAddedEvent(NodeLayout node) {
@@ -320,6 +369,13 @@ public class InternalLayoutContext implements LayoutContext {
 		}
 		if (!intercepted)
 			applyMainAlgorithm();
+	}
+
+	void fireBackgroundEnableChangedEvent() {
+		ContextListener[] listeners = (ContextListener[]) contextListeners.toArray(new ContextListener[contextListeners.size()]);
+		for (int i = 0; i < listeners.length; i++) {
+			listeners[i].backgroundEnableChanged(this);
+		}
 	}
 
 	void fireNodeMovedEvent(InternalNodeLayout node) {
