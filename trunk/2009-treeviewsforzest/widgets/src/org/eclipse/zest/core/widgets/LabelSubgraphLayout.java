@@ -14,7 +14,7 @@ import org.eclipse.zest.layout.interfaces.SubgraphLayout;
 public class LabelSubgraphLayout extends FigureSubgraphLayout {
 
 	public final static SubgraphFactory FACTORY = new SubgraphFactory() {
-		public SubgraphLayout createSubgraph(NodeLayout[] nodes, InternalLayoutContext context) {
+		public SubgraphLayout createSubgraph(InternalNodeLayout[] nodes, InternalLayoutContext context) {
 			return new LabelSubgraphLayout(nodes, context);
 		}
 	};

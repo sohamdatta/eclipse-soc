@@ -12,13 +12,13 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.zest.core.widgets.Graph;
+import org.eclipse.zest.core.widgets.GraphConnection;
+import org.eclipse.zest.core.widgets.GraphItem;
+import org.eclipse.zest.core.widgets.GraphNode;
+import org.eclipse.zest.core.widgets.LabelSubgraphLayout;
 import org.eclipse.zest.layout.algorithms.ExpandableTreeLayoutAlgorithm;
 import org.eclipse.zest.layout.algorithms.TreeLayoutAlgorithm;
-import org.mati.zest.core.widgets.Graph;
-import org.mati.zest.core.widgets.GraphConnection;
-import org.mati.zest.core.widgets.GraphItem;
-import org.mati.zest.core.widgets.GraphNode;
-import org.mati.zest.core.widgets.LabelSubgraphLayout;
 
 public class TreeLayoutExample {
 	/**

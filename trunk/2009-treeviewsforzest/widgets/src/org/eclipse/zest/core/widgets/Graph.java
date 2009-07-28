@@ -75,9 +75,10 @@ public class Graph extends FigureCanvas {
 	private int connectionStyle;
 	private int nodeStyle;
 	private ScalableFreeformLayeredPane fishEyeLayer = null;
-	private LayoutAlgorithm layoutAlgorithm = null;
 	private InternalLayoutContext layoutContext = null;
-	private volatile boolean isLayoutScheduled;
+	private volatile boolean shouldSheduleLayout;
+	private volatile Runnable scheduledLayoutRunnable = null;
+	private volatile boolean scheduledLayoutClean = false;
 	private Dimension preferredSize = null;
 	int style = 0;
 
@@ -149,9 +150,9 @@ public class Graph extends FigureCanvas {
 
 		this.addPaintListener(new PaintListener() {
 			public void paintControl(PaintEvent e) {
-				if (isLayoutScheduled) {
-					applyLayoutInternal();
-					isLayoutScheduled = false;
+				if (shouldSheduleLayout) {
+					applyLayoutInternal(true);
+					shouldSheduleLayout = false;
 				}
 			}
 		});
@@ -329,27 +330,73 @@ public class Graph extends FigureCanvas {
 	}
 
 	/**
+	 * Turns the events for this graph's layout algorithm on and off.
+	 * 
+	 * @param enabled
+	 */
+	public void setLayoutEventsEnabled(boolean enabled) {
+
+	}
+
+	/**
 	 * Runs the layout on this graph. If the view is not visible layout will be
 	 * deferred until after the view is available.
 	 */
 	public void applyLayout() {
-		scheduleLayoutOnReveal();
+		scheduleLayoutOnReveal(true);
 	}
 
-	private void applyLayoutInternal() {
-		if (layoutAlgorithm == null) {
+	/**
+	 * Enables or disables dynamic layout (that is layout algorithm performing
+	 * layout in background or when certain events occur). Dynamic layout should
+	 * be disabled before doing a long series of changes in the graph to make
+	 * sure that layout algorithm won't interfere with these changes.
+	 * 
+	 * Enabling dynamic layout causes the layout algorithm to be applied even if
+	 * it's not actually a dynamic algorithm.
+	 * 
+	 * @param enabled
+	 */
+	public void setDynamicLayout(boolean enabled) {
+		if (getLayoutContext().isBackgroundLayoutEnabled() != enabled) {
+			layoutContext.setBackgroundLayoutEnabled(enabled);
+			if (enabled)
+				scheduleLayoutOnReveal(false);
+		}
+	}
+
+	/**
+	 * 
+	 * @return true if dynamic layout is enabled (see
+	 *         {@link #setDynamicLayout(boolean)})
+	 */
+	public boolean isDynamicLayoutEnabled() {
+		return getLayoutContext().isBackgroundLayoutEnabled();
+	}
+
+	private void applyLayoutInternal(boolean clean) {
+		if (getLayoutContext().getLayoutAlgorithm() == null) {
 			return;
 		}
-		Display.getDefault().asyncExec(new Runnable() {
-			public void run() {
-				Animation.markBegin();
-				layoutAlgorithm.applyLayout();
-				layoutContext.flushChanges(false);
-				Animation.run(ANIMATION_TIME);
-				getLightweightSystem().getUpdateManager().performUpdate();
-			}
-		});
+		scheduledLayoutClean = scheduledLayoutClean || clean;
+		synchronized (this) {
+		if (scheduledLayoutRunnable == null)
+			Display.getDefault().asyncExec(scheduledLayoutRunnable = new Runnable() {
+				public void run() {
+						Animation.markBegin();
+						getLayoutContext().applyLayout(scheduledLayoutClean);
+						layoutContext.flushChanges(false);
+						Animation.run(ANIMATION_TIME);
+						getLightweightSystem().getUpdateManager().performUpdate();
+						synchronized (Graph.this) {
+							scheduledLayoutRunnable = null;
+							scheduledLayoutClean = false;
+						}
+				}
+			});
+		}
 	}
+
 
 	/**
 	 * Sets the preferred size of the layout area. Size of ( -1, -1) uses the
@@ -387,18 +434,13 @@ public class Graph extends FigureCanvas {
 	 * @param algorithm
 	 */
 	public void setLayoutAlgorithm(LayoutAlgorithm algorithm, boolean applyLayout) {
-		if (this.layoutAlgorithm != null) {
-			this.layoutAlgorithm.setLayoutContext(null);
-		}
-		this.layoutAlgorithm = algorithm;
-		this.layoutAlgorithm.setLayoutContext(getLayoutContext());
-		if (applyLayout) {
+		getLayoutContext().setLayoutAlgorithm(algorithm);
+		if (applyLayout)
 			applyLayout();
-		}
 	}
 
 	public LayoutAlgorithm getLayoutAlgorithm() {
-		return this.layoutAlgorithm;
+		return getLayoutContext().getLayoutAlgorithm();
 	}
 
 	public void setSubgraphFactory(SubgraphFactory factory) {
@@ -744,8 +786,7 @@ public class Graph extends FigureCanvas {
 		this.getNodes().remove(node);
 		this.selectedItems.remove(node);
 		figure2ItemMap.remove(figure);
-		node.getLayout().prune(null);
-		getLayoutContext().fireNodeRemovedEvent(node.getLayout());
+		node.getLayout().dispose();
 	}
 
 	void addConnection(GraphConnection connection, boolean addToEdgeLayer) {
@@ -791,9 +832,9 @@ public class Graph extends FigureCanvas {
 	 * Schedules a layout to be performed after the view is revealed (or
 	 * immediately, if the view is already revealed).
 	 * 
-	 * @param revealListener
+	 * @param clean
 	 */
-	private void scheduleLayoutOnReveal() {
+	private void scheduleLayoutOnReveal(final boolean clean) {
 
 		final boolean[] isVisibleSync = new boolean[1];
 		Display.getDefault().syncExec(new Runnable() {
@@ -803,9 +844,9 @@ public class Graph extends FigureCanvas {
 		});
 
 		if (isVisibleSync[0]) {
-			applyLayoutInternal();
+			applyLayoutInternal(clean);
 		} else {
-			isLayoutScheduled = true;
+			shouldSheduleLayout = true;
 		}
 	}
 

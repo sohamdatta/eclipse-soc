@@ -8,12 +8,12 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.zest.core.widgets.Graph;
+import org.eclipse.zest.core.widgets.GraphConnection;
+import org.eclipse.zest.core.widgets.GraphItem;
+import org.eclipse.zest.core.widgets.GraphNode;
+import org.eclipse.zest.core.widgets.LabelSubgraphLayout;
 import org.eclipse.zest.layout.algorithms.SpaceTreeLayoutAlgorithm;
-import org.mati.zest.core.widgets.LabelSubgraphLayout;
-import org.mati.zest.core.widgets.Graph;
-import org.mati.zest.core.widgets.GraphConnection;
-import org.mati.zest.core.widgets.GraphItem;
-import org.mati.zest.core.widgets.GraphNode;
 
 /**
  * This example shows how SpringLayoutAlgorithm reacts to graph structure

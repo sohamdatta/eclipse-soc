@@ -629,7 +629,7 @@ public class GraphContainer extends GraphNode {
 			setLayoutAlgorithm(new TreeLayoutAlgorithm(), false);
 		}
 		Animation.markBegin();
-		layoutAlgorithm.applyLayout();
+		layoutAlgorithm.applyLayout(true);
 		layoutContext.flushChanges(false);
 		Animation.run(ANIMATION_TIME);
 		getFigure().getUpdateManager().performUpdate();

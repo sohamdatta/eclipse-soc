@@ -58,7 +58,7 @@ import org.eclipse.zest.layout.interfaces.SubgraphLayout;
 public class TriangleSubgraphLayout extends FigureSubgraphLayout {
 
 	public final static SubgraphFactory FACTORY = new SubgraphFactory() {
-		public SubgraphLayout createSubgraph(NodeLayout[] nodes, InternalLayoutContext context) {
+		public SubgraphLayout createSubgraph(InternalNodeLayout[] nodes, InternalLayoutContext context) {
 			return new TriangleSubgraphLayout(nodes, context);
 		}
 	};
@@ -383,6 +383,8 @@ public class TriangleSubgraphLayout extends FigureSubgraphLayout {
 	}
 
 	public void setDirection(int direction) {
+		if (this.direction == direction)
+			return;
 		if (direction == TOP_DOWN || direction == BOTTOM_UP || direction == LEFT_RIGHT || direction == RIGHT_LEFT) {
 			this.direction = direction;
 			updateFigure();

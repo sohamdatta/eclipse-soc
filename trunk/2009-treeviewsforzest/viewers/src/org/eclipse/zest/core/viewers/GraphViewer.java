@@ -117,6 +117,12 @@ public class GraphViewer extends AbstractStructuredGraphViewer implements ISelec
 
 		});
 	}
+	
+	protected void inputChanged(Object input, Object oldInput) {
+		graph.setDynamicLayout(false);
+		super.inputChanged(input, oldInput);
+		graph.setDynamicLayout(true);
+	}
 
 	/**
 	 * Gets the styles for this structuredViewer
@@ -259,6 +265,58 @@ public class GraphViewer extends AbstractStructuredGraphViewer implements ISelec
 		if (selectionChangedListeners.contains(listener)) {
 			selectionChangedListeners.remove(listener);
 		}
+	}
+	
+	/**
+	 * {@inheritDoc}
+	 * 
+	 * NOTE: If a layout algorithm is set in the receiver, layout is performed after
+	 * the refresh.
+	 */
+	public void refresh(Object element) {
+		boolean dynamicLayoutEnabled = graph.isDynamicLayoutEnabled();
+		graph.setDynamicLayout(false);
+		super.refresh(element);
+		graph.setDynamicLayout(dynamicLayoutEnabled);
+	}
+	
+	/**
+	 * {@inheritDoc}
+	 * 
+	 * NOTE: If a layout algorithm is set in the receiver, layout is performed after
+	 * the refresh.
+	 */
+	public void refresh(Object element, boolean updateLabels) {
+		boolean dynamicLayoutEnabled = graph.isDynamicLayoutEnabled();
+		graph.setDynamicLayout(false);
+		super.refresh(element, updateLabels);
+		graph.setDynamicLayout(dynamicLayoutEnabled);
+	}
+	
+	/**
+	 * {@inheritDoc}
+	 * 
+	 * NOTE: If a layout algorithm is set in the receiver, layout is performed after
+	 * the update.
+	 */
+	public void update(Object element, String[] properties) {
+		boolean dynamicLayoutEnabled = graph.isDynamicLayoutEnabled();
+		graph.setDynamicLayout(false);
+		super.update(element, properties);
+		graph.setDynamicLayout(dynamicLayoutEnabled);
+	}
+	
+	/**
+	 * {@inheritDoc}
+	 * 
+	 * NOTE: If a layout algorithm is set in the receiver, layout is performed after
+	 * the update.
+	 */
+	public void update(Object[] elements, String[] properties) {
+		boolean dynamicLayoutEnabled = graph.isDynamicLayoutEnabled();
+		graph.setDynamicLayout(false);
+		super.update(elements, properties);
+		graph.setDynamicLayout(dynamicLayoutEnabled);
 	}
 
 	// @tag zest.bug.156286-Zooming.fix.experimental : expose the zoom manager
