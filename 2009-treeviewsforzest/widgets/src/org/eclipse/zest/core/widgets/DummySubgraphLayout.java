@@ -9,6 +9,7 @@ import org.eclipse.zest.layout.dataStructures.DisplayIndependentDimension;
 import org.eclipse.zest.layout.dataStructures.DisplayIndependentPoint;
 import org.eclipse.zest.layout.dataStructures.DisplayIndependentRectangle;
 import org.eclipse.zest.layout.interfaces.ConnectionLayout;
+import org.eclipse.zest.layout.interfaces.EntityLayout;
 import org.eclipse.zest.layout.interfaces.NodeLayout;
 import org.eclipse.zest.layout.interfaces.SubgraphLayout;
 
@@ -71,9 +72,8 @@ public class DummySubgraphLayout implements InternalSubgraphLayout {
 		return false;
 	}
 
-	public NodeLayout[] getSuccessingEntities() {
-		// TODO Auto-generated method stub
-		return null;
+	public EntityLayout[] getSuccessingEntities() {
+		return new EntityLayout[0];
 	}
 
 	public DisplayIndependentDimension getSize() {
@@ -85,9 +85,8 @@ public class DummySubgraphLayout implements InternalSubgraphLayout {
 		return 0;
 	}
 
-	public NodeLayout[] getPredecessingEntities() {
-		// TODO Auto-generated method stub
-		return null;
+	public EntityLayout[] getPredecessingEntities() {
+		return new EntityLayout[0];
 	}
 
 	public DisplayIndependentPoint getLocation() {

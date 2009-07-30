@@ -39,6 +39,7 @@ import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Item;
 import org.eclipse.zest.core.widgets.internal.ContainerFigure;
 import org.eclipse.zest.core.widgets.internal.ZestRootLayer;
+import org.eclipse.zest.layout.interfaces.ExpandCollapseManager;
 import org.eclipse.zest.layout.interfaces.LayoutAlgorithm;
 
 public class Graph extends FigureCanvas {
@@ -445,6 +446,10 @@ public class Graph extends FigureCanvas {
 
 	public void setSubgraphFactory(SubgraphFactory factory) {
 		getLayoutContext().setSubgraphFactory(factory);
+	}
+
+	public void setExpandCollapseManager(ExpandCollapseManager expandCollapseManager) {
+		getLayoutContext().setExpandCollapseManager(expandCollapseManager);
 	}
 
 	/**

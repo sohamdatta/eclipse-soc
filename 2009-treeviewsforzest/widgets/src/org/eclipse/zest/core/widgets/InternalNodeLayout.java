@@ -1,6 +1,7 @@
 package org.eclipse.zest.core.widgets;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 
 import org.eclipse.draw2d.geometry.Dimension;
@@ -8,6 +9,7 @@ import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.zest.layout.dataStructures.DisplayIndependentDimension;
 import org.eclipse.zest.layout.dataStructures.DisplayIndependentPoint;
 import org.eclipse.zest.layout.interfaces.ConnectionLayout;
+import org.eclipse.zest.layout.interfaces.EntityLayout;
 import org.eclipse.zest.layout.interfaces.NodeLayout;
 import org.eclipse.zest.layout.interfaces.SubgraphLayout;
 
@@ -61,7 +63,7 @@ class InternalNodeLayout implements NodeLayout {
 
 	public void prune(SubgraphLayout subgraph) {
 		if (subgraph != null && !(subgraph instanceof InternalSubgraphLayout))
-			throw new RuntimeException("InternalNodeLayout can pruned only to InternalSubgarphLayout.");
+			throw new RuntimeException("InternalNodeLayout can be pruned only to InternalSubgarphLayout.");
 		ownerLayoutContext.checkChangesAllowed();
 		if (subgraph == this.subgraph)
 			return;
@@ -136,14 +138,44 @@ class InternalNodeLayout implements NodeLayout {
 		return result;
 	}
 
-	public NodeLayout[] getSuccessingEntities() {
-		// TODO Auto-generated method stub
-		return getSuccessingNodes();
+	public EntityLayout[] getSuccessingEntities() {
+		if (isPruned())
+			return new NodeLayout[0];
+		ArrayList result = new ArrayList();
+		HashSet addedSubgraphs = new HashSet();
+		NodeLayout[] successingNodes = getSuccessingNodes();
+		for (int i = 0; i < successingNodes.length; i++) {
+			if (!successingNodes[i].isPruned()) {
+				result.add(successingNodes[i]);
+			} else {
+				SubgraphLayout successingSubgraph = successingNodes[i].getSubgraph();
+				if (successingSubgraph.isGraphEntity() && !addedSubgraphs.contains(successingSubgraph)) {
+					result.add(successingSubgraph);
+					addedSubgraphs.add(successingSubgraph);
+				}
+			}
+		}
+		return (EntityLayout[]) result.toArray(new EntityLayout[result.size()]);
 	}
 
-	public NodeLayout[] getPredecessingEntities() {
-		// TODO Auto-generated method stub
-		return getPredecessingNodes();
+	public EntityLayout[] getPredecessingEntities() {
+		if (isPruned())
+			return new NodeLayout[0];
+		ArrayList result = new ArrayList();
+		HashSet addedSubgraphs = new HashSet();
+		NodeLayout[] predecessingNodes = getPredecessingNodes();
+		for (int i = 0; i < predecessingNodes.length; i++) {
+			if (!predecessingNodes[i].isPruned()) {
+				result.add(predecessingNodes[i]);
+			} else {
+				SubgraphLayout predecessingSubgraph = predecessingNodes[i].getSubgraph();
+				if (predecessingSubgraph.isGraphEntity() && !addedSubgraphs.contains(predecessingSubgraph)) {
+					result.add(predecessingSubgraph);
+					addedSubgraphs.add(predecessingSubgraph);
+				}
+			}
+		}
+		return (EntityLayout[]) result.toArray(new EntityLayout[result.size()]);
 	}
 
 	public ConnectionLayout[] getIncomingConnections() {
@@ -178,6 +210,10 @@ class InternalNodeLayout implements NodeLayout {
 
 	public double getPreferredAspectRatio() {
 		return 0;
+	}
+
+	GraphNode getNode() {
+		return node;
 	}
 
 	void applyLayout() {

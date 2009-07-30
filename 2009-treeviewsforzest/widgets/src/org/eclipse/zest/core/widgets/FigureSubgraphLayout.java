@@ -8,6 +8,7 @@ import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.zest.layout.dataStructures.DisplayIndependentDimension;
 import org.eclipse.zest.layout.dataStructures.DisplayIndependentPoint;
+import org.eclipse.zest.layout.interfaces.EntityLayout;
 import org.eclipse.zest.layout.interfaces.NodeLayout;
 
 /**
@@ -55,6 +56,16 @@ public abstract class FigureSubgraphLayout extends DummySubgraphLayout {
 		super.removeNodes(nodes);
 		if (this.nodes.size() < initialCount && !disposed)
 			updateFigure();
+	}
+
+	public EntityLayout[] getSuccessingEntities() {
+		// TODO Auto-generated method stub
+		return super.getSuccessingEntities();
+	}
+
+	public EntityLayout[] getPredecessingEntities() {
+		// TODO Auto-generated method stub
+		return super.getPredecessingEntities();
 	}
 
 	public DisplayIndependentDimension getSize() {
