@@ -457,7 +457,7 @@ public class TriangleSubgraphLayout extends FigureSubgraphLayout {
 			TreeNodeInfo parentNodeInfo = (TreeNodeInfo) dequeued[1];
 			TreeNodeInfo currentNodeInfo = createTreeNodeInfo(node);
 			parentNodeInfo.addChild(currentNodeInfo);
-			NodeLayout[] children = node.getSuccessingEntities();
+			NodeLayout[] children = node.getSuccessingNodes();
 			for (int i = 0; i < children.length; i++) {
 				if (!alreadyVisited.contains(children[i])) {
 					alreadyVisited.add(children[i]);

@@ -26,13 +26,13 @@ public class ZestRootLayer extends FreeformLayer {
 
 	public static final int CONNECTIONS_LAYER = 0;
 	
-	public static final int SUBGRAPHS_LAYER = 1;
+	public static final int SUBGRAPHS_LAYER = 4;
 
-	public static final int NODES_LAYER = 2;
+	public static final int NODES_LAYER = 1;
 	
-	public static final int CONNECTIONS_HIGHLIGHTED_LAYER = 3;
+	public static final int CONNECTIONS_HIGHLIGHTED_LAYER = 2;
 	
-	public static final int NODES_HIGHLIGHTED_LAYER = 4;
+	public static final int NODES_HIGHLIGHTED_LAYER = 3;
 	
 	public static final int NUMBER_OF_LAYERS = 5;
 	

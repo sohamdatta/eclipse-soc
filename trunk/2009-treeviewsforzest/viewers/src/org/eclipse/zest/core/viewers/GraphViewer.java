@@ -122,6 +122,7 @@ public class GraphViewer extends AbstractStructuredGraphViewer implements ISelec
 		graph.setDynamicLayout(false);
 		super.inputChanged(input, oldInput);
 		graph.setDynamicLayout(true);
+		graph.applyLayout();
 	}
 
 	/**

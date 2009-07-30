@@ -4,6 +4,7 @@
 package org.eclipse.zest.core.widgets;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -39,28 +40,16 @@ public class InternalLayoutContext implements LayoutContext {
 	private boolean backgorundLayoutEnabled = true;
 	private boolean externalLayoutInvocation = false;
 
-	private final LayoutFilter defaultFilter = new LayoutFilter() {
-		public boolean isObjectFiltered(GraphItem item) {
-			// filter out invisible elements
-			if (item instanceof GraphItem && ZestStyles.checkStyle(container.getGraph().getStyle(), ZestStyles.IGNORE_INVISIBLE_LAYOUT)
-					&& !((GraphItem) item).isVisible())
-				return true;
-			return false;
-		}
-	};
-
 	/**
 	 * @param graph
 	 *            the graph owning this context
 	 */
 	InternalLayoutContext(Graph graph) {
 		this.container = NodeContainerAdapter.get(graph);
-		addFilter(defaultFilter);
 	}
 
 	InternalLayoutContext(GraphContainer container) {
 		this.container = NodeContainerAdapter.get(container);
-		addFilter(defaultFilter);
 	}
 
 	public void addContextListener(ContextListener listener) {
@@ -143,13 +132,46 @@ public class InternalLayoutContext implements LayoutContext {
 	}
 
 	public EntityLayout[] getEntities() {
-		// TODO Auto-generated method stub
-		return getNodes();
+		HashSet addedSubgraphs = new HashSet();
+		ArrayList result = new ArrayList();
+		for (Iterator iterator = this.container.getNodes().iterator(); iterator.hasNext();) {
+			GraphNode node = (GraphNode) iterator.next();
+			if (!isLayoutItemFiltered(node)) {
+				InternalNodeLayout nodeLayout = node.getLayout();
+				if (!nodeLayout.isPruned()) {
+					result.add(nodeLayout);
+				} else {
+					SubgraphLayout subgraph = nodeLayout.getSubgraph();
+					if (!addedSubgraphs.contains(subgraph)) {
+						result.add(subgraph);
+						addedSubgraphs.add(subgraph);
+					}
+				}
+			}
+		}
+		return (EntityLayout[]) result.toArray(new EntityLayout[result.size()]);
 	}
 
 	public SubgraphLayout[] getSubgraphs() {
-		// TODO filter out subgraphs that have all elements filtered out
-		return (SubgraphLayout[]) subgraphs.toArray(new SubgraphLayout[subgraphs.size()]);
+		SubgraphLayout[] result = new SubgraphLayout[subgraphs.size()];
+		int subgraphCount = 0;
+		for (Iterator iterator = subgraphs.iterator(); iterator.hasNext();) {
+			SubgraphLayout subgraph = (SubgraphLayout) iterator.next();
+			NodeLayout[] nodes = subgraph.getNodes();
+			for (int i = 0; i < nodes.length; i++) {
+				if (!isLayoutItemFiltered(((InternalNodeLayout) nodes[i]).getNode())) {
+					result[subgraphCount++] = subgraph;
+					break;
+				}
+			}
+		}
+		if (subgraphCount == subgraphs.size()) {
+			return result;
+		} else {
+			SubgraphLayout[] result2 = new SubgraphLayout[subgraphCount];
+			System.arraycopy(result, 0, result2, 0, subgraphCount);
+			return result2;
+		}
 	}
 
 	public boolean isBoundsExpandable() {
@@ -192,8 +214,9 @@ public class InternalLayoutContext implements LayoutContext {
 		mainAlgorithm = algorithm;
 	}
 
-	public void setExpandCollapseManager(ExpandCollapseManager pruningManager) {
-		this.expandCollapseManager = pruningManager;
+	public void setExpandCollapseManager(ExpandCollapseManager expandCollapseManager) {
+		this.expandCollapseManager = expandCollapseManager;
+		expandCollapseManager.initExpansion(this);
 	}
 
 	public ConnectionLayout[] getConnections() {
@@ -213,16 +236,30 @@ public class InternalLayoutContext implements LayoutContext {
 	}
 
 	public ConnectionLayout[] getConnections(EntityLayout source, EntityLayout target) {
-		HashSet result = new HashSet();
-		// TODO add support for subgraphs
-		if (source instanceof NodeLayout && target instanceof NodeLayout) {
-			ConnectionLayout[] outgoingConnections = ((NodeLayout) source).getOutgoingConnections();
+		ArrayList result = new ArrayList();
+
+		ArrayList sourcesList = new ArrayList();
+		if (source instanceof NodeLayout)
+			sourcesList.add(source);
+		if (source instanceof SubgraphLayout)
+			sourcesList.addAll(Arrays.asList(((SubgraphLayout) source).getNodes()));
+
+		HashSet targets = new HashSet();
+		if (target instanceof NodeLayout)
+			targets.add(target);
+		if (target instanceof SubgraphLayout)
+			targets.addAll(Arrays.asList(((SubgraphLayout) target).getNodes()));
+
+		for (Iterator iterator = sourcesList.iterator(); iterator.hasNext();) {
+			NodeLayout source2 = (NodeLayout) iterator.next();
+			ConnectionLayout[] outgoingConnections = source2.getOutgoingConnections();
 			for (int i = 0; i < outgoingConnections.length; i++) {
 				ConnectionLayout connection = outgoingConnections[i];
-				if ((connection.getTarget() == target && connection.getSource() == source)
-						|| (connection.getTarget() == source && connection.getSource() == target))
+				if ((connection.getSource() == source2 && targets.contains(connection.getTarget()))
+						|| (connection.getTarget() == source2 && targets.contains(connection.getSource())))
 					result.add(connection);
 			}
+
 		}
 		return (ConnectionLayout[]) result.toArray(new ConnectionLayout[result.size()]);
 	}
