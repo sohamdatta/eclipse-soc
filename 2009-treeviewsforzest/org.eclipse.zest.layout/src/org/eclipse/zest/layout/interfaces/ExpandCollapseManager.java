@@ -9,6 +9,16 @@ package org.eclipse.zest.layout.interfaces;
 public interface ExpandCollapseManager {
 
 	/**
+	 * Initializes the expansion state of all nodes in given layout context. The
+	 * receiver can initialize its internal state related to the layout context
+	 * and add its listeners if necessary.
+	 * 
+	 * @param context
+	 *            the context to initialize
+	 */
+	public void initExpansion(LayoutContext context);
+
+	/**
 	 * Changes the expanded state of given node. It prunes/unprunes nodes and
 	 * hides/shows connections in the graph according to its policy. If
 	 * requested operation cannot be currently performed on the node, it does

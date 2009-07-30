@@ -19,6 +19,8 @@ import org.eclipse.zest.layout.interfaces.ConnectionLayout;
 import org.eclipse.zest.layout.interfaces.EntityLayout;
 import org.eclipse.zest.layout.interfaces.LayoutAlgorithm;
 import org.eclipse.zest.layout.interfaces.LayoutContext;
+import org.eclipse.zest.layout.interfaces.NodeLayout;
+import org.eclipse.zest.layout.interfaces.SubgraphLayout;
 
 /**
  * The SpringLayoutAlgorithm has its own data repository and relation
@@ -146,7 +148,7 @@ public class SpringLayoutAlgorithm implements LayoutAlgorithm {
 
 	private LayoutContext context;
 
-	public void applyLayout() {
+	public void applyLayout(boolean clean) {
 		initLayout();
 		while (performAnotherNonContinuousIteration()) {
 			computeOneIteration();
@@ -343,8 +345,8 @@ public class SpringLayoutAlgorithm implements LayoutAlgorithm {
 		ConnectionLayout[] connections = context.getConnections();
 		for (int i = 0; i < connections.length; i++) {
 			ConnectionLayout connection = connections[i];
-			Integer source = (Integer) entityToPosition.get(connection.getSource());
-			Integer target = (Integer) entityToPosition.get(connection.getTarget());
+			Integer source = (Integer) entityToPosition.get(getEntity(connection.getSource()));
+			Integer target = (Integer) entityToPosition.get(getEntity(connection.getTarget()));
 			if (source == null || target == null)
 				continue;
 			double weight = connection.getWeight();
@@ -360,6 +362,15 @@ public class SpringLayoutAlgorithm implements LayoutAlgorithm {
 
 		startTime = System.currentTimeMillis();
     }
+
+	private EntityLayout getEntity(NodeLayout node) {
+		if (!node.isPruned())
+			return node;
+		SubgraphLayout subgraph = node.getSubgraph();
+		if (subgraph.isGraphEntity())
+			return subgraph;
+		return null;
+	}
 
     private void loadLocations() {
 		if (locationsX == null || locationsX.length != entities.length) {

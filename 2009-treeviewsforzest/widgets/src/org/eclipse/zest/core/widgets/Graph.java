@@ -596,8 +596,14 @@ public class Graph extends FigureCanvas {
 				// There is a figure under this mouse
 				GraphItem itemUnderMouse = (GraphItem) figure2ItemMap.get(figureUnderMouse);
 				if (itemUnderMouse == fisheyedItem) {
-
-				} else if (itemUnderMouse != null && itemUnderMouse.getItemType() == GraphItem.NODE) {
+					return;
+				}
+				if (fisheyedItem != null) {
+					((GraphNode) fisheyedItem).fishEye(false, true);
+					fisheyedItem = null;
+					fisheyedFigure = null;
+				}
+				if (itemUnderMouse != null && itemUnderMouse.getItemType() == GraphItem.NODE) {
 					fisheyedItem = itemUnderMouse;
 					fisheyedFigure = ((GraphNode) itemUnderMouse).fishEye(true, true);
 					if (fisheyedFigure == null) {
@@ -606,10 +612,6 @@ public class Graph extends FigureCanvas {
 						// then remove the fisheyed item
 						fisheyedItem = null;
 					}
-				} else if (fisheyedItem != null) {
-					((GraphNode) fisheyedItem).fishEye(false, true);
-					fisheyedItem = null;
-					fisheyedFigure = null;
 				}
 			} else {
 				if (fisheyedItem != null) {

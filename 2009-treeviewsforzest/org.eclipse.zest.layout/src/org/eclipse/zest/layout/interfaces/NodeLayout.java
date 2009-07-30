@@ -62,4 +62,21 @@ public interface NodeLayout extends EntityLayout {
 	 */
 	public ConnectionLayout[] getOutgoingConnections();
 
+	/**
+	 * Sets the minimized state of this Node. Node that is minimized resizes its
+	 * figure to (0, 0). When it is unminimized, it resizes back to previous
+	 * dimension. The node's size property is not affected by minimized state,
+	 * so an it can be minimized even if it's not resizable.
+	 * 
+	 * @param minimized
+	 *            new minimized state
+	 */
+	public void setMinimized(boolean minimized);
+
+	/**
+	 * @see #setMinimized(boolean)
+	 * 
+	 * @return true if this entity is minimized
+	 */
+	public boolean isMinimized();
 }

@@ -85,12 +85,16 @@ public interface LayoutContext {
 	public boolean isPruningEnabled();
 
 	/**
+	 * Checks if this layout context allows layout algorithms to work
+	 * continuously in background and change the layout with time or in reaction
+	 * to some events. If background changes are not allowed, a layout algorithm
+	 * can make changes in layout context only when
+	 * {@link LayoutAlgorithm#applyLayout(boolean)} is called (otherwise a
+	 * runtime exception will be thrown).
 	 * 
-	 * @return true if this layout context allows layout algorithm to work
-	 *         continuously in background and change the layout with time or in
-	 *         reaction to some events.
+	 * @return true if background layout changes are enabled
 	 */
-	public boolean isContinuousLayoutEnabled();
+	public boolean isBackgroundLayoutEnabled();
 
 	/**
 	 * Sets the main layout algorithm for this context. Main algorithm will be
@@ -113,9 +117,9 @@ public interface LayoutContext {
 	 * used to handle expansion related methods called on the owner of this
 	 * context.
 	 * 
-	 * @param pruningManager
+	 * @param expandCollapseManager
 	 */
-	public void setExpandCollapseManager(ExpandCollapseManager pruningManager);
+	public void setExpandCollapseManager(ExpandCollapseManager expandCollapseManager);
 
 	/**
 	 * 

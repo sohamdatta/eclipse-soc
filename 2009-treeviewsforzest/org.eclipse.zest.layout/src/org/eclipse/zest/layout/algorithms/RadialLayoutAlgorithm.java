@@ -24,7 +24,7 @@ public class RadialLayoutAlgorithm implements LayoutAlgorithm {
 
 	private TreeLayoutAlgorithm treeLayout = new TreeLayoutAlgorithm();
 	
-	public void applyLayout() {
+	public void applyLayout(boolean clean) {
 		EntityLayout[] entities = context.getEntities();
 		treeLayout.internalApplyLayout(entities);
 		DisplayIndependentRectangle bounds = context.getBounds();

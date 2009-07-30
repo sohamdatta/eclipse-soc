@@ -10,11 +10,12 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.zest.core.widgets.DAGExpandCollapseManager;
 import org.eclipse.zest.core.widgets.Graph;
 import org.eclipse.zest.core.widgets.GraphConnection;
 import org.eclipse.zest.core.widgets.GraphNode;
-import org.eclipse.zest.core.widgets.LabelSubgraphLayout;
-import org.eclipse.zest.layout.algorithms.SpaceTreeLayoutAlgorithm;
+import org.eclipse.zest.core.widgets.ZestStyles;
+import org.eclipse.zest.layout.algorithms.TreeLayoutAlgorithm;
 
 public class SpaceTreeExample {
 
@@ -34,11 +35,15 @@ public class SpaceTreeExample {
 		shell.setSize(400, 400);
 
 		g = new Graph(shell, SWT.NONE);
+		g.setConnectionStyle(ZestStyles.CONNECTIONS_DIRECTED);
+		g.setNodeStyle(ZestStyles.NODES_FISHEYE);
 		
-		g.setLayoutAlgorithm(new SpaceTreeLayoutAlgorithm(), false);
-		g.setSubgraphFactory(LabelSubgraphLayout.FACTORY);
+		// g.setSubgraphFactory(LabelSubgraphLayout.FACTORY);
+		// g.setLayoutAlgorithm(new SpaceTreeLayoutAlgorithm(), false);
+		g.setExpandCollapseManager(new DAGExpandCollapseManager());
+		g.setLayoutAlgorithm(new TreeLayoutAlgorithm(), true);
 		
-		createTree(g, "!", 5, 5);
+		createTree(g, "----------------------", 5, 5);
 
 		hookMenu(g);
 
