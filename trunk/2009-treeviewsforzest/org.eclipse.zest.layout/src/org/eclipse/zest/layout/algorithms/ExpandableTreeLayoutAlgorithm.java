@@ -23,7 +23,6 @@ import org.eclipse.zest.layout.dataStructures.DisplayIndependentPoint;
 import org.eclipse.zest.layout.dataStructures.DisplayIndependentRectangle;
 import org.eclipse.zest.layout.interfaces.ConnectionLayout;
 import org.eclipse.zest.layout.interfaces.ContextListener;
-import org.eclipse.zest.layout.interfaces.EntityLayout;
 import org.eclipse.zest.layout.interfaces.ExpandCollapseManager;
 import org.eclipse.zest.layout.interfaces.GraphStructureListener;
 import org.eclipse.zest.layout.interfaces.LayoutAlgorithm;
@@ -92,8 +91,7 @@ public class ExpandableTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCol
 			children.add(child);
 			child.parent = this;
 
-			if (node == null || (expanded && !node.isPruned())) {
-				// (node == null) means this is superRoot
+			if (this == superRoot || (expanded && !node.isPruned())) {
 				// unprune and refresh expanded state
 				child.node.prune(null);
 				child.setExpanded(child.expanded);
@@ -189,18 +187,16 @@ public class ExpandableTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCol
 			if (parent != null)
 				parent.children.remove(this);
 			NodeLayout[] predecessingNodes = node.getPredecessingNodes();
-			ExpandableTreeNode bestParent;
-			if (predecessingNodes.length > 0) {
-				bestParent = (ExpandableTreeNode) layoutToTree.get(predecessingNodes[0]);
-				for (int i = 1; i < predecessingNodes.length; i++) {
-					ExpandableTreeNode potentialParent = (ExpandableTreeNode) layoutToTree.get(predecessingNodes[i]);
-					if (isBetterParent(bestParent, potentialParent))
-						bestParent = potentialParent;
-				}
-			} else
-				bestParent = superRoot;
+			parent = null;
+			for (int i = 1; i < predecessingNodes.length; i++) {
+				ExpandableTreeNode potentialParent = (ExpandableTreeNode) layoutToTree.get(predecessingNodes[i]);
+				if (!children.contains(potentialParent) && isBetterParent(parent, potentialParent))
+					parent = potentialParent;
+			}
+			if (parent == null)
+				parent = superRoot;
 
-			bestParent.addChild(this);
+			parent.addChild(this);
 		}
 
 		public void setSubgraph(SubgraphLayout subgraph) {
@@ -228,6 +224,12 @@ public class ExpandableTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCol
 					break;
 				}
 			}
+		}
+
+		public boolean isAncestorOf(ExpandableTreeNode descendant) {
+			while (descendant.depth > this.depth)
+				descendant = descendant.parent;
+			return descendant == this;
 		}
 
 		public String toString() {
@@ -281,12 +283,12 @@ public class ExpandableTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCol
 			ExpandableTreeNode target = (ExpandableTreeNode) layoutToTree.get(connection.getTarget());
 			if (source == target)
 				return false;
-			if (isBetterParent(target.parent, source)) {
+			if (isBetterParent(target, source)) {
 				target.parent.children.remove(target);
 				source.addChild(target);
 				superRoot.precomputeTree();
 			}
-			if (!connection.isDirected() && isBetterParent(source.parent, target)) {
+			if (!connection.isDirected() && isBetterParent(source, target)) {
 				source.parent.children.remove(source);
 				target.addChild(source);
 				superRoot.precomputeTree();
@@ -358,8 +360,11 @@ public class ExpandableTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCol
 	}
 
 	public void setDirection(int direction) {
-		if (direction == TOP_DOWN || direction == BOTTOM_UP || direction == LEFT_RIGHT || direction == RIGHT_LEFT)
+		if (direction == this.direction)
+			return;
+		if (direction == TOP_DOWN || direction == BOTTOM_UP || direction == LEFT_RIGHT || direction == RIGHT_LEFT) {
 			this.direction = direction;
+		}
 		else
 			throw new IllegalArgumentException("Invalid direction: " + direction);
 	}
@@ -382,7 +387,7 @@ public class ExpandableTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCol
 		resize = resizing;
 	}
 
-	public void applyLayout() {
+	public void applyLayout(boolean clean) {
 		internalApplyLayout();
 	}
 
@@ -401,6 +406,10 @@ public class ExpandableTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCol
 		superRoot = new ExpandableTreeNode(null);
 		createTrees(context.getNodes());
 		collapseAll();
+	}
+
+	public void initExpansion(LayoutContext context) {
+		// do nothing - initialization performed in #setLayoutContext()
 	}
 
 	public void setExpanded(LayoutContext context, NodeLayout node, boolean expanded) {
@@ -449,10 +458,12 @@ public class ExpandableTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCol
 		}
 	}
 
-	private static boolean isBetterParent(ExpandableTreeNode base, ExpandableTreeNode better) {
-		if (better.depth < base.depth && better.depth != -1)
+	private static boolean isBetterParent(ExpandableTreeNode node, ExpandableTreeNode potentialParent) {
+		if (node.parent == null && !node.isAncestorOf(potentialParent))
 			return true;
-		if (base.depth == -1 && better.depth >= 0)
+		if (potentialParent.depth <= node.depth && potentialParent.depth != -1)
+			return true;
+		if (node.parent.depth == -1 && potentialParent.depth >= 0 && !node.isAncestorOf(potentialParent))
 			return true;
 		return false;
 	}
@@ -461,13 +472,13 @@ public class ExpandableTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCol
 	 * Builds a tree structure using BFS method. Created trees are children of
 	 * {@link #superRoot}.
 	 * 
-	 * @param entities
+	 * @param nodes
 	 */
-	private void createTrees(NodeLayout[] entities) {
+	private void createTrees(NodeLayout[] nodes) {
 		HashSet alreadyVisited = new HashSet();
 		LinkedList nodesToAdd = new LinkedList();
-		for (int i = 0; i < entities.length; i++) {
-			EntityLayout root = findRoot(entities[i], alreadyVisited);
+		for (int i = 0; i < nodes.length; i++) {
+			NodeLayout root = findRoot(nodes[i], alreadyVisited);
 			if (root != null) {
 				alreadyVisited.add(root);
 				nodesToAdd.addLast(new Object[] { root, superRoot });
@@ -479,7 +490,7 @@ public class ExpandableTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCol
 			ExpandableTreeNode currentRoot = (ExpandableTreeNode) dequeued[1];
 
 			currentRoot.addChild(currentNode);
-			NodeLayout[] children = currentNode.node.getSuccessingEntities();
+			NodeLayout[] children = currentNode.node.getSuccessingNodes();
 			for (int i = 0; i < children.length; i++) {
 				if (!alreadyVisited.contains(children[i])) {
 					alreadyVisited.add(children[i]);
@@ -491,32 +502,32 @@ public class ExpandableTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCol
 	}
 
 	/**
-	 * Searches for a root of a tree containing given entity by continuously
-	 * grabbing a predecessor of current entity. If it reaches an entity that
-	 * exists in alreadyVisited set, it returns null. If it detects a cycle, it
-	 * returns the first found entity of that cycle. If it reaches an entity
-	 * that has no predecessors, it returns that entity.
+	 * Searches for a root of a tree containing given node by continuously
+	 * grabbing a predecessor of current node. If it reaches a node that exists
+	 * in alreadyVisited set, it returns null. If it detects a cycle, it returns
+	 * the first found node of that cycle. If it reaches a node that has no
+	 * predecessors, it returns that node.
 	 * 
-	 * @param entityLayout
-	 *            starting entity
+	 * @param nodeLayout
+	 *            starting node
 	 * @param alreadyVisited
-	 *            set of entities that can't lay on path to the root (if one
-	 *            does, method stops and returns null).
+	 *            set of nodes that can't lay on path to the root (if one does,
+	 *            method stops and returns null).
 	 * @return
 	 */
-	private EntityLayout findRoot(EntityLayout entityLayout, Set alreadyVisited) {
+	private NodeLayout findRoot(NodeLayout nodeLayout, Set alreadyVisited) {
 		HashSet alreadyVisitedRoot = new HashSet();
 		while (true) {
-			if (alreadyVisited.contains(entityLayout))
+			if (alreadyVisited.contains(nodeLayout))
 				return null;
-			if (alreadyVisitedRoot.contains(entityLayout))
-				return entityLayout;
-			alreadyVisitedRoot.add(entityLayout);
-			NodeLayout[] predecessingEntities = entityLayout.getPredecessingEntities();
-			if (predecessingEntities.length > 0) {
-				entityLayout = predecessingEntities[0];
+			if (alreadyVisitedRoot.contains(nodeLayout))
+				return nodeLayout;
+			alreadyVisitedRoot.add(nodeLayout);
+			NodeLayout[] predecessingNodes = nodeLayout.getPredecessingNodes();
+			if (predecessingNodes.length > 0) {
+				nodeLayout = predecessingNodes[0];
 			} else {
-				return entityLayout;
+				return nodeLayout;
 			}
 		}
 	}

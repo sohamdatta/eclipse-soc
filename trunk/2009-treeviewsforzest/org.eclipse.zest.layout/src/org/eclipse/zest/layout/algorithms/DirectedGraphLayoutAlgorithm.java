@@ -14,6 +14,8 @@ import org.eclipse.zest.layout.interfaces.ConnectionLayout;
 import org.eclipse.zest.layout.interfaces.EntityLayout;
 import org.eclipse.zest.layout.interfaces.LayoutAlgorithm;
 import org.eclipse.zest.layout.interfaces.LayoutContext;
+import org.eclipse.zest.layout.interfaces.NodeLayout;
+import org.eclipse.zest.layout.interfaces.SubgraphLayout;
 
 public class DirectedGraphLayoutAlgorithm implements LayoutAlgorithm {
 	
@@ -69,7 +71,7 @@ public class DirectedGraphLayoutAlgorithm implements LayoutAlgorithm {
 			this.orientation = orientation;
 	}
 
-	public void applyLayout() {
+	public void applyLayout(boolean clean) {
 		HashMap mapping = new HashMap();
 		DirectedGraph graph = new DirectedGraph();
 		EntityLayout[] entities = context.getEntities();
@@ -81,10 +83,12 @@ public class DirectedGraphLayoutAlgorithm implements LayoutAlgorithm {
 		}
 		ConnectionLayout[] connections = context.getConnections();
 		for (int i = 0; i < connections.length; i++) {
-			Node source = (Node) mapping.get(connections[i].getSource());
-			Node dest = (Node) mapping.get(connections[i].getTarget());
-			Edge edge = new Edge(connections[i], source, dest);
-			graph.edges.add(edge);
+			Node source = (Node) mapping.get(getEntity(connections[i].getSource()));
+			Node dest = (Node) mapping.get(getEntity(connections[i].getTarget()));
+			if (source != null && dest != null) {
+				Edge edge = new Edge(connections[i], source, dest);
+				graph.edges.add(edge);
+			}
 		}
 		DirectedGraphLayout directedGraphLayout = new ExtendedDirectedGraphLayout();
 		directedGraphLayout.visit(graph);
@@ -98,6 +102,15 @@ public class DirectedGraphLayoutAlgorithm implements LayoutAlgorithm {
 				entity.setLocation(node.y, node.x);
 			}
 		}
+	}
+
+	private EntityLayout getEntity(NodeLayout node) {
+		if (!node.isPruned())
+			return node;
+		SubgraphLayout subgraph = node.getSubgraph();
+		if (subgraph.isGraphEntity())
+			return subgraph;
+		return null;
 	}
 
 	public void setLayoutContext(LayoutContext context) {

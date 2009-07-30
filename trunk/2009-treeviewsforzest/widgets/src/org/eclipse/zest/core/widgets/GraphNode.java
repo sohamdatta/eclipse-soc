@@ -421,8 +421,11 @@ public class GraphNode extends GraphItem {
 
 		if (isFisheyeEnabled) {
 			Rectangle fishEyeBounds = calculateFishEyeBounds();
-			if (fishEyeBounds != null)
+			if (fishEyeBounds != null) {
+				fishEyeFigure.getParent().translateToRelative(fishEyeBounds);
+				fishEyeFigure.getParent().translateFromParent(fishEyeBounds);
 				fishEyeFigure.getParent().setConstraint(fishEyeFigure, fishEyeBounds);
+			}
 		}
 	}
 
@@ -582,8 +585,8 @@ public class GraphNode extends GraphItem {
 
 		} else {
 			// Remove the fisheye and dispose the font
-			this.getGraphModel().removeFishEye(fishEyeFigure, nodeFigure, animate);
 			isFisheyeEnabled = false;
+			this.getGraphModel().removeFishEye(fishEyeFigure, nodeFigure, animate);
 			return null;
 		}
 	}
@@ -635,14 +638,16 @@ public class GraphNode extends GraphItem {
 		}
 		figure.setToolTip(toolTip);
 
-		refreshBounds();
-
 		if (isFisheyeEnabled) {
 			IFigure newFisheyeFigure = createFishEyeFigure();
 			if (graph.replaceFishFigure(this.fishEyeFigure, newFisheyeFigure)) {
 				this.fishEyeFigure = newFisheyeFigure;
-			}
+			} else
+				System.out.println("Hmmm...");
+			if (fishEyeFigure.getParent() == null)
+				System.out.println("wtf?");
 		}
+		refreshBounds();
 	}
 
 	protected IFigure createFigureForModel() {

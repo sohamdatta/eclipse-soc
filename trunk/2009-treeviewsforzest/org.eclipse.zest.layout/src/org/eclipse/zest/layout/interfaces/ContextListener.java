@@ -7,7 +7,7 @@ public interface ContextListener {
 			return false;
 		}
 
-		public void continuousLayoutChanged(LayoutContext context) {
+		public void backgroundEnableChanged(LayoutContext context) {
 			// do nothing
 		}
 
@@ -50,13 +50,14 @@ public interface ContextListener {
 	public boolean pruningEnablementChanged(LayoutContext context);
 
 	/**
-	 * This method is called whenever continuous layout is enabled or disabled
+	 * This method is called whenever background layout is enabled or disabled
 	 * in a layout context. If the receiving listener is related to a layout
-	 * algorithm that supports continuous layout, it should react accordingly by
-	 * starting or stopping its thread.
+	 * algorithm that performs layout in reaction to events, it should turn
+	 * automatic flush of changes on or off. Also, eventual additional threads
+	 * responsible for layout should be stopped or started accordingly.
 	 * 
 	 * @param context
 	 *            the layout context that fired the event
 	 */
-	public void continuousLayoutChanged(LayoutContext context);
+	public void backgroundEnableChanged(LayoutContext context);
 }

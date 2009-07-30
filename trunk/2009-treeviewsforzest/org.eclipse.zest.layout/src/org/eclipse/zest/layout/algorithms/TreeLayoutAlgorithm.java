@@ -138,7 +138,7 @@ public class TreeLayoutAlgorithm implements LayoutAlgorithm {
 		this.context = context;
 	}
 
-	public void applyLayout() {
+	public void applyLayout(boolean clean) {
 		EntityLayout[] entities = context.getEntities();
 
 		internalApplyLayout(entities);

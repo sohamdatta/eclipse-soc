@@ -22,10 +22,13 @@ public interface LayoutAlgorithm {
 
 	/**
 	 * Makes this algorithm perform layout computation and apply it to its
-	 * context. The receiver should assume that the layout context has changed
-	 * significantly and recompute the layout even if it keeps track of changes
-	 * with listeners.
+	 * context.
+	 * 
+	 * @param clean
+	 *            if true the receiver should assume that the layout context has
+	 *            changed significantly and recompute the layout even if it
+	 *            keeps track of changes with listeners.
 	 */
-	public void applyLayout();
+	public void applyLayout(boolean clean);
 
 }

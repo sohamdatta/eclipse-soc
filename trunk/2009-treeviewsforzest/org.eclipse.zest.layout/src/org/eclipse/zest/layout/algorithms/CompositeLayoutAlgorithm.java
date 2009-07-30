@@ -11,10 +11,11 @@ public class CompositeLayoutAlgorithm implements LayoutAlgorithm {
 		this.algorithms = algorithms;
 	}
 
-	public void applyLayout() {
-		for (int i = 0; i < algorithms.length; i++) {
-			algorithms[i].applyLayout();
-		}
+	public void applyLayout(boolean clean) {
+		if (clean)
+			for (int i = 0; i < algorithms.length; i++) {
+				algorithms[i].applyLayout(clean);
+			}
 	}
 
 	public void setLayoutContext(LayoutContext context) {

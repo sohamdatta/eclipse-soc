@@ -8,5 +8,6 @@ Require-Bundle: org.eclipse.zest.layout,
  org.eclipse.swt,
  org.eclipse.draw2d,
  org.eclipse.jface,
+ org.eclipse.equinox.common,
  widgets,
  viewers
