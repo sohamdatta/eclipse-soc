@@ -154,9 +154,10 @@ public class Venn extends BaseRenderer {
 		poly1.setBackground(ColorDefinitionImpl.CYAN());
 		
 		
+		
 		allLocs = new ArrayList<Location>();
 
-		computePolygonLocationsC2C3(xm2,ym2,r2,xm3,ym3,r3,allLocs);
+		computePolygonLocationsC2C3(xm2, ym2, r2, xm3, ym3, r3, allLocs);
 
 		Location[] allPoints2 = (Location[]) allLocs.toArray(new Location[] {});
 		PolygonRenderEvent poly2 = (PolygonRenderEvent) poly1.copy();
@@ -164,6 +165,10 @@ public class Venn extends BaseRenderer {
 		poly2.setPoints(allPoints2);
 		poly2.setBackground(ColorDefinitionImpl.ORANGE());
 
+		
+		
+		
+		
 		allLocs = new ArrayList<Location>();
 
 		computePolygonLocationsC1C3(xm1,ym1,r1,xm3,ym3,r3,allLocs);
@@ -179,16 +184,16 @@ public class Venn extends BaseRenderer {
 				.getEventObject(WrappedStructureSource.createSeries(vennseries),
 						RectangleRenderEvent.class));
 		
-		Location[] c1c2 = computeCircleIntersections(xm1, xm2, ym1, ym2, r1, r2);
+		// CIRCLE C1 - C2
+		Location[] c1c2 = computeCircleIntersectionsC1C2(xm1, xm2, ym1, ym2, r1, r2);
 		lre1.setBounds(BoundsImpl.create(c1c2[0].getX(), c1c2[0].getY(), 10, 10));
 		lre1.setBackground(ColorDefinitionImpl.BLACK());
 		
 		RectangleRenderEvent lre2 = (RectangleRenderEvent) lre1.copy();
 		lre2.setBounds(BoundsImpl.create(c1c2[1].getX(), c1c2[1].getY(), 10, 10));
+
 		
-		
-		
-		Location[] c1c3 = computeCircleIntersections(xm1, xm3, ym1, ym3, r1, r3);
+		Location[] c1c3 = computeCircleIntersectionsC1C3(xm1, xm3, ym1, ym3, r1, r3);
 		RectangleRenderEvent lre3 = (RectangleRenderEvent) lre1.copy();
 		lre3.setBounds(BoundsImpl.create(c1c3[0].getX(), c1c3[0].getY(), 10, 10));
 		lre3.setBackground(ColorDefinitionImpl.BLACK());
@@ -196,50 +201,33 @@ public class Venn extends BaseRenderer {
 		RectangleRenderEvent lre4 = (RectangleRenderEvent) lre1.copy();
 		lre4.setBounds(BoundsImpl.create(c1c3[1].getX(), c1c3[1].getY(), 10, 10));
 		
+		Location[] c2c3 = computeCircleIntersectionsC2C3(xm2, xm3, ym2, ym3, r2, r3);
+		RectangleRenderEvent lre5 = (RectangleRenderEvent) lre1.copy();
+		lre5.setBounds(BoundsImpl.create(c2c3[0].getX(), c2c3[0].getY(), 10, 10));
+		lre5.setBackground(ColorDefinitionImpl.BLACK());
+		
+		RectangleRenderEvent lre6 = (RectangleRenderEvent) lre1.copy();
+		lre6.setBounds(BoundsImpl.create(c2c3[1].getX(), c2c3[1].getY(), 10, 10));
+		
 		System.out.println("c1c2");
 		System.out.println("0x="+c1c2[0].getX());
 		System.out.println("0y="+c1c2[0].getY());
 		System.out.println("1x="+c1c2[1].getX());
 		System.out.println("1y="+c1c2[1].getY());
 		
-//		LineRenderEvent lre2 = (LineRenderEvent) lre1.copy();
-//		Location[] c1c3 = computeCircleIntersections(xm1, xm3, ym1, ym3, r1, r3);
-//		lre2.setStart(c1c3[0]);
-//		lre2.setEnd(c1c3[1]);
-//		System.out.println("c1c3");
-//		System.out.println("0x="+c1c3[0].getX());
-//		System.out.println("0y="+c1c3[0].getY());
-//		System.out.println("1x="+c1c3[1].getX());
-//		System.out.println("1y="+c1c3[1].getY());
-		
-//		LineRenderEvent lre3 = (LineRenderEvent) lre1.copy();
-//		Location[] c2c3 = computeCircleIntersections(xm2, xm3, ym2, ym3, r2, r3);
-//		lre3.setStart(c2c3[0]);
-//		lre3.setEnd(c2c3[1]);
-//		System.out.println("c2c3");
-//		System.out.println("0x="+c2c3[0].getX());
-//		System.out.println("0y="+c2c3[0].getY());
-//		System.out.println("1x="+c2c3[1].getX());
-//		System.out.println("1y="+c2c3[1].getY());
-		// for (int i = 0; i < angleExtent1 + 1; i++) {
-		//
-		// double u;
-		// double v;
-		//
-		// u = xm1 + Math.cos(Math.toRadians(startAngle1 + i)) * r1;
-		// v = ym1 - Math.sin(Math.toRadians(startAngle1 + i)) * r1;
-		//
-		// Location loc = goFactory.createLocation(u, v);
-		// allLocs.add(loc);
-		// }
+
 
 		idr.drawArc(circle1);
 		idr.drawArc(circle2);
 		idr.drawArc(circle3);
+		idr.fillPolygon(poly1);
+		idr.fillPolygon(poly2);
 		idr.fillRectangle(lre1);
 		idr.fillRectangle(lre2);
 		idr.fillRectangle(lre3);
 		idr.fillRectangle(lre4);
+		idr.fillRectangle(lre5);
+		idr.fillRectangle(lre6);
 		/*
 		 * double[] m1 = new double[] { 1, 3, 5 }; double[] m2 = new double[] {
 		 * 1, 4, 5 };
@@ -354,6 +342,7 @@ public class Venn extends BaseRenderer {
 		 */
 	}
 
+
 	private void computePolygonLocationsC1C3(double xm1, double ym1, double r1,
 			double xm3, double ym3, double r3, ArrayList<Location> allLocs) {
 		// TODO Auto-generated method stub
@@ -363,25 +352,24 @@ public class Venn extends BaseRenderer {
 	private void computePolygonLocationsC2C3(double xm2, double ym2, double r2,
 			double xm3, double ym3, double r3, ArrayList<Location> allLocs) {
 
-		Location[] intersectionC2C3 = computeCircleIntersections(xm2, xm3, ym2,
-				ym3, r2, r3);
+		Location[] intersectionC2C3 = computeCircleIntersectionsC2C3(xm2, xm3, ym2, ym3, r2, r3);
 		System.out.println("IntersectionC2C3");
 		for (int i = 0; i < intersectionC2C3.length; i++) {
 			System.out.println(i + "x=" + intersectionC2C3[i].getX());
 			System.out.println(i + "y=" + intersectionC2C3[i].getY());
 		}
 
-		double y1 = ym3 - intersectionC2C3[0].getY();
-		double startAngle1 = Math.toDegrees(Math.asin(y1 / -r3));
-		double dY = ym3 - intersectionC2C3[1].getY();
+		double y1 = ym3 - intersectionC2C3[1].getY();
+		double startAngle1 = Math.toDegrees(Math.asin(y1 / r3));
+		double dY = ym3 - intersectionC2C3[0].getY();
 		double endAngle1 = Math.toDegrees(Math.asin(dY / r3));
 		double angleExtent1 = startAngle1 - endAngle1;
 		System.out.println("startAngle:" + startAngle1);
 		System.out.println("angleExtent:" + angleExtent1);
 
-		double y2 = ym2 - intersectionC2C3[1].getY();
+		double y2 = ym2 - intersectionC2C3[0].getY();
 		double startAngle2 = Math.toDegrees(Math.asin(y2 / r2));
-		double dY2 = ym2 - intersectionC2C3[0].getY();
+		double dY2 = ym2 - intersectionC2C3[1].getY();
 		double endAngle2 = Math.toDegrees(Math.asin(dY2 / -r2));
 		double angleExtent2 = startAngle2 - endAngle2;
 
@@ -394,7 +382,7 @@ public class Venn extends BaseRenderer {
 
 	private void computePolygonLocationsC1C2(double xm1, double ym1, double r1,
 			double xm2, double ym2, double r2, ArrayList<Location> allLocs) {
-		Location[] intersectionC1C2 = computeCircleIntersections(xm1, xm2, ym1,
+		Location[] intersectionC1C2 = computeCircleIntersectionsC1C2(xm1, xm2, ym1,
 				ym2, r1, r2);
 		double y1 = ym1 - intersectionC1C2[0].getY();
 		double startAngle1 = Math.toDegrees(Math.asin(y1 / r1));
@@ -431,7 +419,7 @@ public class Venn extends BaseRenderer {
 		}
 	}
 
-	private Location[] computeCircleIntersections(double xm1, double xm2,
+	private Location[] computeCircleIntersectionsC1C2(double xm1, double xm2,
 			double ym1, double ym2, double r1, double r2) {
 
 		double a = (-2 * xm1 + 2 * xm2);
@@ -439,6 +427,32 @@ public class Venn extends BaseRenderer {
 				+ Math.pow(r1, 2) + Math.pow(xm2, 2) - Math.pow(xm1, 2))
 				/ a;
 		double c = (-2 * ym2 + 2 * ym1) / a;
+
+		double p = (2 * (c * b - c * xm1 - ym1)) / (Math.pow(c, 2) + 1);
+		double q = (Math.pow(b - xm1, 2) + Math.pow(ym1, 2) - Math.pow(r1, 2))
+				/ (Math.pow(c, 2) + 1);
+
+		double y1 = -p / 2 + Math.sqrt(Math.pow(p / 2, 2) - q);
+		double y2 = -p / 2 - Math.sqrt(Math.pow(p / 2, 2) - q);
+
+		double x1 = xm1 + Math.sqrt(Math.pow(r1, 2) - Math.pow((y1 - ym1), 2));
+		double x2 = xm1 + Math.sqrt(Math.pow(r1, 2) - Math.pow((y2 - ym1), 2));
+
+		if (y1 == y2 && x1 == x2) {
+			return new Location[] { goFactory.createLocation(x1, y1) };
+		} else {
+			return new Location[] { goFactory.createLocation(x1, y1),
+					goFactory.createLocation(x2, y2) };
+		}
+	}
+	
+	private Location[] computeCircleIntersectionsC1C3(double xm1, double xm3,
+			double ym1, double ym3, double r1, double r3) {
+		double a = (-2 * xm1 + 2 * xm3);
+		double b = (Math.pow(ym3, 2) - Math.pow(ym1, 2) - Math.pow(r3, 2)
+				+ Math.pow(r1, 2) + Math.pow(xm3, 2) - Math.pow(xm1, 2))
+				/ a;
+		double c = (-2 * ym3 + 2 * ym1) / a;
 
 		double p = (2 * (c * b - c * xm1 - ym1)) / (Math.pow(c, 2) + 1);
 		double q = (Math.pow(b - xm1, 2) + Math.pow(ym1, 2) - Math.pow(r1, 2))
@@ -457,4 +471,31 @@ public class Venn extends BaseRenderer {
 					goFactory.createLocation(x2, y2) };
 		}
 	}
+	
+	private Location[] computeCircleIntersectionsC2C3(double xm2, double xm3,
+			double ym2, double ym3, double r1, double r3) {
+		double a = (-2 * xm2 + 2 * xm3);
+		double b = (Math.pow(ym3, 2) - Math.pow(ym2, 2) - Math.pow(r1, 2)
+				+ Math.pow(r1, 2) + Math.pow(xm3, 2) - Math.pow(xm2, 2))
+				/ a;
+		double c = (-2 * ym3 + 2 * ym2) / a;
+
+		double p = (2 * (c * b - c * xm2 - ym2)) / (Math.pow(c, 2) + 1);
+		double q = (Math.pow(b - xm2, 2) + Math.pow(ym2, 2) - Math.pow(r1, 2))
+				/ (Math.pow(c, 2) + 1);
+
+		double y1 = -p / 2 + Math.sqrt(Math.pow(p / 2, 2) - q);
+		double y2 = -p / 2 - Math.sqrt(Math.pow(p / 2, 2) - q);
+
+		double x1 = xm2 - Math.sqrt(Math.pow(r1, 2) - Math.pow((y1 - ym2), 2));
+		double x2 = xm2 + Math.sqrt(Math.pow(r1, 2) - Math.pow((y2 - ym2), 2));
+
+		if (y1 == y2 && x1 == x2) {
+			return new Location[] { goFactory.createLocation(x1, y1) };
+		} else {
+			return new Location[] { goFactory.createLocation(x1, y1),
+					goFactory.createLocation(x2, y2) };
+		}
+	}
+
 }
