@@ -18,6 +18,7 @@ import org.eclipse.birt.chart.model.component.impl.SeriesImpl;
 import org.eclipse.birt.chart.model.data.NumberDataSet;
 import org.eclipse.birt.chart.model.data.SeriesDefinition;
 import org.eclipse.birt.chart.model.data.TextDataSet;
+import org.eclipse.birt.chart.model.data.impl.DataSetImpl;
 import org.eclipse.birt.chart.model.data.impl.NumberDataSetImpl;
 import org.eclipse.birt.chart.model.data.impl.SeriesDefinitionImpl;
 import org.eclipse.birt.chart.model.data.impl.TextDataSetImpl;
@@ -31,6 +32,8 @@ import org.eclipse.birt.chart.model.type.impl.BarSeriesImpl;
 import org.eclipse.birt.chart.model.type.impl.PieSeriesImpl;
 import org.eclipse.birt.chart.model.newtype.DonutSeries;
 import org.eclipse.birt.chart.model.newtype.VennSeries;
+import org.eclipse.birt.chart.model.newtype.data.VennDataSet;
+import org.eclipse.birt.chart.model.newtype.data.VennDataSetImpl;
 import org.eclipse.birt.chart.model.newtype.impl.DonutSeriesImpl;
 import org.eclipse.birt.chart.model.newtype.impl.VennSeriesImpl;
 import org.eclipse.swt.SWT;
@@ -83,7 +86,7 @@ public class NewChartsView extends ViewPart {
     ChartWithoutAxes chart = ChartWithoutAxesImpl.create();
     chart.setDimension( ChartDimension.TWO_DIMENSIONAL_LITERAL );
     
-    chart.getTitle().getLabel().getCaption().setValue( "First venn diagram try" );
+    chart.getTitle().getLabel().getCaption().setValue( "First venn diagram" );
     adjustFont( chart.getTitle().getLabel().getCaption().getFont() );
     
     Legend legend = chart.getLegend();
@@ -94,14 +97,27 @@ public class NewChartsView extends ViewPart {
     TextDataSet categoryValues = TextDataSetImpl.create( new String[]{
       "amount1", "amount2"} );//$NON-NLS-1$ //$NON-NLS-2$
     
+    
+    
     NumberDataSet seriesOneValues = NumberDataSetImpl.create( new double[]{1,3,5} );
     NumberDataSet seriesTwoValues = NumberDataSetImpl.create( new double[]{2,3,7} );
     
+    VennDataSet allDataSets = VennDataSetImpl.create(seriesOneValues);
+    allDataSets.addDataSet( seriesTwoValues );
     
     // Base Series
     SeriesDefinition baseSeriesDefinition = SeriesDefinitionImpl.create();
     chart.getSeriesDefinitions().add( baseSeriesDefinition );
     
+    final Fill[] fiaBase = {
+      ColorDefinitionImpl.BLUE(),
+      ColorDefinitionImpl.ORANGE()
+    };
+    baseSeriesDefinition.getSeriesPalette().getEntries().clear();
+    for( int i = 0; i < fiaBase.length; i++ ) {
+      baseSeriesDefinition.getSeriesPalette().getEntries().add( fiaBase[ i ] );
+    }
+
     Series seBase = SeriesImpl.create();
     seBase.setDataSet( categoryValues );
     baseSeriesDefinition.getSeries().add( seBase );
@@ -111,13 +127,19 @@ public class NewChartsView extends ViewPart {
     baseSeriesDefinition.getSeriesDefinitions().add( baseSeriesDefinition1 );
     
     VennSeries seVenn1 = ( VennSeries )VennSeriesImpl.create();
-    seVenn1.setDataSet( seriesOneValues );
+
     
-    VennSeries seVenn2 = (VennSeries) VennSeriesImpl.create( );
-    seVenn2.setDataSet( seriesTwoValues );
+//    seVenn1.setDataSet( seriesOneValues );
+    seVenn1.setDataSet(seriesOneValues );
+//    seVenn1.setDataSet( "dataset2", seriesTwoValues );
+    
+    
     
     baseSeriesDefinition1.getSeries().add( seVenn1 );
-    baseSeriesDefinition1.getSeries().add( seVenn2 );
+//    VennSeries seVenn2 = (VennSeries) VennSeriesImpl.create( );
+//    seVenn2.setDataSet( seriesTwoValues );
+//    
+//    baseSeriesDefinition1.getSeries().add( seVenn2 );
     return chart;
   }
 
