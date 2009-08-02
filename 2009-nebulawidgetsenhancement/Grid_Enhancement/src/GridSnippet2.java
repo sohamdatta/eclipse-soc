@@ -3,11 +3,18 @@
 
 import org.eclipse.nebula.widgets.grid.Grid;
 import org.eclipse.nebula.widgets.grid.GridColumn;
+import org.eclipse.nebula.widgets.grid.GridEditor;
 import org.eclipse.nebula.widgets.grid.GridItem;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.FillLayout;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.swt.widgets.Text;
 
 /*
  * Create a grid with an item that spans columns.
@@ -22,9 +29,11 @@ public static void main (String [] args) {
     Shell shell = new Shell (display);
     shell.setLayout(new FillLayout());
 
-    Grid grid = new Grid(shell,SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL);
+    final Grid grid = new Grid(shell,SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL);
     grid.setHeaderVisible(true);
-    grid.setCellSelectionEnabled(true);
+    //Note: if the grid(or a cell) has set cell selection enabled,
+    //the editor of its corresponding cell will not work.
+    //grid.setCellSelectionEnabled(true);
     grid.setRowHeaderVisible(true);
     GridColumn column = new GridColumn(grid,SWT.NONE);
     column.setText("Column 1");
@@ -63,6 +72,39 @@ public static void main (String [] args) {
     
     shell.setSize(200,200);
     shell.open ();
+    
+    final int COLUMN = 1;
+    final GridEditor editor = new GridEditor(grid);
+    editor.grabHorizontal = true;
+
+    grid.addSelectionListener(new SelectionAdapter() {
+
+        @Override
+        public void widgetSelected(SelectionEvent e) {
+        	System.out.println(e);
+            Control oldEditor = editor.getEditor();
+            if (oldEditor != null)
+                oldEditor.dispose();
+
+            GridItem item = (GridItem) e.item;
+            if (item == null)
+                return;
+
+            Text newEditor = new Text(grid, SWT.None);
+            newEditor.setText(item.getText(COLUMN));
+            newEditor.addModifyListener(new ModifyListener() {
+                public void modifyText(ModifyEvent e) {
+                    Text text = (Text) editor.getEditor();
+                    editor.getItem().setText(COLUMN, text.getText());
+                }
+            });
+            newEditor.selectAll();
+            newEditor.setFocus();
+            editor.setEditor(newEditor,item,COLUMN);
+
+        }
+    });
+
     while (!shell.isDisposed()) {
         if (!display.readAndDispatch ()) display.sleep ();
     }
