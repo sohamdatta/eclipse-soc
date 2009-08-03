@@ -67,7 +67,7 @@ public class Graph extends FigureCanvas {
 	private List nodes;
 	protected List connections;
 	private List selectedItems = null;
-	IFigure fisheyedFigure = null;
+	private ArrayList fisheyeListeners = new ArrayList();
 	private List selectionListeners = null;
 
 	/** This maps all visible nodes to their model element. */
@@ -601,11 +601,10 @@ public class Graph extends FigureCanvas {
 				if (fisheyedItem != null) {
 					((GraphNode) fisheyedItem).fishEye(false, true);
 					fisheyedItem = null;
-					fisheyedFigure = null;
 				}
 				if (itemUnderMouse != null && itemUnderMouse.getItemType() == GraphItem.NODE) {
 					fisheyedItem = itemUnderMouse;
-					fisheyedFigure = ((GraphNode) itemUnderMouse).fishEye(true, true);
+					IFigure fisheyedFigure = ((GraphNode) itemUnderMouse).fishEye(true, true);
 					if (fisheyedFigure == null) {
 						// If there is no fisheye figure (this means that the
 						// node does not support a fish eye)
@@ -617,7 +616,6 @@ public class Graph extends FigureCanvas {
 				if (fisheyedItem != null) {
 					((GraphNode) fisheyedItem).fishEye(false, true);
 					fisheyedItem = null;
-					fisheyedFigure = null;
 				}
 			}
 		}
@@ -912,12 +910,16 @@ public class Graph extends FigureCanvas {
 
 		fishEyeLayer.setConstraint(fishEyeFigure, bounds);
 
+		for (Iterator iterator = fisheyeListeners.iterator(); iterator.hasNext();) {
+			FisheyeListener listener = (FisheyeListener) iterator.next();
+			listener.fisheyeRemoved(this, regularFigure, fishEyeFigure);
+		}
+
 		if (animate) {
 			Animation.run(FISHEYE_ANIMATION_TIME * 2);
 		}
 		this.getRootLayer().getUpdateManager().performUpdate();
 		fishEyeLayer.removeAll();
-		this.fisheyedFigure = null;
 
 	}
 
@@ -933,7 +935,12 @@ public class Graph extends FigureCanvas {
 			newFigure.setBounds(bounds);
 			this.fishEyeLayer.remove(oldFigure);
 			this.fishEyeLayer.add(newFigure);
-			this.fisheyedFigure = newFigure;
+
+			for (Iterator iterator = fisheyeListeners.iterator(); iterator.hasNext();) {
+				FisheyeListener listener = (FisheyeListener) iterator.next();
+				listener.fisheyeReplaced(this, oldFigure, newFigure);
+			}
+
 			return true;
 		}
 		return false;
@@ -954,7 +961,7 @@ public class Graph extends FigureCanvas {
 	void fishEye(IFigure startFigure, IFigure endFigure, Rectangle newBounds, boolean animate) {
 
 		fishEyeLayer.removeAll();
-		fisheyedFigure = null;
+
 		if (animate) {
 			Animation.markBegin();
 		}
@@ -976,10 +983,30 @@ public class Graph extends FigureCanvas {
 		fishEyeLayer.add(endFigure);
 		fishEyeLayer.setConstraint(endFigure, newBounds);
 
+		for (Iterator iterator = fisheyeListeners.iterator(); iterator.hasNext();) {
+			FisheyeListener listener = (FisheyeListener) iterator.next();
+			listener.fisheyeAdded(this, startFigure, endFigure);
+		}
+
 		if (animate) {
 			Animation.run(FISHEYE_ANIMATION_TIME);
 		}
 		this.getRootLayer().getUpdateManager().performUpdate();
+	}
+
+	/**
+	 * Adds a listener that will be notified when fisheyed figures change in
+	 * this graph.
+	 * 
+	 * @param listener
+	 *            listener to add
+	 */
+	public void addFisheyeListener(FisheyeListener listener) {
+		fisheyeListeners.add(listener);
+	}
+
+	public void removeFisheyeListener(FisheyeListener listener) {
+		fisheyeListeners.remove(listener);
 	}
 
 	public int getItemType() {
