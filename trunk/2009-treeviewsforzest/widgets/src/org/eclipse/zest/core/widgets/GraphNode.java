@@ -584,7 +584,6 @@ public class GraphNode extends GraphItem {
 			return fishEyeFigure;
 
 		} else {
-			// Remove the fisheye and dispose the font
 			isFisheyeEnabled = false;
 			this.getGraphModel().removeFishEye(fishEyeFigure, nodeFigure, animate);
 			return null;
@@ -642,10 +641,7 @@ public class GraphNode extends GraphItem {
 			IFigure newFisheyeFigure = createFishEyeFigure();
 			if (graph.replaceFishFigure(this.fishEyeFigure, newFisheyeFigure)) {
 				this.fishEyeFigure = newFisheyeFigure;
-			} else
-				System.out.println("Hmmm...");
-			if (fishEyeFigure.getParent() == null)
-				System.out.println("wtf?");
+			}
 		}
 		refreshBounds();
 	}

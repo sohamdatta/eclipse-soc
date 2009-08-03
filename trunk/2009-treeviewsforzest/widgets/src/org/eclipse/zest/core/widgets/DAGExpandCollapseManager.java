@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 
-import org.eclipse.draw2d.Animation;
+import org.eclipse.draw2d.AncestorListener;
 import org.eclipse.draw2d.ColorConstants;
 import org.eclipse.draw2d.FigureListener;
 import org.eclipse.draw2d.IFigure;
@@ -15,7 +15,7 @@ import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.zest.core.widgets.internal.GraphLabel;
-import org.eclipse.zest.layout.dataStructures.DisplayIndependentPoint;
+import org.eclipse.zest.core.widgets.internal.ZestRootLayer;
 import org.eclipse.zest.layout.interfaces.ConnectionLayout;
 import org.eclipse.zest.layout.interfaces.ContextListener;
 import org.eclipse.zest.layout.interfaces.ExpandCollapseManager;
@@ -36,24 +36,48 @@ import org.eclipse.zest.layout.interfaces.NodeLayout;
  * expanded, all its successors are unpruned and connections pointing to them
  * are shown.
  * </p>
- * <p>
- * <b>NOTE:</b> This manager registers a {@link GraphStructureListener} in its
- * layout context and may intercept some events if layout algorithm shouldn't
- * receive them (for example when a connection added to a pruned node is
- * instantly made invisible). That's why <b>{@link DAGExpandCollapseManager}
- * should be set in a context before a layout algorithm</b>.
  * </p>
  * <p>
  * <b>NOTE:</b> A <code>Graph</code> using this manger should use
- * {@link DummySubgraphLayout} s, which don't show any information about
+ * {@link DummySubgraphLayout}, which doesn't show any information about
  * subgraphs in the graph. That's because for this manager it doesn't matter
  * which subgraph a node belongs to (each pruning creates a new subgraph). Also,
  * this manager adds a label to each collapsed node showing number of its
- * children.
+ * successors.
  * </p>
  * One instance of this class can serve only one instance of <code>Graph</code>.
  */
 public class DAGExpandCollapseManager implements ExpandCollapseManager {
+
+	private class LabelAncestorListener extends AncestorListener.Stub {
+		private final IFigure originalFigure;
+		private IFigure fisheyeFigure;
+
+		public LabelAncestorListener(IFigure originalFigure, IFigure fisheyeFigure) {
+			this.originalFigure = originalFigure;
+			this.fisheyeFigure = fisheyeFigure;
+		}
+
+		public void ancestorRemoved(IFigure ancestor) {
+			if (fisheyeFigure != null) {
+				final GraphLabel label = (GraphLabel) nodeFigureToLabel.get(fisheyeFigure);
+				if (label == null)
+					return;
+				nodeFigureToLabel.remove(fisheyeFigure);
+				Display.getDefault().asyncExec(new Runnable() {
+					public void run() {
+						label.removeAncestorListener(LabelAncestorListener.this);
+					}
+				});
+				fisheyeFigure.removeFigureListener(nodeFigureListener);
+				originalFigure.addFigureListener(nodeFigureListener);
+				labelToAncestorListener.remove(label);
+				fisheyeFigure = null;
+				addLabelForFigure(originalFigure, label);
+				refreshLabelBounds(originalFigure, label);
+			}
+		}
+	}
 
 	private InternalLayoutContext context;
 
@@ -67,20 +91,22 @@ public class DAGExpandCollapseManager implements ExpandCollapseManager {
 
 	private HashSet connectionsToShow = new HashSet();
 
+	private HashSet nodeLabelsToUpdate = new HashSet();
+
 	private boolean cleanLayoutScheduled = false;
 
-	private boolean filterOn = true;
-
+	/**
+	 * Maps from figures of nodes to labels showing number of nodes hidden
+	 * successors
+	 */
 	private HashMap nodeFigureToLabel = new HashMap();
 
-	private HashMap nodeFigureToNode = new HashMap();
+	private HashMap labelToAncestorListener = new HashMap();
 
 	private final FigureListener nodeFigureListener = new FigureListener() {
 		public void figureMoved(IFigure source) {
-			if (!Animation.isAnimating()) {
-				InternalNodeLayout node = (InternalNodeLayout) nodeFigureToNode.get(source);
-				updateFigureForNode(node);
-			}
+			GraphLabel label = (GraphLabel) nodeFigureToLabel.get(source);
+			refreshLabelBounds(source, label);
 		}
 	};
 
@@ -89,23 +115,13 @@ public class DAGExpandCollapseManager implements ExpandCollapseManager {
 			throw new RuntimeException("This manager works only with org.eclipse.zest.core.widgets.InternalLayoutContext");
 		context = (InternalLayoutContext) context2;
 
-		context.addFilter(new LayoutFilter() {
-			public boolean isObjectFiltered(GraphItem item) {
-				if (filterOn && item instanceof GraphConnection) {
-					GraphConnection connection = (GraphConnection) item;
-					return !isExpanded(connection.getSource().getLayout());
-				}
-				return false;
-			}
-		});
-
 		context.addGraphStructureListener(new GraphStructureListener() {
 			public boolean nodeRemoved(LayoutContext context, NodeLayout node) {
 				if (isExpanded(node)) {
 					collapse(node);
-					flushChanges(false, true);
 				}
 				removeFigureForNode((InternalNodeLayout) node);
+				flushChanges(false, true);
 				return false;
 			}
 
@@ -118,27 +134,27 @@ public class DAGExpandCollapseManager implements ExpandCollapseManager {
 			public boolean connectionRemoved(LayoutContext context, ConnectionLayout connection) {
 				NodeLayout source = connection.getSource();
 				NodeLayout target = connection.getTarget();
-				if (!isExpanded(target) && getUnfilteredIncomingConnections(target).length == 0) {
+				if (!isExpanded(target) && target.getIncomingConnections().length == 0) {
 					expand(target);
-					flushChanges(false, true);
 				}
-				updateFigureForNode((InternalNodeLayout) source);
-				return !isExpanded(source);
+				updateNodeLabel((InternalNodeLayout) source);
+				flushChanges(false, true);
+				return false;
 			}
 
 			public boolean connectionAdded(LayoutContext context, ConnectionLayout connection) {
 				NodeLayout source = connection.getSource();
 				NodeLayout target = connection.getTarget();
-
-				if (isExpanded(source))
+				resetState(target);
+				updateNodeLabel((InternalNodeLayout) source);
+				if (!isPruned(target) && !isPruned(source))
 					showConnection(connection);
 				else
 					hideConnection(connection);
-				resetState(target);
 
 				flushChanges(false, true);
-				updateFigureForNode((InternalNodeLayout) source);
-				return !isExpanded(source);
+				updateNodeLabel((InternalNodeLayout) source);
+				return false;
 			}
 
 		});
@@ -148,14 +164,49 @@ public class DAGExpandCollapseManager implements ExpandCollapseManager {
 				flushChanges(false, false);
 			}
 		});
+
+		context.container.getGraph().addFisheyeListener(new FisheyeListener() {
+
+			public void fisheyeReplaced(Graph graph, IFigure oldFisheyeFigure, IFigure newFisheyeFigure) {
+				oldFisheyeFigure.removeFigureListener(nodeFigureListener);
+				newFisheyeFigure.addFigureListener(nodeFigureListener);
+				GraphLabel label = (GraphLabel) nodeFigureToLabel.remove(oldFisheyeFigure);
+				nodeFigureToLabel.put(newFisheyeFigure, label);
+
+				LabelAncestorListener ancestorListener = (LabelAncestorListener) labelToAncestorListener.get(label);
+				ancestorListener.fisheyeFigure = null;
+				addLabelForFigure(newFisheyeFigure, label);
+				ancestorListener.fisheyeFigure = newFisheyeFigure;
+				refreshLabelBounds(newFisheyeFigure, label);
+			}
+
+			public void fisheyeRemoved(Graph graph, IFigure originalFigure, IFigure fisheyeFigure) {
+				// do nothing - labelAncestorListener will take care of cleaning
+				// up
+			}
+
+			public void fisheyeAdded(Graph graph, IFigure originalFigure, IFigure fisheyeFigure) {
+				originalFigure.removeFigureListener(nodeFigureListener);
+				fisheyeFigure.addFigureListener(nodeFigureListener);
+				GraphLabel label = (GraphLabel) nodeFigureToLabel.get(originalFigure);
+				if (label == null)
+					return;
+				nodeFigureToLabel.put(fisheyeFigure, label);
+				refreshLabelBounds(fisheyeFigure, label);
+				addLabelForFigure(fisheyeFigure, label);
+				LabelAncestorListener labelAncestorListener = new LabelAncestorListener(originalFigure, fisheyeFigure);
+				label.addAncestorListener(labelAncestorListener);
+				labelToAncestorListener.put(label, labelAncestorListener);
+			}
+		});
 	}
 
 	public boolean canCollapse(LayoutContext context, NodeLayout node) {
-		return isExpanded(node) && !node.isPruned() && getUnfilteredOutgoingConnections(node).length > 0;
+		return isExpanded(node) && !node.isPruned() && node.getOutgoingConnections().length > 0;
 	}
 
 	public boolean canExpand(LayoutContext context, NodeLayout node) {
-		return !isExpanded(node) && !node.isPruned() && getUnfilteredOutgoingConnections(node).length > 0;
+		return !isExpanded(node) && !node.isPruned() && node.getOutgoingConnections().length > 0;
 	}
 
 	public void setExpanded(LayoutContext context, NodeLayout node, boolean expanded) {
@@ -175,11 +226,10 @@ public class DAGExpandCollapseManager implements ExpandCollapseManager {
 
 	private void expand(NodeLayout node) {
 		setExpanded(node, true);
-		ConnectionLayout[] connections = getUnfilteredOutgoingConnections(node);
-		for (int i = 0; i < connections.length; i++) {
-			showConnection(connections[i]);
-			NodeLayout target = connections[i].getTarget();
-			unpruneNode(target);
+		updateNodeLabel((InternalNodeLayout) node);
+		NodeLayout[] successingNodes = node.getSuccessingNodes();
+		for (int i = 0; i < successingNodes.length; i++) {
+			unpruneNode(successingNodes[i]);
 		}
 	}
 
@@ -188,54 +238,78 @@ public class DAGExpandCollapseManager implements ExpandCollapseManager {
 			setExpanded(node, false);
 		else
 			return;
-		ConnectionLayout[] connections = getUnfilteredOutgoingConnections(node);
-		for (int i = 0; i < connections.length; i++) {
-			hideConnection(connections[i]);
-		}
-		for (int i = 0; i < connections.length; i++) {
-			NodeLayout target = connections[i].getTarget();
-			collapse(target);
-			ConnectionLayout[] incomingConnections = target.getIncomingConnections();
-			boolean shouldPrune = true;
-			for (int j = 0; j < incomingConnections.length; j++) {
-				if (isVisible(incomingConnections[j])) {
-					shouldPrune = false;
-					break;
-				}
-			}
-			if (shouldPrune)
-				pruneNode(target);
+		NodeLayout[] successors = node.getSuccessingNodes();
+		for (int i = 0; i < successors.length; i++) {
+			checkPruning(successors[i]);
+			if (isPruned(successors[i]))
+				collapse(successors[i]);
 		}
 	}
 
+	private void checkPruning(NodeLayout node) {
+		boolean prune = true;
+		NodeLayout[] predecessors = node.getPredecessingNodes();
+		for (int j = 0; j < predecessors.length; j++) {
+			if (isExpanded(predecessors[j])) {
+				prune = false;
+				break;
+			}
+		}
+		if (prune)
+			pruneNode(node);
+		else
+			unpruneNode(node);
+	}
+
 	/**
-	 * By default nodes at the top are expanded. Nodes that have no visible
-	 * incoming connections must be pruned.
+	 * By default nodes at the top are expanded. The rest are collapsed and
+	 * pruned if they don't have any expanded predecessors
 	 * 
 	 * @param target
 	 */
-	private void resetState(NodeLayout target) {
-		ConnectionLayout[] incomingConnections = getUnfilteredIncomingConnections(target);
-		if (incomingConnections.length == 0) {
-			expand(target);
-		} else {
-			collapse(target);
-			for (int i = 0; i < incomingConnections.length; i++) {
-				if (isVisible(incomingConnections[i]))
-					return;
-			}
-			pruneNode(target);
+	private void resetState(NodeLayout node) {
+		NodeLayout[] predecessors = node.getPredecessingNodes();
+		if (predecessors.length == 0)
+			expand(node);
+		else {
+			collapse(node);
+			checkPruning(node);
 		}
 	}
 
 	private void pruneNode(NodeLayout node) {
+		if (isPruned(node))
+			return;
 		nodesToUnprune.remove(node);
 		nodesToPrune.add(node);
+		ConnectionLayout[] incoming = node.getIncomingConnections();
+		for (int i = 0; i < incoming.length; i++) {
+			hideConnection(incoming[i]);
+			updateNodeLabel((InternalNodeLayout) incoming[i].getSource());
+		}
+		ConnectionLayout[] outgoing = node.getOutgoingConnections();
+		for (int i = 0; i < outgoing.length; i++) {
+			hideConnection(outgoing[i]);
+		}
 	}
 
 	private void unpruneNode(NodeLayout node) {
+		if (!isPruned(node))
+			return;
 		nodesToPrune.remove(node);
 		nodesToUnprune.add(node);
+		updateNodeLabel((InternalNodeLayout) node);
+		ConnectionLayout[] incoming = node.getIncomingConnections();
+		for (int i = 0; i < incoming.length; i++) {
+			if (!isPruned(incoming[i].getSource()))
+				showConnection(incoming[i]);
+			updateNodeLabel((InternalNodeLayout) incoming[i].getSource());
+		}
+		ConnectionLayout[] outgoing = node.getOutgoingConnections();
+		for (int i = 0; i < outgoing.length; i++) {
+			if (!isPruned(outgoing[i].getTarget()))
+				showConnection(outgoing[i]);
+		}
 	}
 
 	private void showConnection(ConnectionLayout connection) {
@@ -248,8 +322,12 @@ public class DAGExpandCollapseManager implements ExpandCollapseManager {
 		connectionsToHide.add(connection);
 	}
 
-	private boolean isVisible(ConnectionLayout connection) {
-		return (connection.isVisible() && !connectionsToHide.contains(connection)) || (connectionsToShow.contains(connection));
+	private boolean isPruned(NodeLayout node) {
+		if (nodesToUnprune.contains(node))
+			return false;
+		if (nodesToPrune.contains(node))
+			return true;
+		return node.isPruned();
 	}
 
 	private void flushChanges(boolean force, boolean clean) {
@@ -257,6 +335,12 @@ public class DAGExpandCollapseManager implements ExpandCollapseManager {
 		if (!force && !context.isBackgroundLayoutEnabled()) {
 			return;
 		}
+
+		for (Iterator iterator = nodeLabelsToUpdate.iterator(); iterator.hasNext();) {
+			InternalNodeLayout node = (InternalNodeLayout) iterator.next();
+			updateNodeLabel2(node);
+		}
+		nodeLabelsToUpdate.clear();
 
 		for (Iterator iterator = nodesToUnprune.iterator(); iterator.hasNext();) {
 			NodeLayout node = (NodeLayout) iterator.next();
@@ -284,20 +368,6 @@ public class DAGExpandCollapseManager implements ExpandCollapseManager {
 		context.flushChanges(true);
 	}
 
-	private ConnectionLayout[] getUnfilteredOutgoingConnections(NodeLayout node) {
-		filterOn = false;
-		ConnectionLayout[] result = node.getOutgoingConnections();
-		filterOn = true;
-		return result;
-	}
-
-	private ConnectionLayout[] getUnfilteredIncomingConnections(NodeLayout node) {
-		filterOn = false;
-		ConnectionLayout[] result = node.getIncomingConnections();
-		filterOn = true;
-		return result;
-	}
-
 	private boolean isExpanded(NodeLayout node) {
 		return expandedNodes.contains(node);
 	}
@@ -308,12 +378,19 @@ public class DAGExpandCollapseManager implements ExpandCollapseManager {
 		} else {
 			expandedNodes.remove(node);
 		}
-		updateFigureForNode((InternalNodeLayout) node);
+		updateNodeLabel((InternalNodeLayout) node);
 	}
 
-	private void updateFigureForNode(InternalNodeLayout internalNode) {
+	private void updateNodeLabel(InternalNodeLayout internalNode) {
+		nodeLabelsToUpdate.add(internalNode);
+	}
+
+	private void updateNodeLabel2(InternalNodeLayout internalNode) {
 		IFigure figure = internalNode.getNode().getFigure();
 		GraphLabel label = (GraphLabel) nodeFigureToLabel.get(figure);
+		IFigure fisheye = getFisheyeFigure(figure);
+		if (fisheye != null)
+			figure = fisheye;
 		if (label == null) {
 			label = new GraphLabel(false);
 			label.setForegroundColor(ColorConstants.white);
@@ -322,31 +399,72 @@ public class DAGExpandCollapseManager implements ExpandCollapseManager {
 			fontData.setHeight(6);
 			label.setFont(new Font(Display.getCurrent(), fontData));
 			figure.addFigureListener(nodeFigureListener);
-			context.container.addSubgraphFigure(label);
+			addLabelForFigure(figure, label);
 			nodeFigureToLabel.put(figure, label);
-			nodeFigureToNode.put(figure, internalNode);
 		}
-		if (internalNode.isMinimized()) {
-			DisplayIndependentPoint location = internalNode.getLocation();
-			label.getParent().setConstraint(label, new Rectangle((int) location.x, (int) location.y, 0, 0));
+
+		NodeLayout[] successors = internalNode.getSuccessingNodes();
+		if (isExpanded(internalNode) || isPruned(internalNode) || successors.length == 0) {
+			label.setVisible(false);
 		} else {
-			int numberOfSuccessors = getUnfilteredOutgoingConnections(internalNode).length;
-			label.setVisible(numberOfSuccessors > 0 && !isExpanded(internalNode));
-			label.setText("" + numberOfSuccessors);
-			Dimension size = label.getSize();
-			size.expand(-6, -4);
+			int numberOfHiddenSuccessors = 0;
+			for (int i = 0; i < successors.length; i++) {
+				if (isPruned(successors[i]))
+					numberOfHiddenSuccessors++;
+			}
+			label.setText(numberOfHiddenSuccessors > 0 ? "" + numberOfHiddenSuccessors : "");
+			label.setVisible(true);
+		}
+
+		refreshLabelBounds(figure, label);
+	}
+
+	private IFigure getFisheyeFigure(IFigure originalFigure) {
+		// a node has a fisheye if and only if its label has an AncestorListener
+		GraphLabel label = (GraphLabel) nodeFigureToLabel.get(originalFigure);
+		LabelAncestorListener ancestorListener = (LabelAncestorListener) labelToAncestorListener.get(label);
+		if (ancestorListener != null)
+			return ancestorListener.fisheyeFigure;
+		return null;
+	}
+
+	private void addLabelForFigure(IFigure figure, GraphLabel label) {
+		IFigure parent = figure.getParent();
+		if (parent instanceof ZestRootLayer) {
+			((ZestRootLayer) parent).addDecoration(figure, label);
+		} else {
+			if (parent.getChildren().contains(label))
+				parent.remove(label);
+			int index = parent.getChildren().indexOf(figure);
+			parent.add(label, index + 1);
+		}
+	}
+
+	private void refreshLabelBounds(IFigure figure, GraphLabel label) {
+		Rectangle figureBounds = figure.getBounds();
+		if (figureBounds.width * figureBounds.height > 0) {
+			label.setText(label.getText()); // hack: resets label's size
+			Dimension labelSize = label.getSize();
+			labelSize.expand(-6, -4);
 			Point anchorPoint = figure.getBounds().getBottomRight();
-			anchorPoint.x -= size.width / 2;
-			anchorPoint.y -= size.height / 2;
-			label.getParent().setConstraint(label, new Rectangle(anchorPoint, size));
+			anchorPoint.x -= labelSize.width / 2;
+			anchorPoint.y -= labelSize.height / 2;
+			Rectangle bounds = new Rectangle(anchorPoint, labelSize);
+			label.setBounds(bounds);
+			label.getParent().setConstraint(label, bounds);
+		} else {
+			label.getParent().setConstraint(label, new Rectangle(figureBounds.x, figureBounds.y, 0, 0));
+			label.setBounds(new Rectangle(figureBounds.x, figureBounds.y, 0, 0));
 		}
 	}
 
 	private void removeFigureForNode(InternalNodeLayout internalNode) {
 		IFigure figure = internalNode.getNode().getFigure();
 		GraphLabel label = (GraphLabel) nodeFigureToLabel.get(figure);
-		if (label != null) {
+		if (label != null && label.getParent() != null) {
 			label.getParent().remove(label);
 		}
+		nodeFigureToLabel.remove(figure);
+		nodeLabelsToUpdate.remove(internalNode);
 	}
 }
