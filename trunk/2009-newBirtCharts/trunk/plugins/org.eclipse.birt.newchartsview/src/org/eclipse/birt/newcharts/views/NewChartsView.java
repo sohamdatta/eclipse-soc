@@ -86,7 +86,7 @@ public class NewChartsView extends ViewPart {
     ChartWithoutAxes chart = ChartWithoutAxesImpl.create();
     chart.setDimension( ChartDimension.TWO_DIMENSIONAL_LITERAL );
     
-    chart.getTitle().getLabel().getCaption().setValue( "First venn diagram" );
+    chart.getTitle().getLabel().getCaption().setValue( "additive color wheel" );
     adjustFont( chart.getTitle().getLabel().getCaption().getFont() );
     
     Legend legend = chart.getLegend();
