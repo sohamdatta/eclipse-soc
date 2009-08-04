@@ -129,7 +129,7 @@ public class Venn extends BaseRenderer {
 		circle2.setHeight(2 * r2);
 		circle2.setStartAngle(0);
 		circle2.setAngleExtent(360);
-		circle2.setBackground(ColorDefinitionImpl.BLUE());
+		circle2.setBackground(ColorDefinitionImpl.BLUE().darker());
 
 		ArcRenderEvent circle3 = (ArcRenderEvent) circle1.copy();
 
@@ -151,7 +151,7 @@ public class Venn extends BaseRenderer {
 						PolygonRenderEvent.class);
 
 		poly1.setPoints(allPoints);
-		poly1.setBackground(ColorDefinitionImpl.YELLOW());
+		poly1.setBackground(ColorDefinitionImpl.CYAN().darker());
 		
 		
 		
@@ -163,7 +163,7 @@ public class Venn extends BaseRenderer {
 		PolygonRenderEvent poly2 = (PolygonRenderEvent) poly1.copy();
 
 		poly2.setPoints(allPoints2);
-		poly2.setBackground(ColorDefinitionImpl.PINK().darker());
+		poly2.setBackground(ColorDefinitionImpl.PINK());
 
 		
 		
@@ -176,7 +176,17 @@ public class Venn extends BaseRenderer {
 		Location[] allPoints3 = (Location[]) allLocs.toArray(new Location[] {});
 		PolygonRenderEvent poly3 = (PolygonRenderEvent) poly1.copy();
 		poly3.setPoints(allPoints3);
-		poly3.setBackground(ColorDefinitionImpl.CREAM());
+		poly3.setBackground(ColorDefinitionImpl.YELLOW());
+		
+		allLocs = new ArrayList<Location>();
+		
+		computePolygonLocationC1C2C3(xm1,ym1,r1,xm2,ym2,r2,xm3,ym3,r3,allLocs);
+		Location[] allPoints4 = (Location[]) allLocs.toArray(new Location[]{});
+		PolygonRenderEvent poly4 = (PolygonRenderEvent) poly1.copy();
+		poly4.setPoints(allPoints4);
+		poly4.setBackground(ColorDefinitionImpl.WHITE());
+		
+		
 //		poly2.setPoints(allPoints3);
 //		poly2.setBackground(ColorDefinitionImpl.PINK());
 
@@ -207,6 +217,7 @@ public class Venn extends BaseRenderer {
 		lre5.setBounds(BoundsImpl.create(c2c3[0].getX(), c2c3[0].getY(), 10, 10));
 		lre5.setBackground(ColorDefinitionImpl.BLACK());
 		
+		
 		RectangleRenderEvent lre6 = (RectangleRenderEvent) lre1.copy();
 		lre6.setBounds(BoundsImpl.create(c2c3[1].getX(), c2c3[1].getY(), 10, 10));
 		
@@ -224,9 +235,10 @@ public class Venn extends BaseRenderer {
 		idr.fillPolygon(poly1);
 		idr.fillPolygon(poly2);
 		idr.fillPolygon(poly3);
+		idr.fillPolygon(poly4);
 //		idr.fillRectangle(lre1);
 //		idr.fillRectangle(lre2);
-		idr.fillRectangle(lre3);
+//		idr.fillRectangle(lre3);
 //		idr.fillRectangle(lre4);
 //		idr.fillRectangle(lre5);
 //		idr.fillRectangle(lre6);
@@ -345,6 +357,50 @@ public class Venn extends BaseRenderer {
 	}
 
 
+	private void computePolygonLocationC1C2C3(double xm1, double ym1,
+			double r1, double xm2, double ym2, double r2, double xm3,
+			double ym3, double r3, ArrayList<Location> allLocs) {
+
+		Location loc0 = computeCircleIntersectionsC1C2(xm1, xm2, ym1, ym2, r1, r2)[1];
+		Location loc1 = computeCircleIntersectionsC1C3(xm1, xm3, ym1, ym3, r1, r3)[0];
+		Location loc2 = computeCircleIntersectionsC2C3(xm2, xm3, ym2, ym3, r1, r3)[0];
+		
+		
+		double y00 = ym1-loc2.getY();
+		double startAngle0 = Math.toDegrees(Math.asin(y00/r1));
+		
+		double y01 = ym1-loc0.getY();
+		double endAngle0 = Math.toDegrees(Math.asin(y01/r1));
+		
+		double angleExtent0 = endAngle0-startAngle0;
+		
+		System.out.println("startAngle"+startAngle0);
+		System.out.println("endAngle"+endAngle0);
+		System.out.println("angleextent"+angleExtent0);
+		createLocationPoints(r1, xm1, ym1, startAngle0, angleExtent0, allLocs);
+
+		
+		double y10 = ym2-loc0.getY();
+		double startAngle1 = 90+Math.toDegrees(Math.acos(y10/r2));
+		
+		double y11 = ym2-loc1.getY();
+		double endAngle1 = 180-Math.toDegrees(Math.asin(y11/r2));
+		
+		double angleExtent1 = endAngle1-startAngle1;
+		
+		createLocationPoints(r2, xm2, ym2, startAngle1, angleExtent1, allLocs);
+		
+		double y20 = ym3 - loc1.getY();
+		double startAngle2 = 180+Math.toDegrees(Math.asin(y20/-r3));
+		System.out.println("start"+startAngle2);
+		double y21 = ym3 - loc2.getY();
+		double endAngle2 = 360-Math.toDegrees(Math.asin(y21/-r3));
+		System.out.println("end"+endAngle2);
+		double angleExtent2 = endAngle2-startAngle2;
+		
+		createLocationPoints(r3, xm3, ym3, startAngle2, angleExtent2, allLocs);
+	}
+
 	private void computePolygonLocationsC1C3(double xm1, double ym1, double r1,
 			double xm3, double ym3, double r3, ArrayList<Location> allLocs) {
 
@@ -358,15 +414,15 @@ public class Venn extends BaseRenderer {
 		double y1 = ym1 - intersectionC1C3[0].getY();
 		double startAngle1 = Math.toDegrees(Math.asin(y1 / r1));
 		double dY = ym1 - intersectionC1C3[1].getY();
-		double endAngle1 = Math.toDegrees(Math.asin(dY / r1));
+		double endAngle1 = 90+Math.toDegrees(Math.acos(dY / r1));
 		double angleExtent1 = startAngle1 - endAngle1;
 		System.out.println("startAngle:" + startAngle1);
 		System.out.println("angleExtent:" + angleExtent1);
 
 		double y2 = ym3 - intersectionC1C3[1].getY();
-		double startAngle2 = Math.toDegrees(Math.asin(y2 / r3));
+		double startAngle2 = 180+Math.toDegrees(Math.asin(y2 / r3));
 		double dY2 = ym3 - intersectionC1C3[0].getY();
-		double endAngle2 = Math.toDegrees(Math.asin(dY2 / -r3));
+		double endAngle2 = 0-Math.toDegrees(Math.asin(dY2 / r3));
 		double angleExtent2 = startAngle2 - endAngle2;
 		System.out.println("startAngle:" + startAngle2);
 		System.out.println("endAngle:"+endAngle2);
