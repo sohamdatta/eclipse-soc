@@ -149,14 +149,22 @@ public class SpringLayoutAlgorithm implements LayoutAlgorithm {
 	private LayoutContext context;
 
 	public void applyLayout(boolean clean) {
-		initLayout();
+		if (!clean)
+			return;
 		while (performAnotherNonContinuousIteration()) {
 			computeOneIteration();
 		}
 		saveLocations();
 		if (resize)
 			AlgorithmHelper.maximizeSizes(entities);
-		AlgorithmHelper.fitWithinBounds(entities, bounds, resize);
+
+		DisplayIndependentRectangle bounds2 = new DisplayIndependentRectangle(bounds);
+		int insets = 4;
+		bounds2.x += insets;
+		bounds2.y += insets;
+		bounds2.width -= 2 * insets;
+		bounds2.height -= 2 * insets;
+		AlgorithmHelper.fitWithinBounds(entities, bounds2, resize);
 	}
     
 	public void setLayoutContext(LayoutContext context) {

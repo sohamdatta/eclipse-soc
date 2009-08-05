@@ -19,7 +19,7 @@ class InternalNodeLayout implements NodeLayout {
 	private boolean minimized = false;
 	private final GraphNode node;
 	private final InternalLayoutContext ownerLayoutContext;
-	private InternalSubgraphLayout subgraph;
+	private DefaultSubgraph subgraph;
 	private boolean isDisposed = false;
 
 	public InternalNodeLayout(GraphNode graphNode) {
@@ -62,8 +62,8 @@ class InternalNodeLayout implements NodeLayout {
 	}
 
 	public void prune(SubgraphLayout subgraph) {
-		if (subgraph != null && !(subgraph instanceof InternalSubgraphLayout))
-			throw new RuntimeException("InternalNodeLayout can be pruned only to InternalSubgarphLayout.");
+		if (subgraph != null && !(subgraph instanceof DefaultSubgraph))
+			throw new RuntimeException("InternalNodeLayout can be pruned only to instance of DefaultSubgraph.");
 		ownerLayoutContext.checkChangesAllowed();
 		if (subgraph == this.subgraph)
 			return;
@@ -73,7 +73,7 @@ class InternalNodeLayout implements NodeLayout {
 			subgraph2.removeNodes(new NodeLayout[] { this });
 		}
 		if (subgraph != null) {
-			this.subgraph = (InternalSubgraphLayout) subgraph;
+			this.subgraph = (DefaultSubgraph) subgraph;
 			subgraph.addNodes(new NodeLayout[] { this });
 		}
 	}

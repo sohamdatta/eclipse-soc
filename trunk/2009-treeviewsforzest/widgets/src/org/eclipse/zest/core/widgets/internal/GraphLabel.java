@@ -235,12 +235,7 @@ public class GraphLabel extends CachedLabel {
 	 * @see org.eclipse.draw2d.Label#setText(java.lang.String)
 	 */
 	public void setText(String s) {
-		if (!s.equals("")) {
-			super.setText(s);
-
-		} else {
-			super.setText("");
-		}
+		super.setText(s);
 		adjustBoundsToFit();
 	}
 
@@ -251,7 +246,7 @@ public class GraphLabel extends CachedLabel {
 	 */
 	public void setIcon(Image image) {
 		super.setIcon(image);
-		//adjustBoundsToFit();
+		adjustBoundsToFit();
 	}
 
 	public Color getBorderColor() {
