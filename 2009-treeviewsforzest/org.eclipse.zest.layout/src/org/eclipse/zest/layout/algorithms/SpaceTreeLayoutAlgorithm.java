@@ -162,6 +162,7 @@ public class SpaceTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCollapse
 					SpaceTreeNode child = (SpaceTreeNode) iterator.next();
 					allChildren.add(child.node);
 					child.setSubgraph(null);
+					child.expanded = false;
 					nodesToVisit.addLast(child);
 				}
 			}
@@ -442,7 +443,10 @@ public class SpaceTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCollapse
 			if (!expanded) {
 				int numberOfChildrenInSubgraph = subgraph == null ? 0 : subgraph.countNodes();
 				collapseAllChildrenIntoSubgraph(subgraph, false);
-				return numberOfChildrenInSubgraph != (subgraph == null ? 0 : subgraph.countNodes());
+				int newNumberOfChildrenInSubgraph = (subgraph == null ? 0 : subgraph.countNodes());
+				if (numberOfChildrenInSubgraph != newNumberOfChildrenInSubgraph && newNumberOfChildrenInSubgraph > 0)
+					refreshSubgraphLocation();
+				return numberOfChildrenInSubgraph != newNumberOfChildrenInSubgraph;
 			}
 			if (expanded && subgraph == null) {
 				boolean madeChagnes = false;
@@ -944,28 +948,48 @@ public class SpaceTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCollapse
 
 	private LayoutListener layoutListener = new LayoutListener() {
 
-		public boolean subgraphResized(LayoutContext context, SubgraphLayout node) {
-			// do nothing
-			return false;
+		public boolean subgraphResized(LayoutContext context, SubgraphLayout subgraph) {
+			return defaultSubgraphHandle(context, subgraph);
 		}
 
-		public boolean subgraphMoved(LayoutContext context, SubgraphLayout node) {
-			// do nothing
-			return false;
+		public boolean subgraphMoved(LayoutContext context, SubgraphLayout subgraph) {
+			return defaultSubgraphHandle(context, subgraph);
 		}
 
 		public boolean nodeResized(LayoutContext context, NodeLayout node) {
 			setAvailableSpace(getAvailableSpace() + ((SpaceTreeNode) layoutToSpaceTree.get(node)).spaceRequiredForNode());
-			boolean result = defaultHandle(context, node);
+			boolean result = defaultNodeHandle(context, node);
 			setAvailableSpace(0);
 			return result;
 		}
 
 		public boolean nodeMoved(LayoutContext context, NodeLayout node) {
-			return defaultHandle(context, node);
+			return defaultNodeHandle(context, node);
 		}
 
-		private boolean defaultHandle(LayoutContext context, NodeLayout node) {
+		/**
+		 * Finds a root of given subgraph and moves the subgraph to proper
+		 * position
+		 * 
+		 * @param context
+		 * @param subgraph
+		 * @return
+		 */
+		private boolean defaultSubgraphHandle(LayoutContext context, SubgraphLayout subgraph) {
+			if (!context.isBackgroundLayoutEnabled())
+				return false;
+			SpaceTreeNode node = (SpaceTreeNode) layoutToSpaceTree.get(subgraph.getNodes()[0]);
+			while (node != null && node.node.getSubgraph() == subgraph) {
+				node = node.parent;
+			}
+			if (node != null && node.subgraph == subgraph) {
+				node.refreshSubgraphLocation();
+				context.flushChanges(false);
+			}
+			return false;
+		}
+
+		private boolean defaultNodeHandle(LayoutContext context, NodeLayout node) {
 			if (bounds.width * bounds.height <= 0)
 				return false;
 			SpaceTreeNode spaceTreeNode = (SpaceTreeNode) layoutToSpaceTree.get(node);
@@ -1081,7 +1105,15 @@ public class SpaceTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCollapse
 	public boolean canExpand(LayoutContext context, NodeLayout node) {
 		SpaceTreeNode spaceTreeNode = (SpaceTreeNode) layoutToSpaceTree.get(node);
 		if (spaceTreeNode != null) {
-			return !spaceTreeNode.expanded && !spaceTreeNode.children.isEmpty();
+			return !spaceTreeNode.children.isEmpty();
+		}
+		return false;
+	}
+
+	public boolean canCollapse(LayoutContext context, NodeLayout node) {
+		SpaceTreeNode spaceTreeNode = (SpaceTreeNode) layoutToSpaceTree.get(node);
+		if (spaceTreeNode != null) {
+			return spaceTreeNode.expanded && !spaceTreeNode.children.isEmpty();
 		}
 		return false;
 	}
@@ -1109,14 +1141,6 @@ public class SpaceTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCollapse
 			return SubgraphLayout.RIGHT_LEFT;
 		}
 		throw new RuntimeException();
-	}
-
-	public boolean canCollapse(LayoutContext context, NodeLayout node) {
-		SpaceTreeNode spaceTreeNode = (SpaceTreeNode) layoutToSpaceTree.get(node);
-		if (spaceTreeNode != null) {
-			return spaceTreeNode.expanded && !spaceTreeNode.children.isEmpty();
-		}
-		return false;
 	}
 
 	protected void refreshLayout(boolean animation) {

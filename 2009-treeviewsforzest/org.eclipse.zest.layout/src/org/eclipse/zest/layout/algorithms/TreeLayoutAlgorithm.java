@@ -139,13 +139,23 @@ public class TreeLayoutAlgorithm implements LayoutAlgorithm {
 	}
 
 	public void applyLayout(boolean clean) {
+		if (!clean)
+			return;
+
 		EntityLayout[] entities = context.getEntities();
 
 		internalApplyLayout(entities);
 
 		if (resize)
 			AlgorithmHelper.maximizeSizes(entities);
-		AlgorithmHelper.fitWithinBounds(entities, bounds, resize);
+
+		DisplayIndependentRectangle bounds2 = new DisplayIndependentRectangle(bounds);
+		int insets = 4;
+		bounds2.x += insets;
+		bounds2.y += insets;
+		bounds2.width -= 2 * insets;
+		bounds2.height -= 2 * insets;
+		AlgorithmHelper.fitWithinBounds(entities, bounds2, resize);
 	}
 
 	void internalApplyLayout(EntityLayout[] entities) {

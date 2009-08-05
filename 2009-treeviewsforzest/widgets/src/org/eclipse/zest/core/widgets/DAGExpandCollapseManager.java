@@ -39,7 +39,7 @@ import org.eclipse.zest.layout.interfaces.NodeLayout;
  * </p>
  * <p>
  * <b>NOTE:</b> A <code>Graph</code> using this manger should use
- * {@link DummySubgraphLayout}, which doesn't show any information about
+ * {@link DefaultSubgraph}, which doesn't show any information about
  * subgraphs in the graph. That's because for this manager it doesn't matter
  * which subgraph a node belongs to (each pruning creates a new subgraph). Also,
  * this manager adds a label to each collapsed node showing number of its

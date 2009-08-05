@@ -25,12 +25,19 @@ public class RadialLayoutAlgorithm implements LayoutAlgorithm {
 	private TreeLayoutAlgorithm treeLayout = new TreeLayoutAlgorithm();
 	
 	public void applyLayout(boolean clean) {
+		if (!clean)
+			return;
 		EntityLayout[] entities = context.getEntities();
 		treeLayout.internalApplyLayout(entities);
 		DisplayIndependentRectangle bounds = context.getBounds();
 		computeRadialPositions(entities, bounds);
 		if (resize)
 			AlgorithmHelper.maximizeSizes(entities);
+		int insets = 4;
+		bounds.x += insets;
+		bounds.y += insets;
+		bounds.width -= 2 * insets;
+		bounds.height -= 2 * insets;
 		AlgorithmHelper.fitWithinBounds(entities, bounds, resize);
 	}
 

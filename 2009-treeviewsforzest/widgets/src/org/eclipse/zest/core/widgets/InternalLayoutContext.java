@@ -23,7 +23,7 @@ import org.eclipse.zest.layout.interfaces.NodeLayout;
 import org.eclipse.zest.layout.interfaces.PruningListener;
 import org.eclipse.zest.layout.interfaces.SubgraphLayout;
 
-public class InternalLayoutContext implements LayoutContext {
+class InternalLayoutContext implements LayoutContext {
 
 	final NodeContainerAdapter container;
 	private final List filters = new ArrayList();
@@ -34,7 +34,7 @@ public class InternalLayoutContext implements LayoutContext {
 	private LayoutAlgorithm mainAlgorithm;
 	private LayoutAlgorithm layoutAlgorithm;
 	private ExpandCollapseManager expandCollapseManager;
-	private SubgraphFactory subgraphFactory = DummySubgraphLayout.FACTORY;
+	private SubgraphFactory subgraphFactory = new DefaultSubgraph.Factory();
 	private final HashSet subgraphs = new HashSet();
 	private boolean eventsOn = true;
 	private boolean backgorundLayoutEnabled = true;
@@ -79,7 +79,7 @@ public class InternalLayoutContext implements LayoutContext {
 		return subgraph;
 	}
 
-	void removeSubgrah(DummySubgraphLayout subgraph) {
+	void removeSubgrah(DefaultSubgraph subgraph) {
 		subgraphs.remove(subgraph);
 	}
 
@@ -100,7 +100,7 @@ public class InternalLayoutContext implements LayoutContext {
 			connection.applyLayoutChanges();
 		}
 		for (Iterator iterator = subgraphs.iterator(); iterator.hasNext();) {
-			DummySubgraphLayout subgraph = (DummySubgraphLayout) iterator.next();
+			DefaultSubgraph subgraph = (DefaultSubgraph) iterator.next();
 			subgraph.applyLayoutChanges();
 		}
 		if (animationHint) {
@@ -436,6 +436,33 @@ public class InternalLayoutContext implements LayoutContext {
 		LayoutListener[] listeners = (LayoutListener[]) layoutListeners.toArray(new LayoutListener[layoutListeners.size()]);
 		for (int i = 0; i < listeners.length && !intercepted; i++) {
 			intercepted = listeners[i].nodeResized(this, node);
+		}
+		if (!intercepted)
+			applyMainAlgorithm();
+	}
+
+	void fireSubgraphMovedEvent(DefaultSubgraph subgraph) {
+		if (eventsOn) {
+			subgraph.refreshLocation();
+		}
+		boolean intercepted = !eventsOn;
+		LayoutListener[] listeners = (LayoutListener[]) layoutListeners.toArray(new LayoutListener[layoutListeners.size()]);
+		for (int i = 0; i < listeners.length && !intercepted; i++) {
+			intercepted = listeners[i].subgraphMoved(this, subgraph);
+		}
+		if (!intercepted)
+			applyMainAlgorithm();
+	}
+
+	void fireSubgraphResizedEvent(DefaultSubgraph subgraph) {
+		if (eventsOn) {
+			subgraph.refreshSize();
+			subgraph.refreshLocation();
+		}
+		boolean intercepted = !eventsOn;
+		LayoutListener[] listeners = (LayoutListener[]) layoutListeners.toArray(new LayoutListener[layoutListeners.size()]);
+		for (int i = 0; i < listeners.length && !intercepted; i++) {
+			intercepted = listeners[i].subgraphResized(this, subgraph);
 		}
 		if (!intercepted)
 			applyMainAlgorithm();

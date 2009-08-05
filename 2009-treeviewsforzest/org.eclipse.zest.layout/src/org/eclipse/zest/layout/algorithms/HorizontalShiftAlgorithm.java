@@ -26,6 +26,8 @@ public class HorizontalShiftAlgorithm implements LayoutAlgorithm {
 	private LayoutContext context;
 
 	public void applyLayout(boolean clean) {
+		if (!clean)
+			return;
 		ArrayList rowsList = new ArrayList();
 		EntityLayout[] entities = context.getEntities();
 

@@ -26,8 +26,12 @@ public interface LayoutAlgorithm {
 	 * 
 	 * @param clean
 	 *            if true the receiver should assume that the layout context has
-	 *            changed significantly and recompute the layout even if it
-	 *            keeps track of changes with listeners.
+	 *            changed significantly and recompute the whole layout even if
+	 *            it keeps track of changes with listeners. False can be used
+	 *            after dynamic layout in a context is turned back on so that
+	 *            layout algorithm working in background can apply accumulated
+	 *            changes. Static layout algorithm can ignore this call entirely
+	 *            if clean is false.
 	 */
 	public void applyLayout(boolean clean);
 

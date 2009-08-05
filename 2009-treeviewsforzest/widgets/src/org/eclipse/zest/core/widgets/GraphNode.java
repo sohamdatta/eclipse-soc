@@ -462,9 +462,7 @@ public class GraphNode extends GraphItem {
 		}
 		super.setText(string);
 
-		if (nodeFigure != null) {
-			updateFigureForModel(this.nodeFigure);
-		}
+		updateFigureForModel(this.nodeFigure);
 	}
 
 	/*
@@ -474,9 +472,7 @@ public class GraphNode extends GraphItem {
 	 */
 	public void setImage(Image image) {
 		super.setImage(image);
-		if (nodeFigure != null) {
-			updateFigureForModel(nodeFigure);
-		}
+		updateFigureForModel(nodeFigure);
 	}
 
 	/**
@@ -609,10 +605,11 @@ public class GraphNode extends GraphItem {
 		GraphLabel figure = (GraphLabel) currentFigure;
 		IFigure toolTip;
 
-		if (!checkStyle(ZestStyles.NODES_HIDE_TEXT)) {
+		if (!checkStyle(ZestStyles.NODES_HIDE_TEXT) && !figure.getText().equals(this.getText())) {
 			figure.setText(this.getText());
 		}
-		figure.setIcon(getImage());
+		if (figure.getIcon() != getImage())
+			figure.setIcon(getImage());
 
 		if (highlighted == HIGHLIGHT_ON) {
 			figure.setForegroundColor(getForegroundColor());
@@ -626,7 +623,8 @@ public class GraphNode extends GraphItem {
 
 		figure.setBorderWidth(getBorderWidth());
 
-		figure.setFont(getFont());
+		if (figure.getFont() != getFont())
+			figure.setFont(getFont());
 
 		if (this.getTooltip() == null && hasCustomTooltip == false) {
 			// if we have a custom tooltip, don't try and create our own.

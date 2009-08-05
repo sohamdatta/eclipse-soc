@@ -38,12 +38,12 @@ public class SpaceTreeExample {
 		g.setConnectionStyle(ZestStyles.CONNECTIONS_DIRECTED);
 		g.setNodeStyle(ZestStyles.NODES_FISHEYE);
 		
-		// g.setSubgraphFactory(LabelSubgraphLayout.FACTORY);
+		// g.setSubgraphFactory(LabelSubgraph.FACTORY);
 		// g.setLayoutAlgorithm(new SpaceTreeLayoutAlgorithm(), false);
 		g.setExpandCollapseManager(new DAGExpandCollapseManager());
 		g.setLayoutAlgorithm(new TreeLayoutAlgorithm(), true);
 		
-		createTree(g, "----------------------", 5, 5);
+		createTree(g, "!", 5, 5);
 
 		hookMenu(g);
 

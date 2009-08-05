@@ -10,28 +10,31 @@ import org.eclipse.zest.layout.dataStructures.DisplayIndependentPoint;
 import org.eclipse.zest.layout.dataStructures.DisplayIndependentRectangle;
 import org.eclipse.zest.layout.interfaces.ConnectionLayout;
 import org.eclipse.zest.layout.interfaces.EntityLayout;
+import org.eclipse.zest.layout.interfaces.LayoutContext;
 import org.eclipse.zest.layout.interfaces.NodeLayout;
 import org.eclipse.zest.layout.interfaces.SubgraphLayout;
 
 /**
- * A primitive implementation of subgraph layout. A node pruned to this subgraph
+ * Default implementation of {@link SubgraphLayout}. Every subgraph added to
+ * Zest {@link Graph} should inherit from this class.
+ * The default implementation is very simple. A node pruned to this subgraph
  * is minimized and all connections adjacent to it are made invisible. No
  * additional graphic elements are added to the graph, but subclasses may add
  * them.
  */
-public class DummySubgraphLayout implements InternalSubgraphLayout {
+public class DefaultSubgraph implements SubgraphLayout {
 
 	/**
-	 * Default factory for {@link DummySubgraphLayout}. It creates one subgraph for a
+	 * Default factory for {@link DefaultSubgraph}. It creates one subgraph for a
 	 * whole graph and throws every node into it.
 	 */
-	public final static SubgraphFactory FACTORY = new SubgraphFactory() {
+	public static class Factory implements SubgraphFactory {
 		private HashMap contextToSubgraph = new HashMap();
 
-		public SubgraphLayout createSubgraph(InternalNodeLayout[] nodes, InternalLayoutContext context) {
-			DummySubgraphLayout subgraph = (DummySubgraphLayout) contextToSubgraph.get(context);
+		public SubgraphLayout createSubgraph(NodeLayout[] nodes, LayoutContext context) {
+			DefaultSubgraph subgraph = (DefaultSubgraph) contextToSubgraph.get(context);
 			if (subgraph == null) {
-				subgraph = new DummySubgraphLayout(context);
+				subgraph = new DefaultSubgraph(context);
 				contextToSubgraph.put(context, subgraph);
 			}
 			subgraph.addNodes(nodes);
@@ -46,8 +49,11 @@ public class DummySubgraphLayout implements InternalSubgraphLayout {
 
 	protected boolean disposed = false;
 
-	protected DummySubgraphLayout(InternalLayoutContext context) {
-		this.context = context;
+	protected DefaultSubgraph(LayoutContext context2) {
+		if (context2 instanceof InternalLayoutContext)
+			this.context = (InternalLayoutContext) context2;
+		else
+			throw new RuntimeException("This subgraph can be only created with LayoutContext provided by Zest Graph");
 	}
 
 	public boolean isGraphEntity() {
@@ -150,6 +156,22 @@ public class DummySubgraphLayout implements InternalSubgraphLayout {
 	protected void refreshConnectionsVisibility(ConnectionLayout[] connections) {
 		for (int i = 0; i < connections.length; i++)
 			connections[i].setVisible(!connections[i].getSource().isPruned() && !connections[i].getTarget().isPruned());
+	}
+
+	/**
+	 * Makes sure that value returned by {@link #getLocation()} will be equal to
+	 * current location of this subgraph.
+	 */
+	protected void refreshLocation() {
+		// do nothing, to reimplement in subclasses
+	}
+
+	/**
+	 * Makes sure that value returned by {@link #getSize()} will be equal to
+	 * current size of this subgraph.
+	 */
+	protected void refreshSize() {
+		// do nothing, to reimplement in subclasses
 	}
 
 	protected void applyLayoutChanges() {

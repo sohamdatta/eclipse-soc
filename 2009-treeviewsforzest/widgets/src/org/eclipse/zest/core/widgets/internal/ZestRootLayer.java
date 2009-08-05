@@ -23,27 +23,34 @@ import org.eclipse.draw2d.IFigure;
  * <li>The Subgraphs</li>
  * <li>The Nodes</li>
  * <li>The Highlighted Connections</li>
- * <li>The Highlighted Nodes</li></ol>
+ * <li>The Highlighted Nodes</li>
+ * </ol>
  * 
  */
 public class ZestRootLayer extends FreeformLayer {
 
 	public static final int CONNECTIONS_LAYER = 0;
-	
+
 	public static final int SUBGRAPHS_LAYER = 1;
 
 	public static final int NODES_LAYER = 2;
-	
+
 	public static final int CONNECTIONS_HIGHLIGHTED_LAYER = 3;
-	
+
 	public static final int NODES_HIGHLIGHTED_LAYER = 4;
 
 	public static final int TOP_LAYER = 5;
-	
+
 	public static final int NUMBER_OF_LAYERS = 6;
-	
+
 	private final int[] itemsInLayer = new int[NUMBER_OF_LAYERS];
 
+	/**
+	 * Set of all figures that are decorations for other figures. A decoration
+	 * figure is always put one position (or more if there's more than one
+	 * decoration for the same figure) after the decorated figure in children
+	 * list.
+	 */
 	private HashSet decoratingFigures = new HashSet();
 
 	/**
@@ -55,7 +62,9 @@ public class ZestRootLayer extends FreeformLayer {
 
 	/**
 	 * Adds a node to the ZestRootLayer
-	 * @param nodeFigure The figure representing the node
+	 * 
+	 * @param nodeFigure
+	 *            The figure representing the node
 	 */
 	public void addNode(IFigure nodeFigure) {
 		addFigure(nodeFigure, NODES_LAYER);
@@ -84,7 +93,7 @@ public class ZestRootLayer extends FreeformLayer {
 	public void unHighlightConnection(IFigure connectionFigure) {
 		changeFigureLayer(connectionFigure, CONNECTIONS_LAYER);
 	}
-	
+
 	private void changeFigureLayer(IFigure figure, int newLayer) {
 		ArrayList decorations = getDecorations(figure);
 		remove(figure);
@@ -120,11 +129,11 @@ public class ZestRootLayer extends FreeformLayer {
 	 */
 	private int getPosition(int layer) {
 		int result = 0;
-		for(int i = 0; i <= layer; i++)
+		for (int i = 0; i <= layer; i++)
 			result += itemsInLayer[i];
 		return result;
 	}
-	
+
 	/**
 	 * 
 	 * @param position

@@ -72,6 +72,8 @@ public class DirectedGraphLayoutAlgorithm implements LayoutAlgorithm {
 	}
 
 	public void applyLayout(boolean clean) {
+		if (!clean)
+			return;
 		HashMap mapping = new HashMap();
 		DirectedGraph graph = new DirectedGraph();
 		EntityLayout[] entities = context.getEntities();

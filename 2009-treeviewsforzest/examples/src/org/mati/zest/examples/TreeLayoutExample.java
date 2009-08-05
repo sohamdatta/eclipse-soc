@@ -16,8 +16,7 @@ import org.eclipse.zest.core.widgets.Graph;
 import org.eclipse.zest.core.widgets.GraphConnection;
 import org.eclipse.zest.core.widgets.GraphItem;
 import org.eclipse.zest.core.widgets.GraphNode;
-import org.eclipse.zest.core.widgets.LabelSubgraphLayout;
-import org.eclipse.zest.layout.algorithms.ExpandableTreeLayoutAlgorithm;
+import org.eclipse.zest.core.widgets.LabelSubgraph;
 import org.eclipse.zest.layout.algorithms.TreeLayoutAlgorithm;
 
 public class TreeLayoutExample {
@@ -47,8 +46,8 @@ public class TreeLayoutExample {
 			new GraphConnection(g, SWT.NONE, root, n);
 		}
 
-		final ExpandableTreeLayoutAlgorithm algorithm = new ExpandableTreeLayoutAlgorithm();
-		g.setSubgraphFactory(LabelSubgraphLayout.FACTORY);
+		final TreeLayoutAlgorithm algorithm = new TreeLayoutAlgorithm();
+		g.setSubgraphFactory(new LabelSubgraph.Factory());
 		g.setLayoutAlgorithm(algorithm, false);
 		hookMenu(g);
 

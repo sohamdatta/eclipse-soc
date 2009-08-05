@@ -52,11 +52,11 @@ public interface LayoutListener {
 	 * 
 	 * @param context
 	 *            the layout context that fired the event
-	 * @param node
-	 *            the node that has moved
+	 * @param subgraph
+	 *            the subgraph that has moved
 	 * @return true if no further operations after this event are required
 	 */
-	public boolean subgraphMoved(LayoutContext context, SubgraphLayout node);
+	public boolean subgraphMoved(LayoutContext context, SubgraphLayout subgraph);
 
 	/**
 	 * This method is called whenever size of a particular subgraph is changed
@@ -72,9 +72,9 @@ public interface LayoutListener {
 	 * 
 	 * @param context
 	 *            the layout context that fired the event
-	 * @param node
-	 *            the node that was resized
+	 * @param subgraph
+	 *            the subgraph that was resized
 	 * @return true if no further operations after this event are required
 	 */
-	public boolean subgraphResized(LayoutContext context, SubgraphLayout node);
+	public boolean subgraphResized(LayoutContext context, SubgraphLayout subgraph);
 }
