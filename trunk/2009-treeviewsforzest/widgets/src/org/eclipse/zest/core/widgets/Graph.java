@@ -448,8 +448,16 @@ public class Graph extends FigureCanvas {
 		getLayoutContext().setSubgraphFactory(factory);
 	}
 
+	public SubgraphFactory getSubgraphFactory() {
+		return getLayoutContext().getSubgraphFactory();
+	}
+
 	public void setExpandCollapseManager(ExpandCollapseManager expandCollapseManager) {
 		getLayoutContext().setExpandCollapseManager(expandCollapseManager);
+	}
+
+	public ExpandCollapseManager getExpandCollapseManager() {
+		return getLayoutContext().getExpandCollapseManager();
 	}
 
 	/**
@@ -1019,6 +1027,7 @@ public class Graph extends FigureCanvas {
 
 	public void setExpanded(GraphNode node, boolean expanded) {
 		layoutContext.setExpanded(node.getLayout(), expanded);
+		rootlayer.invalidate();
 	}
 
 	public boolean canExpand(GraphNode node) {
