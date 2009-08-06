@@ -300,6 +300,10 @@ class InternalLayoutContext implements LayoutContext {
 		subgraphFactory = factory;
 	}
 
+	SubgraphFactory getSubgraphFactory() {
+		return subgraphFactory;
+	}
+
 	void applyMainAlgorithm() {
 		if (backgorundLayoutEnabled && mainAlgorithm != null) {
 			mainAlgorithm.applyLayout(true);
