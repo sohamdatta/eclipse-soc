@@ -1,9 +1,12 @@
 package org.eclipse.zest.core.widgets;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 
+import org.eclipse.draw2d.FigureListener;
+import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.zest.layout.dataStructures.DisplayIndependentDimension;
@@ -14,6 +17,23 @@ import org.eclipse.zest.layout.interfaces.NodeLayout;
 import org.eclipse.zest.layout.interfaces.SubgraphLayout;
 
 class InternalNodeLayout implements NodeLayout {
+
+	/**
+	 * This listener is added to nodes' figures as a workaround for the problem
+	 * of minimized nodes leaving single on the graph pixels when zoomed out
+	 */
+	private final static FigureListener figureListener = new FigureListener() {
+		public void figureMoved(IFigure source) {
+			// hide figures of minimized nodes
+			GraphNode node = (GraphNode) figureToNode.get(source);
+			if (node.getLayout().isMinimized() && source.getSize().equals(0, 0))
+				source.setVisible(false);
+			else
+				source.setVisible(node.isVisible());
+		}
+	};
+	private final static HashMap figureToNode = new HashMap();
+	
 	private DisplayIndependentPoint location;
 	private DisplayIndependentDimension size;
 	private boolean minimized = false;
@@ -25,6 +45,8 @@ class InternalNodeLayout implements NodeLayout {
 	public InternalNodeLayout(GraphNode graphNode) {
 		this.node = graphNode;
 		this.ownerLayoutContext = node.parent.getLayoutContext();
+		graphNode.nodeFigure.addFigureListener(figureListener);
+		figureToNode.put(graphNode.nodeFigure, graphNode);
 	}
 
 	public DisplayIndependentPoint getLocation() {
@@ -256,6 +278,7 @@ class InternalNodeLayout implements NodeLayout {
 		if (subgraph != null)
 			subgraph.removeDisposedNodes();
 		ownerLayoutContext.fireNodeRemovedEvent(node.getLayout());
+		figureToNode.remove(node.nodeFigure);
 	}
 
 	boolean isDisposed() {
