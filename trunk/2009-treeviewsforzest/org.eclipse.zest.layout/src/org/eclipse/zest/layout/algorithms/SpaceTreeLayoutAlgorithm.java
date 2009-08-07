@@ -14,21 +14,16 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
-import java.util.Set;
 
 import org.eclipse.zest.layout.dataStructures.DisplayIndependentDimension;
 import org.eclipse.zest.layout.dataStructures.DisplayIndependentPoint;
 import org.eclipse.zest.layout.dataStructures.DisplayIndependentRectangle;
-import org.eclipse.zest.layout.interfaces.ConnectionLayout;
 import org.eclipse.zest.layout.interfaces.ContextListener;
 import org.eclipse.zest.layout.interfaces.ExpandCollapseManager;
-import org.eclipse.zest.layout.interfaces.GraphStructureListener;
 import org.eclipse.zest.layout.interfaces.LayoutAlgorithm;
 import org.eclipse.zest.layout.interfaces.LayoutContext;
 import org.eclipse.zest.layout.interfaces.LayoutListener;
@@ -44,11 +39,13 @@ import org.eclipse.zest.layout.interfaces.SubgraphLayout;
  * positions to makes sure they stay in their current layer and don't overlap
  * with each other.
  * 
- * This layout algorithm registers itself in the layout context as an
- * expand/collapse manager. It also adds listeners for context, structure and
- * layout.
+ * It's recommended to set an <code>ExpandCollapseManger</code> returned by
+ * {@link #getExpandCollapseManager()} in the <code>LayoutContext</code> that
+ * will be used with this layout algorithm. Other
+ * <code>ExpandCollapseManager</code>s could also work, but the algorithm's
+ * functionality would be very limited.
  */
-public class SpaceTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCollapseManager {
+public class SpaceTreeLayoutAlgorithm implements LayoutAlgorithm {
 
 	/**
 	 * Tree direction constant for which root is placed at the top and branches
@@ -74,39 +71,25 @@ public class SpaceTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCollapse
 	 */
 	public final static int RIGHT_LEFT = 4;
 
-	private class SpaceTreeNode {
-		final public NodeLayout node;
-		public int height = 0;
-		public int depth = -1;
-		public int numOfLeaves = 0;
-		public int order = 0;
-		public final List children = new ArrayList();
-		public SpaceTreeNode parent;
-		public boolean firstChild = false, lastChild = false;
+	private class SpaceTreeNode extends TreeLayoutObserver.TreeNode {
 		public SubgraphLayout subgraph = null;
 
 		public boolean expanded = false;
 		public double positionInLayer;
 
-		/**
-		 * This constructor should not be used. Use
-		 * {@link SpaceTreeLayoutAlgorithm#createSpaceTreeNode(NodeLayout)}
-		 * instead.
-		 * 
-		 * @param node
-		 */
-		private SpaceTreeNode(NodeLayout node) {
-			this.node = node;
+		public SpaceTreeNode(NodeLayout node, TreeLayoutObserver owner) {
+			super(node, owner);
 		}
 
-		public void addChild(SpaceTreeNode child) {
-			children.add(child);
-			child.parent = this;
-			child.expanded = false;
-			child.setSubgraph(null);
+		protected void addChild(TreeLayoutObserver.TreeNode child) {
+			super.addChild(child);
+
+			SpaceTreeNode child2 = (SpaceTreeNode) child;
+			child2.expanded = false;
+			child2.setSubgraph(null);
 
 			if (child.depth >= 0)
-				((SpaceTreeLayer) spaceTreeLayers.get(child.depth)).removeNode(child);
+				((SpaceTreeLayer) spaceTreeLayers.get(child.depth)).removeNode(child2);
 
 			if (expanded) {
 				child.depth = this.depth + 1;
@@ -126,28 +109,14 @@ public class SpaceTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCollapse
 		}
 
 		public void precomputeTree() {
-			if (children.isEmpty()) {
-				numOfLeaves = 1;
-				height = 0;
-			} else {
-				numOfLeaves = 0;
-				height = 0;
-				for (ListIterator iterator = children.listIterator(); iterator.hasNext();) {
-					SpaceTreeNode child = (SpaceTreeNode) iterator.next();
-					child.depth = this.depth + 1;
-					child.order = this.order + this.numOfLeaves;
-					child.precomputeTree();
-					child.firstChild = (this.numOfLeaves == 0);
-					child.lastChild = !iterator.hasNext();
-
-					this.numOfLeaves += child.numOfLeaves;
-					this.height = Math.max(this.height, child.height + 1);
-				}
-			}
-			if (this == superRoot) {
+			super.precomputeTree();
+			if (this == owner.getSuperRoot()) {
 				expanded = true;
 				while (spaceTreeLayers.size() <= this.height)
 					spaceTreeLayers.add(new SpaceTreeLayer(spaceTreeLayers.size()));
+
+				if (treeObserver != null)
+					refreshLayout(true);
 			}
 		}
 
@@ -184,29 +153,7 @@ public class SpaceTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCollapse
 			return subgraph;
 		}
 
-		public void findNewParent() {
-			if (parent != null)
-				parent.children.remove(this);
-			NodeLayout[] predecessingNodes = node.getPredecessingNodes();
-			parent = null;
-			for (int i = 0; i < predecessingNodes.length; i++) {
-				SpaceTreeNode potentialParent = (SpaceTreeNode) layoutToSpaceTree.get(predecessingNodes[i]);
-				if (!children.contains(potentialParent) && isBetterParent(this, potentialParent))
-					parent = potentialParent;
-			}
-			if (parent == null)
-				parent = superRoot;
-
-			parent.addChild(this);
-		}
-
-		public boolean isAncestorOf(SpaceTreeNode descendant) {
-			while (descendant.depth > this.depth)
-				descendant = descendant.parent;
-			return descendant == this;
-		}
-
-		public void setSubgraph(SubgraphLayout subgraph) {
+		public void setSubgraph(SubgraphLayout subgraph) { // !
 			if (this.subgraph != subgraph) {
 				this.subgraph = subgraph;
 				refreshSubgraphLocation();
@@ -216,12 +163,12 @@ public class SpaceTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCollapse
 		/**
 		 * Moves the node back to its layer, preserving its location
 		 */
-		public void adjustPosition() {
-			protectedNode = superRoot;
+		public void adjustPosition() { // !
+			protectedNode = (SpaceTreeNode) owner.getSuperRoot();
 
 			DisplayIndependentPoint newLocation = node.getLocation();
 			double newPositionInLayer = (direction == BOTTOM_UP || direction == TOP_DOWN) ? newLocation.x : newLocation.y;
-			if (parent.expanded) {
+			if (((SpaceTreeNode) parent).expanded) {
 				((SpaceTreeLayer) spaceTreeLayers.get(depth)).moveNode(this, newPositionInLayer);
 				centerParentsTopDown();
 			}
@@ -282,77 +229,11 @@ public class SpaceTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCollapse
 			return result;
 		}
 
-		public void maximizeExpansion() {
-			protectedNode = this;
-			double availableSpace = getAvailableSpace();
-			double requiredSpace = 0;
-
-			ArrayList nodesInThisLayer = null;
-			ArrayList nodesInNextLayer = new ArrayList();
-			nodesInNextLayer.add(this);
-			double spaceRequiredInNextLayer = spaceRequiredForNode();
-			for (int layer = 0; !nodesInNextLayer.isEmpty(); layer++) {
-				requiredSpace = Math.max(requiredSpace, spaceRequiredInNextLayer);
-				spaceRequiredInNextLayer = 0;
-
-				nodesInThisLayer = nodesInNextLayer;
-				nodesInNextLayer = new ArrayList();
-
-				int numOfNodesWithChildren = 0;
-				for (Iterator iterator = nodesInThisLayer.iterator(); iterator.hasNext();) {
-					SpaceTreeNode node = (SpaceTreeNode) iterator.next();
-					if (!node.children.isEmpty()) {
-						node.expanded = true;
-						spaceRequiredInNextLayer += node.spaceRequiredForChildren();
-						nodesInNextLayer.addAll(node.children);
-						numOfNodesWithChildren++;
-					}
-				}
-
-				if (numOfNodesWithChildren == 0)
-					break;
-
-				spaceRequiredInNextLayer += branchGap * (numOfNodesWithChildren - 1);
-
-				boolean addedNewLayer = false;
-				if ((spaceRequiredInNextLayer <= requiredSpace || spaceRequiredInNextLayer <= availableSpace || layer < (this == superRoot ? 2 : 1))
-						&& !nodesInNextLayer.isEmpty()) {
-					// add next layer and center its nodes
-
-					NodeSnapshot[][] snapShot = takeSnapShot();
-					SpaceTreeLayer childLayer = (SpaceTreeLayer) spaceTreeLayers.get(this.depth + layer + 1);
-					childLayer.addNodes(nodesInNextLayer);
-					SpaceTreeNode firstChild = ((SpaceTreeNode) nodesInNextLayer.get(0));
-					SpaceTreeNode lastChild = ((SpaceTreeNode) nodesInNextLayer.get(nodesInNextLayer.size() - 1));
-					double boundsWidth = spaceRequiredInNextLayer - firstChild.spaceRequiredForNode() / 2 - lastChild.spaceRequiredForNode() / 2;
-					double startPosition = Math.max((availableSpace - boundsWidth) / 2, firstChild.spaceRequiredForNode() / 2);
-					setAvailableSpace(spaceRequiredInNextLayer);
-					childLayer.fitNodesWithinBounds(nodesInNextLayer, startPosition, startPosition + boundsWidth);
-					setAvailableSpace(0);
-					if (layer >= (this == superRoot ? 2 : 1) && !childrenPositionsOK(nodesInThisLayer)) {
-						revertToShanpshot(snapShot);
-					} else
-						addedNewLayer = true;
-				}
-				if (!addedNewLayer) {
-					// not enough space -> collapse nodes in this level, clean
-					// up and stop
-					for (Iterator iterator = nodesInThisLayer.iterator(); iterator.hasNext();) {
-						SpaceTreeNode node = (SpaceTreeNode) iterator.next();
-						node.expanded = false;
-					}
-					((SpaceTreeLayer) spaceTreeLayers.get(this.depth + layer + 1)).removeNodes(nodesInNextLayer);
-					break;
-				}
-			}
-			centerParentsBottomUp();
-			centerParentsTopDown();
-		}
-
 		/**
 		 * Checks if nodes in given list have proper positions according to
 		 * their children (a parent's position cannot be smaller than its first
-		 * child's nor bigger than its last child's position).
+		 * child's position nor bigger than its last child's position). If not,
+		 * it tries to fix them.
 		 * 
 		 * @param nodesToCheck
 		 * @return true if all locations are correct or could be corrected while
@@ -403,7 +284,7 @@ public class SpaceTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCollapse
 		}
 
 		public void centerParentsTopDown() {
-			if (this == superRoot) {
+			if (this == owner.getSuperRoot()) {
 				this.positionInLayer = getAvailableSpace() / 2;
 			}
 			if (!children.isEmpty() && expanded) {
@@ -522,6 +403,12 @@ public class SpaceTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCollapse
 			return sb.toString();
 		}
 	}
+
+	private TreeLayoutObserver.TreeNodeFactory spaceTreeNodeFactory = new TreeLayoutObserver.TreeNodeFactory() {
+		public TreeLayoutObserver.TreeNode createTreeNode(NodeLayout nodeLayout, TreeLayoutObserver observer) {
+			return new SpaceTreeNode(nodeLayout, observer);
+		};
+	};
 
 	private class SpaceTreeLayer {
 		public ArrayList nodes = new ArrayList();
@@ -669,6 +556,18 @@ public class SpaceTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCollapse
 				moveNodeBackward(node, newPosition);
 		}
 
+		/**
+		 * Tries to increase node's position in layer. It can move a node only
+		 * if it doesn't cause nodes to fall out of available space (see
+		 * {@link SpaceTreeLayoutAlgorithm#getAvailableSpace()}. If there's not
+		 * enough space available, some nodes may be collapsed to increase it as
+		 * long as it doesn't cause
+		 * {@link SpaceTreeLayoutAlgorithm#protectedNode} or any of its
+		 * descendants to be collapsed.
+		 * 
+		 * @param nodeToMove
+		 * @param newPosition
+		 */
 		private void moveNodeForward(SpaceTreeNode nodeToMove, double newPosition) {
 			int nodeIndex = nodes.indexOf(nodeToMove);
 			if (nodeIndex == -1)
@@ -691,7 +590,7 @@ public class SpaceTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCollapse
 					for (int i = nodeIndex; i < nodes.size(); i++) {
 						SpaceTreeNode nextNode = ((SpaceTreeNode) nodes.get(i));
 						if (protectedNode == null || (!protectedNode.isAncestorOf(nextNode) && !nextNode.parent.isAncestorOf(protectedNode))) {
-							collapseNode(nextNode.parent);
+							collapseNode((SpaceTreeNode) nextNode.parent);
 							if (nextNode.parent == nodeToMove.parent)
 								break mainLoop;
 							removed = true;
@@ -712,7 +611,7 @@ public class SpaceTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCollapse
 					currentNodeToMove.positionInLayer = newPositionForCurrent;
 					// move parent if moved node is its first child
 					if (currentNodeToMove.firstChild) {
-						SpaceTreeNode parent = currentNodeToMove.parent;
+						SpaceTreeNode parent = (SpaceTreeNode) currentNodeToMove.parent;
 						if (depth > 0 && parent.positionInLayer <= newPositionForCurrent) {
 							SpaceTreeLayer parentLayer = (SpaceTreeLayer) spaceTreeLayers.get(depth - 1);
 							parentLayer.moveNodeForward(parent, newPositionForCurrent);
@@ -764,6 +663,14 @@ public class SpaceTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCollapse
 			}
 		}
 
+		/**
+		 * Method complementary to
+		 * {@link #moveNodeForward(SpaceTreeNode, double)}. Decreases node's
+		 * position in layer.
+		 * 
+		 * @param nodeToMove
+		 * @param newPosition
+		 */
 		private void moveNodeBackward(SpaceTreeNode nodeToMove, double newPosition) {
 			int nodeIndex = nodes.indexOf(nodeToMove);
 			if (nodeIndex == -1)
@@ -787,7 +694,7 @@ public class SpaceTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCollapse
 					for (int i = nodeIndex; i >= 0; i--) {
 						SpaceTreeNode nextNode = ((SpaceTreeNode) nodes.get(i));
 						if (protectedNode == null || (!protectedNode.isAncestorOf(nextNode) && !nextNode.parent.isAncestorOf(protectedNode))) {
-							collapseNode(nextNode.parent);
+							collapseNode((SpaceTreeNode) nextNode.parent);
 							if (nextNode.parent == nodeToMove.parent)
 								break mainLoop;
 							nodeIndex -= nextNode.parent.children.size();
@@ -809,7 +716,7 @@ public class SpaceTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCollapse
 					currentNodeToMove.positionInLayer = newPositionForCurrent;
 					// move parent if moved node is its last child
 					if (currentNodeToMove.lastChild) {
-						SpaceTreeNode parent = currentNodeToMove.parent;
+						SpaceTreeNode parent = (SpaceTreeNode) currentNodeToMove.parent;
 						if (depth > 0 && parent.positionInLayer >= newPositionForCurrent) {
 							SpaceTreeLayer parentLayer = (SpaceTreeLayer) spaceTreeLayers.get(depth - 1);
 							parentLayer.moveNodeBackward(parent, newPositionForCurrent);
@@ -882,64 +789,118 @@ public class SpaceTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCollapse
 		}
 	}
 
-	private GraphStructureListener structureListener = new GraphStructureListener() {
+	private class SpaceTreeExpandCollapseManager implements ExpandCollapseManager {
+		public void initExpansion(LayoutContext context) {
+			// do nothing - initialization performed in #setLayoutContext()
+		}
 
-		public boolean nodeRemoved(LayoutContext context, NodeLayout node) {
-			SpaceTreeNode spaceTreeNode = (SpaceTreeNode) layoutToSpaceTree.get(node);
-			spaceTreeNode.parent.children.remove(spaceTreeNode);
-			((SpaceTreeLayer) spaceTreeLayers.get(spaceTreeNode.depth)).removeNode(spaceTreeNode);
-			superRoot.precomputeTree();
-			refreshLayout(true);
+		public void setExpanded(LayoutContext context, NodeLayout node, boolean expanded) {
+			SpaceTreeNode spaceTreeNode = (SpaceTreeNode) treeObserver.getTreeNode(node);
+			if (expanded) {
+				maximizeExpansion(spaceTreeNode);
+				refreshLayout(true);
+			} else if (spaceTreeNode.expanded) {
+				spaceTreeNode.expanded = false;
+				((SpaceTreeLayer) spaceTreeLayers.get(spaceTreeNode.depth + 1)).removeNodes(spaceTreeNode.children);
+				refreshLayout(true);
+			}
+		}
+
+		public boolean canExpand(LayoutContext context, NodeLayout node) {
+			SpaceTreeNode spaceTreeNode = (SpaceTreeNode) treeObserver.getTreeNode(node);
+			if (spaceTreeNode != null) {
+				// we don't check if node is expanded because it can be expanded
+				// again
+				return !spaceTreeNode.children.isEmpty();
+			}
 			return false;
 		}
 
-		public boolean nodeAdded(LayoutContext context, NodeLayout node) {
-			superRoot.addChild(createSpaceTreeNode(node));
-			superRoot.precomputeTree();
-			refreshLayout(true);
+		public boolean canCollapse(LayoutContext context, NodeLayout node) {
+			SpaceTreeNode spaceTreeNode = (SpaceTreeNode) treeObserver.getTreeNode(node);
+			if (spaceTreeNode != null) {
+				return spaceTreeNode.expanded && !spaceTreeNode.children.isEmpty();
+			}
 			return false;
 		}
 
-		public boolean connectionRemoved(LayoutContext context, ConnectionLayout connection) {
-			SpaceTreeNode node1 = (SpaceTreeNode) layoutToSpaceTree.get(connection.getSource());
-			SpaceTreeNode node2 = (SpaceTreeNode) layoutToSpaceTree.get(connection.getTarget());
-			if (node1.parent == node2) {
-				node1.findNewParent();
-			}
-			if (node2.parent == node1) {
-				node2.findNewParent();
-			}
-			superRoot.precomputeTree();
-			refreshLayout(true);
-			return false;
-		}
+		public void maximizeExpansion(SpaceTreeNode nodeToExpand) {
+			protectedNode = nodeToExpand;
+			double availableSpace = getAvailableSpace();
+			double requiredSpace = 0;
 
-		public boolean connectionAdded(LayoutContext context, ConnectionLayout connection) {
-			SpaceTreeNode source = (SpaceTreeNode) layoutToSpaceTree.get(connection.getSource());
-			SpaceTreeNode target = (SpaceTreeNode) layoutToSpaceTree.get(connection.getTarget());
-			if (source == target)
-				return false;
-			if (isBetterParent(target, source)) {
-				target.parent.children.remove(target);
-				source.addChild(target);
-				superRoot.precomputeTree();
+			ArrayList nodesInThisLayer = null;
+			ArrayList nodesInNextLayer = new ArrayList();
+			nodesInNextLayer.add(nodeToExpand);
+			double spaceRequiredInNextLayer = nodeToExpand.spaceRequiredForNode();
+			for (int layer = 0; !nodesInNextLayer.isEmpty(); layer++) {
+				requiredSpace = Math.max(requiredSpace, spaceRequiredInNextLayer);
+				spaceRequiredInNextLayer = 0;
+
+				nodesInThisLayer = nodesInNextLayer;
+				nodesInNextLayer = new ArrayList();
+
+				int numOfNodesWithChildren = 0;
+				for (Iterator iterator = nodesInThisLayer.iterator(); iterator.hasNext();) {
+					SpaceTreeNode node = (SpaceTreeNode) iterator.next();
+					if (!node.children.isEmpty()) {
+						node.expanded = true;
+						spaceRequiredInNextLayer += node.spaceRequiredForChildren();
+						nodesInNextLayer.addAll(node.children);
+						numOfNodesWithChildren++;
+					}
+				}
+
+				if (numOfNodesWithChildren == 0)
+					break;
+
+				spaceRequiredInNextLayer += branchGap * (numOfNodesWithChildren - 1);
+
+				boolean addedNewLayer = false;
+				if ((spaceRequiredInNextLayer <= requiredSpace || spaceRequiredInNextLayer <= availableSpace || (layer < 1 && nodeToExpand.depth
+						+ layer < 1))
+						&& !nodesInNextLayer.isEmpty()) {
+					// add next layer and center its nodes
+
+					NodeSnapshot[][] snapShot = takeSnapShot();
+					SpaceTreeLayer childLayer = (SpaceTreeLayer) spaceTreeLayers.get(nodeToExpand.depth + layer + 1);
+					childLayer.addNodes(nodesInNextLayer);
+					SpaceTreeNode firstChild = ((SpaceTreeNode) nodesInNextLayer.get(0));
+					SpaceTreeNode lastChild = ((SpaceTreeNode) nodesInNextLayer.get(nodesInNextLayer.size() - 1));
+					double boundsWidth = spaceRequiredInNextLayer - firstChild.spaceRequiredForNode() / 2 - lastChild.spaceRequiredForNode() / 2;
+					double startPosition = Math.max((availableSpace - boundsWidth) / 2, firstChild.spaceRequiredForNode() / 2);
+					setAvailableSpace(spaceRequiredInNextLayer);
+					childLayer.fitNodesWithinBounds(nodesInNextLayer, startPosition, startPosition + boundsWidth);
+					setAvailableSpace(0);
+					if (layer >= 1 && nodeToExpand.depth + layer >= 1 && !nodeToExpand.childrenPositionsOK(nodesInThisLayer)) {
+						revertToShanpshot(snapShot);
+					} else
+						addedNewLayer = true;
+				}
+				if (!addedNewLayer) {
+					// not enough space -> collapse nodes in this level, clean
+					// up and stop
+					for (Iterator iterator = nodesInThisLayer.iterator(); iterator.hasNext();) {
+						SpaceTreeNode node = (SpaceTreeNode) iterator.next();
+						node.expanded = false;
+					}
+					((SpaceTreeLayer) spaceTreeLayers.get(nodeToExpand.depth + layer + 1)).removeNodes(nodesInNextLayer);
+					break;
+				}
 			}
-			if (!connection.isDirected() && isBetterParent(source, target)) {
-				source.parent.children.remove(source);
-				target.addChild(source);
-				superRoot.precomputeTree();
-			}
-			refreshLayout(true);
-			return false;
+			nodeToExpand.centerParentsBottomUp();
+			nodeToExpand.centerParentsTopDown();
 		}
 	};
+
+	private SpaceTreeExpandCollapseManager expandCollapseManager = new SpaceTreeExpandCollapseManager();
 
 	private ContextListener contextListener = new ContextListener.Stub() {
 		public boolean boundsChanged(LayoutContext context) {
 			boolean previousBoundsWrong = (bounds == null || bounds.width * bounds.height <= 0);
 			bounds = context.getBounds();
 			if (bounds.width * bounds.height > 0 && previousBoundsWrong) {
-				superRoot.maximizeExpansion();
+				expandCollapseManager.maximizeExpansion((SpaceTreeNode) treeObserver.getSuperRoot());
 				refreshLayout(false);
 			}
 			return false;
@@ -957,7 +918,7 @@ public class SpaceTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCollapse
 		}
 
 		public boolean nodeResized(LayoutContext context, NodeLayout node) {
-			setAvailableSpace(getAvailableSpace() + ((SpaceTreeNode) layoutToSpaceTree.get(node)).spaceRequiredForNode());
+			setAvailableSpace(getAvailableSpace() + ((SpaceTreeNode) treeObserver.getTreeNode(node)).spaceRequiredForNode());
 			boolean result = defaultNodeHandle(context, node);
 			setAvailableSpace(0);
 			return result;
@@ -978,9 +939,9 @@ public class SpaceTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCollapse
 		private boolean defaultSubgraphHandle(LayoutContext context, SubgraphLayout subgraph) {
 			if (!context.isBackgroundLayoutEnabled())
 				return false;
-			SpaceTreeNode node = (SpaceTreeNode) layoutToSpaceTree.get(subgraph.getNodes()[0]);
+			SpaceTreeNode node = (SpaceTreeNode) treeObserver.getTreeNode(subgraph.getNodes()[0]);
 			while (node != null && node.node.getSubgraph() == subgraph) {
-				node = node.parent;
+				node = (SpaceTreeNode) node.parent;
 			}
 			if (node != null && node.subgraph == subgraph) {
 				node.refreshSubgraphLocation();
@@ -992,10 +953,10 @@ public class SpaceTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCollapse
 		private boolean defaultNodeHandle(LayoutContext context, NodeLayout node) {
 			if (bounds.width * bounds.height <= 0)
 				return false;
-			SpaceTreeNode spaceTreeNode = (SpaceTreeNode) layoutToSpaceTree.get(node);
+			SpaceTreeNode spaceTreeNode = (SpaceTreeNode) treeObserver.getTreeNode(node);
 			spaceTreeNode.adjustPosition();
 			if (context.isBackgroundLayoutEnabled()) {
-				superRoot.flushLocationChanges(0);
+				((SpaceTreeNode) treeObserver.getSuperRoot()).flushLocationChanges(0);
 				spaceTreeNode.refreshSubgraphLocation();
 				context.flushChanges(false);
 			}
@@ -1015,6 +976,8 @@ public class SpaceTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCollapse
 
 	private DisplayIndependentRectangle bounds;
 
+	private TreeLayoutObserver treeObserver;
+
 	private double availableSpace;
 
 	private ArrayList spaceTreeLayers = new ArrayList();
@@ -1025,21 +988,42 @@ public class SpaceTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCollapse
 	 */
 	private SpaceTreeNode protectedNode = null;
 
-	private SpaceTreeNode superRoot;
-
-	private HashMap layoutToSpaceTree = new HashMap();
-
+	/**
+	 * Constructs an instance of <code>SpaceTreeLayoutAlgorithm</code> that
+	 * places the root of a tree at the top of the graph.
+	 */
 	public SpaceTreeLayoutAlgorithm() {
 	}
 
+	/**
+	 * Constructs an instance of <code>SpaceTreeLayoutAlgorithm</code> that
+	 * places the root of a tree according to given direction
+	 * 
+	 * @param direction
+	 *            direction of the tree, sould be one of the following:
+	 *            {@link #TOP_DOWN}, {@link #BOTTOM_UP}, {@link #LEFT_RIGHT},
+	 *            {@link #RIGHT_LEFT}.
+	 */
 	public SpaceTreeLayoutAlgorithm(int direction) {
 		setDirection(direction);
 	}
 
+	/**
+	 * 
+	 * @return current direction (placement) of the tree
+	 */
 	public int getDirection() {
 		return direction;
 	}
 
+	/**
+	 * Sets direction (placement) of the tree
+	 * 
+	 * @param direction
+	 *            direction of the tree, sould be one of the following:
+	 *            {@link #TOP_DOWN}, {@link #BOTTOM_UP}, {@link #LEFT_RIGHT},
+	 *            {@link #RIGHT_LEFT}.
+	 */
 	public void setDirection(int direction) {
 		if (direction == this.direction)
 			return;
@@ -1059,10 +1043,10 @@ public class SpaceTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCollapse
 			return;
 
 		if (clean) {
-			superRoot = createSpaceTreeNode(null);
-			createTrees(context.getNodes());
-			superRoot.maximizeExpansion();
+			treeObserver.recomputeTree();
+			expandCollapseManager.maximizeExpansion((SpaceTreeNode) treeObserver.getSuperRoot());
 		}
+		SpaceTreeNode superRoot = ((SpaceTreeNode) treeObserver.getSuperRoot());
 		superRoot.flushExpansionChanges();
 		superRoot.flushLocationChanges(0);
 		checkPendingChangeDirection();
@@ -1070,52 +1054,25 @@ public class SpaceTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCollapse
 
 	public void setLayoutContext(LayoutContext context) {
 		if (this.context != null) {
-			this.context.setExpandCollapseManager(null);
-			this.context.removeGraphStructureListener(structureListener);
 			this.context.removeContextListener(contextListener);
 			this.context.removeLayoutListener(layoutListener);
+			treeObserver.stop();
 		}
 		this.context = context;
-		context.setExpandCollapseManager(this);
-		context.addGraphStructureListener(structureListener);
 		context.addContextListener(contextListener);
 		context.addLayoutListener(layoutListener);
+		treeObserver = new TreeLayoutObserver(context, spaceTreeNodeFactory);
 
 		bounds = context.getBounds();
-		superRoot = new SpaceTreeNode(null);
-		createTrees(context.getNodes());
 	}
 
-	public void initExpansion(LayoutContext context) {
-		// do nothing - initialization performed in #setLayoutContext()
-	}
-
-	public void setExpanded(LayoutContext context, NodeLayout node, boolean expanded) {
-		SpaceTreeNode spaceTreeNode = (SpaceTreeNode) layoutToSpaceTree.get(node);
-		if (expanded) {
-			spaceTreeNode.maximizeExpansion();
-			refreshLayout(true);
-		} else if (spaceTreeNode.expanded) {
-			spaceTreeNode.expanded = false;
-			((SpaceTreeLayer) spaceTreeLayers.get(spaceTreeNode.depth + 1)).removeNodes(spaceTreeNode.children);
-			refreshLayout(true);
-		}
-	}
-
-	public boolean canExpand(LayoutContext context, NodeLayout node) {
-		SpaceTreeNode spaceTreeNode = (SpaceTreeNode) layoutToSpaceTree.get(node);
-		if (spaceTreeNode != null) {
-			return !spaceTreeNode.children.isEmpty();
-		}
-		return false;
-	}
-
-	public boolean canCollapse(LayoutContext context, NodeLayout node) {
-		SpaceTreeNode spaceTreeNode = (SpaceTreeNode) layoutToSpaceTree.get(node);
-		if (spaceTreeNode != null) {
-			return spaceTreeNode.expanded && !spaceTreeNode.children.isEmpty();
-		}
-		return false;
+	/**
+	 * 
+	 * @return <code>ExpandCollapseManager</code> that can (and should) be used
+	 *         on layout context managed by this layout algorithm.
+	 */
+	public ExpandCollapseManager getExpandCollapseManager() {
+		return expandCollapseManager;
 	}
 
 	private void checkPendingChangeDirection() {
@@ -1146,6 +1103,7 @@ public class SpaceTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCollapse
 	protected void refreshLayout(boolean animation) {
 		if (!context.isBackgroundLayoutEnabled())
 			return;
+		SpaceTreeNode superRoot = (SpaceTreeNode) treeObserver.getSuperRoot();
 		if (animation && superRoot.flushCollapseChanges())
 			context.flushChanges(true);
 		if (superRoot.flushLocationChanges(0) && animation)
@@ -1153,99 +1111,6 @@ public class SpaceTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCollapse
 		superRoot.flushExpansionChanges();
 		superRoot.flushLocationChanges(0);
 		context.flushChanges(animation);
-	}
-
-	private SpaceTreeNode createSpaceTreeNode(NodeLayout node) {
-		SpaceTreeNode spaceTreeNode = (SpaceTreeNode) layoutToSpaceTree.get(node);
-		if (spaceTreeNode == null) {
-			spaceTreeNode = new SpaceTreeNode(node);
-			layoutToSpaceTree.put(node, spaceTreeNode);
-		}
-		spaceTreeNode.children.clear();
-		spaceTreeNode.subgraph = null;
-		return spaceTreeNode;
-	}
-
-	/**
-	 * Checks if a potential parent would be better for given node than its
-	 * current parent.
-	 * 
-	 * @param node
-	 * @param potentialParent
-	 * @return
-	 */
-	private boolean isBetterParent(SpaceTreeNode node, SpaceTreeNode potentialParent) {
-		if (node.parent == null && !node.isAncestorOf(potentialParent))
-			return true;
-		if (potentialParent.depth <= node.depth && potentialParent.depth != -1)
-			return true;
-		if (node.parent.depth == -1 && potentialParent.depth >= 0 && !node.isAncestorOf(potentialParent))
-			return true;
-		return false;
-	}
-
-	/**
-	 * Builds a tree structure using BFS method. Created trees are children of
-	 * {@link #superRoot}.
-	 * 
-	 * @param nodes
-	 */
-	private void createTrees(NodeLayout[] nodes) {
-		HashSet alreadyVisited = new HashSet();
-		LinkedList nodesToAdd = new LinkedList();
-		for (int i = 0; i < nodes.length; i++) {
-			NodeLayout root = findRoot(nodes[i], alreadyVisited);
-			if (root != null) {
-				alreadyVisited.add(root);
-				nodesToAdd.addLast(new Object[] { root, superRoot });
-			}
-		}
-		while (!nodesToAdd.isEmpty()) {
-			Object[] dequeued = (Object[]) nodesToAdd.removeFirst();
-			SpaceTreeNode currentNode = createSpaceTreeNode((NodeLayout) dequeued[0]);
-			SpaceTreeNode currentRoot = (SpaceTreeNode) dequeued[1];
-
-			currentRoot.addChild(currentNode);
-			NodeLayout[] children = currentNode.node.getSuccessingNodes();
-			for (int i = 0; i < children.length; i++) {
-				if (!alreadyVisited.contains(children[i])) {
-					alreadyVisited.add(children[i]);
-					nodesToAdd.addLast(new Object[] { children[i], currentNode });
-				}
-			}
-		}
-		superRoot.precomputeTree();
-	}
-
-	/**
-	 * Searches for a root of a tree containing given node by continuously
-	 * grabbing a predecessor of current node. If it reaches an node that exists
-	 * in alreadyVisited set, it returns null. If it detects a cycle, it returns
-	 * the first found node of that cycle. If it reaches a node that has no
-	 * predecessors, it returns that node.
-	 * 
-	 * @param nodeLayout
-	 *            starting node
-	 * @param alreadyVisited
-	 *            set of nodes that can't lay on path to the root (if one does,
-	 *            method stops and returns null).
-	 * @return
-	 */
-	private NodeLayout findRoot(NodeLayout nodeLayout, Set alreadyVisited) {
-		HashSet alreadyVisitedRoot = new HashSet();
-		while (true) {
-			if (alreadyVisited.contains(nodeLayout))
-				return null;
-			if (alreadyVisitedRoot.contains(nodeLayout))
-				return nodeLayout;
-			alreadyVisitedRoot.add(nodeLayout);
-			NodeLayout[] predecessingNodes = nodeLayout.getPredecessingNodes();
-			if (predecessingNodes.length > 0) {
-				nodeLayout = predecessingNodes[0];
-			} else {
-				return nodeLayout;
-			}
-		}
 	}
 
 	/**
@@ -1296,6 +1161,11 @@ public class SpaceTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCollapse
 		boolean expanded;
 	}
 
+	/**
+	 * Stores current expansion state of tree nodes and their position in layers
+	 * 
+	 * @return array containing state of all unpruned nodes
+	 */
 	private NodeSnapshot[][] takeSnapShot() {
 		NodeSnapshot[][] result = new NodeSnapshot[spaceTreeLayers.size()][];
 		for (int i = 0; i < result.length; i++) {
@@ -1311,6 +1181,12 @@ public class SpaceTreeLayoutAlgorithm implements LayoutAlgorithm, ExpandCollapse
 		return result;
 	}
 
+	/**
+	 * Restores tree nodes' expansion state and position in layers
+	 * 
+	 * @param snapShot
+	 *            state obtained with {@link #takeSnapShot()}
+	 */
 	private void revertToShanpshot(NodeSnapshot[][] snapShot) {
 		for (int i = 0; i < snapShot.length; i++) {
 			SpaceTreeLayer layer = (SpaceTreeLayer) spaceTreeLayers.get(i);
