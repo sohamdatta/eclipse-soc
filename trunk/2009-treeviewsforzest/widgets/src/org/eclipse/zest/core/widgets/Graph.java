@@ -2,6 +2,7 @@ package org.eclipse.zest.core.widgets;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
@@ -66,6 +67,7 @@ public class Graph extends FigureCanvas {
 	 */
 	private List nodes;
 	protected List connections;
+	HashSet subgraphFigures;
 	private List selectedItems = null;
 	private ArrayList fisheyeListeners = new ArrayList();
 	private List selectionListeners = null;
@@ -145,6 +147,7 @@ public class Graph extends FigureCanvas {
 		this.connectionStyle = ZestStyles.NONE;
 		this.nodeStyle = ZestStyles.NONE;
 		this.connections = new ArrayList();
+		this.subgraphFigures = new HashSet();
 		this.selectedItems = new ArrayList();
 		this.selectionListeners = new ArrayList();
 		this.figure2ItemMap = new HashMap();
@@ -532,6 +535,7 @@ public class Graph extends FigureCanvas {
 	private class DragSupport implements MouseMotionListener, org.eclipse.draw2d.MouseListener {
 
 		Point dragStartLocation = null;
+		IFigure draggedSubgraphFigure = null;
 		/** locations of dragged items relative to cursor position */
 		ArrayList relativeLocations = new ArrayList();
 		GraphItem fisheyedItem = null;
@@ -541,27 +545,28 @@ public class Graph extends FigureCanvas {
 			if (!isDragging) {
 				return;
 			}
+			if (selectedItems.isEmpty()) {
+				IFigure figureUnderMouse = getFigureAt(dragStartLocation.x, dragStartLocation.y);
+				if (subgraphFigures.contains(figureUnderMouse))
+					draggedSubgraphFigure = figureUnderMouse;
+			}
+
 			Point mousePoint = new Point(me.x, me.y);
-			if (selectedItems.size() > 0) {
+			if (!selectedItems.isEmpty() || draggedSubgraphFigure != null) {
 
 				if (relativeLocations.isEmpty()) {
 					for (Iterator iterator = selectedItems.iterator(); iterator.hasNext();) {
 						GraphItem item = (GraphItem) iterator.next();
 						if ((item.getItemType() == GraphItem.NODE) || (item.getItemType() == GraphItem.CONTAINER)) {
-							Point location = ((GraphNode) item).getLocation().getCopy();
-							Point mousePointCopy = dragStartLocation.getCopy();
-							item.getFigure().getParent().translateToRelative(mousePointCopy);
-							item.getFigure().getParent().translateFromParent(mousePointCopy);
-							location.x -= mousePointCopy.x;
-							location.y -= mousePointCopy.y;
-							relativeLocations.add(location);
+							relativeLocations.add(getRelativeLocation(item.getFigure()));
 						}
 					}
+					if (draggedSubgraphFigure != null)
+						relativeLocations.add(getRelativeLocation(draggedSubgraphFigure));
 				}
 
-				Iterator selectionIterator = selectedItems.iterator();
 				Iterator locationsIterator = relativeLocations.iterator();
-				while (selectionIterator.hasNext()) {
+				for (Iterator selectionIterator = selectedItems.iterator(); selectionIterator.hasNext();) {
 					GraphItem item = (GraphItem) selectionIterator.next();
 					if ((item.getItemType() == GraphItem.NODE) || (item.getItemType() == GraphItem.CONTAINER)) {
 						Point pointCopy = mousePoint.getCopy();
@@ -575,7 +580,27 @@ public class Graph extends FigureCanvas {
 						// There is no movement for connection
 					}
 				}
+				if (draggedSubgraphFigure != null) {
+					Point pointCopy = mousePoint.getCopy();
+					draggedSubgraphFigure.getParent().translateToRelative(pointCopy);
+					draggedSubgraphFigure.getParent().translateFromParent(pointCopy);
+					Point relativeLocation = (Point) locationsIterator.next();
+					pointCopy.x += relativeLocation.x;
+					pointCopy.y += relativeLocation.y;
+
+					draggedSubgraphFigure.setLocation(pointCopy);
+				}
 			}
+		}
+
+		private Point getRelativeLocation(IFigure figure) {
+			Point location = figure.getBounds().getTopLeft();
+			Point mousePointCopy = dragStartLocation.getCopy();
+			figure.getParent().translateToRelative(mousePointCopy);
+			figure.getParent().translateFromParent(mousePointCopy);
+			location.x -= mousePointCopy.x;
+			location.y -= mousePointCopy.y;
+			return location;
 		}
 
 		public void mouseEntered(org.eclipse.draw2d.MouseEvent me) {
@@ -734,6 +759,7 @@ public class Graph extends FigureCanvas {
 		public void mouseReleased(org.eclipse.draw2d.MouseEvent me) {
 			isDragging = false;
 			relativeLocations.clear();
+			draggedSubgraphFigure = null;
 		}
 
 	}
@@ -818,6 +844,12 @@ public class Graph extends FigureCanvas {
 
 	void addSubgraphFigure(IFigure figure) {
 		zestRootLayer.addSubgraph(figure);
+		subgraphFigures.add(figure);
+	}
+
+	void removeSubgraphFigure(IFigure figure) {
+		subgraphFigures.remove(figure);
+		figure.getParent().remove(figure);
 	}
 
 	void registerItem(GraphItem item) {

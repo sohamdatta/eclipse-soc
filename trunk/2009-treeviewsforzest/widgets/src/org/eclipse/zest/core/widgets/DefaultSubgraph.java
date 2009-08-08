@@ -133,8 +133,19 @@ public class DefaultSubgraph implements SubgraphLayout {
 	}
 
 	public NodeLayout[] getNodes() {
-		// TODO perform filtering
-		return (NodeLayout[]) nodes.toArray(new NodeLayout[nodes.size()]);
+		InternalNodeLayout[] result = new InternalNodeLayout[nodes.size()];
+		int i = 0;
+		for (Iterator iterator = nodes.iterator(); iterator.hasNext();) {
+			result[i] = (InternalNodeLayout) iterator.next();
+			if (!context.isLayoutItemFiltered(result[i].getNode()))
+				i++;
+		}
+		if (i == nodes.size())
+			return result;
+
+		NodeLayout[] result2 = new NodeLayout[i];
+		System.arraycopy(result, 0, result2, 0, i);
+		return result2;
 	}
 
 	public int countNodes() {
@@ -163,7 +174,7 @@ public class DefaultSubgraph implements SubgraphLayout {
 	 * current location of this subgraph.
 	 */
 	protected void refreshLocation() {
-		// do nothing, to reimplement in subclasses
+		// do nothing, to be reimplemented in subclasses
 	}
 
 	/**
@@ -171,7 +182,7 @@ public class DefaultSubgraph implements SubgraphLayout {
 	 * current size of this subgraph.
 	 */
 	protected void refreshSize() {
-		// do nothing, to reimplement in subclasses
+		// do nothing, to be reimplemented in subclasses
 	}
 
 	protected void applyLayoutChanges() {

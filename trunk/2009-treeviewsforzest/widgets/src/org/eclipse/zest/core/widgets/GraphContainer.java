@@ -841,6 +841,7 @@ public class GraphContainer extends GraphNode {
 
 	void addSubgraphFigure(IFigure figure) {
 		zestLayer.addSubgraph(figure);
+		graph.subgraphFigures.add(figure);
 	}
 
 	void addConnectionFigure(IFigure figure) {
