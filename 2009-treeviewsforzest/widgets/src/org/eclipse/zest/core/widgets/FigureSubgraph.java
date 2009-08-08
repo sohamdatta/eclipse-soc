@@ -23,16 +23,17 @@ public abstract class FigureSubgraph extends DefaultSubgraph {
 
 	protected IFigure figure;
 	private DisplayIndependentPoint location;
+	private boolean isLayoutBeingApplied = false;
 
 	/**
 	 * Listens to changes in this subgraph's figure and fires proper event in
 	 * its layout context.
 	 */
 	protected class SubgraphFigrueListener implements FigureListener {
-		private Rectangle previousBounds = figure.getBounds();
+		private Rectangle previousBounds = figure.getBounds().getCopy();
 
 		public void figureMoved(IFigure source) {
-			if (Animation.isAnimating())
+			if (Animation.isAnimating() || isLayoutBeingApplied)
 				return;
 			Rectangle newBounds = figure.getBounds();
 			if (!newBounds.getSize().equals(previousBounds.getSize())) {
@@ -40,7 +41,7 @@ public abstract class FigureSubgraph extends DefaultSubgraph {
 			} else if (!newBounds.getLocation().equals(previousBounds.getLocation())) {
 				((InternalLayoutContext) context).fireSubgraphMovedEvent(FigureSubgraph.this);
 			}
-			previousBounds = newBounds;
+			previousBounds = newBounds.getCopy();
 		}
 	};
 
@@ -59,7 +60,7 @@ public abstract class FigureSubgraph extends DefaultSubgraph {
 	 * it.
 	 */
 	protected abstract void updateFigure();
-	
+
 	public IFigure getFigure() {
 		if (figure == null) {
 			createFigure();
@@ -141,6 +142,14 @@ public abstract class FigureSubgraph extends DefaultSubgraph {
 		}
 	}
 
+	protected void refreshLocation() {
+		Rectangle bounds = figure.getBounds();
+		if (location == null)
+			location = new DisplayIndependentPoint(0, 0);
+		location.x = bounds.x + bounds.width / 2;
+		location.y = bounds.y + bounds.height / 2;
+	}
+
 	public boolean isGraphEntity() {
 		return true;
 	}
@@ -153,8 +162,7 @@ public abstract class FigureSubgraph extends DefaultSubgraph {
 		if (!disposed) {
 			super.dispose();
 			if (figure != null) {
-				IFigure parent = figure.getParent();
-				parent.remove(figure);
+				context.container.getGraph().removeSubgraphFigure(figure);
 			}
 		}
 	}
@@ -162,8 +170,10 @@ public abstract class FigureSubgraph extends DefaultSubgraph {
 	protected void applyLayoutChanges() {
 		getFigure();
 		if (location != null) {
+			isLayoutBeingApplied = true;
 			Dimension size = figure.getSize();
 			figure.setLocation(new Point(location.x - size.width / 2, location.y - size.height / 2));
+			isLayoutBeingApplied = false;
 		}
 	}
 

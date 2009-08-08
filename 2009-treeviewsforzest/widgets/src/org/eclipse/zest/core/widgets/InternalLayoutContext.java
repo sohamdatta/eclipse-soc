@@ -84,10 +84,10 @@ class InternalLayoutContext implements LayoutContext {
 	}
 
 	public void flushChanges(boolean animationHint) {
-		// TODO Auto-generated method stub
 		// TODO support for asynchronous call
+		if (!container.getGraph().isVisible())
+			return;
 		eventsOn = false;
-		animationHint = animationHint && container.getGraph().isVisible();
 		if (animationHint) {
 			Animation.markBegin();
 		}
@@ -187,7 +187,6 @@ class InternalLayoutContext implements LayoutContext {
 			this.backgorundLayoutEnabled = enabled;
 			fireBackgroundEnableChangedEvent();
 		}
-
 	}
 
 	public boolean isPruningEnabled() {
