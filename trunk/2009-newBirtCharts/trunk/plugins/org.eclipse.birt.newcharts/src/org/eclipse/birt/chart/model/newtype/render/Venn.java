@@ -1,13 +1,20 @@
 package org.eclipse.birt.chart.model.newtype.render;
 
+import java.awt.List;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Hashtable;
 
+import org.eclipse.birt.chart.computation.BoundingBox;
 import org.eclipse.birt.chart.computation.DataPointHints;
 import org.eclipse.birt.chart.computation.GObjectFactory;
+import org.eclipse.birt.chart.computation.IConstants;
 import org.eclipse.birt.chart.computation.IGObjectFactory;
 import org.eclipse.birt.chart.computation.withoutaxes.SeriesRenderingHints;
 import org.eclipse.birt.chart.device.IDeviceRenderer;
+import org.eclipse.birt.chart.device.IDisplayServer;
 import org.eclipse.birt.chart.device.IPrimitiveRenderer;
 import org.eclipse.birt.chart.event.ArcRenderEvent;
 import org.eclipse.birt.chart.event.EventObjectCache;
@@ -22,13 +29,17 @@ import org.eclipse.birt.chart.model.ChartWithoutAxes;
 import org.eclipse.birt.chart.model.attribute.Bounds;
 import org.eclipse.birt.chart.model.attribute.ColorDefinition;
 import org.eclipse.birt.chart.model.attribute.Fill;
+import org.eclipse.birt.chart.model.attribute.LeaderLineStyle;
 import org.eclipse.birt.chart.model.attribute.LineAttributes;
 import org.eclipse.birt.chart.model.attribute.LineStyle;
 import org.eclipse.birt.chart.model.attribute.Location;
+import org.eclipse.birt.chart.model.attribute.Palette;
+import org.eclipse.birt.chart.model.attribute.Position;
 import org.eclipse.birt.chart.model.attribute.impl.BoundsImpl;
 import org.eclipse.birt.chart.model.attribute.impl.ColorDefinitionImpl;
 import org.eclipse.birt.chart.model.attribute.impl.DataPointImpl;
 import org.eclipse.birt.chart.model.attribute.impl.LineAttributesImpl;
+import org.eclipse.birt.chart.model.component.Label;
 import org.eclipse.birt.chart.model.component.Series;
 import org.eclipse.birt.chart.model.data.DataSet;
 import org.eclipse.birt.chart.model.data.NumberDataSet;
@@ -38,13 +49,14 @@ import org.eclipse.birt.chart.model.layout.Legend;
 import org.eclipse.birt.chart.model.layout.Plot;
 import org.eclipse.birt.chart.model.newtype.VennSeries;
 import org.eclipse.birt.chart.model.newtype.data.VennDataSet;
+import org.eclipse.birt.chart.plugin.ChartEngineExtensionPlugin;
 import org.eclipse.birt.chart.render.BaseRenderer;
 import org.eclipse.birt.chart.render.ISeriesRenderingHints;
 
 public class Venn extends BaseRenderer {
 
-	ArrayList<double[]> assignedSeriesDefinition;
-	Bounds bounds;
+	ArrayList<Double[]> assignedSeriesDefinition;
+
 	private Hashtable<Double, Double> duplicateValues;
 	private DataPointHints dph = null;
 
@@ -52,31 +64,286 @@ public class Venn extends BaseRenderer {
 			.instance();
 	private VennSeries vennseries;
 	private IDeviceRenderer idr = null;
+	private LineAttributes leaderLineAttributes;
+	private LeaderLineStyle leaderLineStyle;
+	private double leaderLineLength;
+	private Label titleLabel;
+
+	private Bounds titleContainerBounds;
+
+	private Position titlePosition;
+
+	private IDisplayServer idserver;
+
+	private Bounds bounds = null;
+
+	private ArrayList<Circle> circleList;
+
+	private ArrayList<Double[]> datasets;
+
+	private Palette seriesPalette;
+
+	private ArrayList<Intersection> interSectionList = new ArrayList<Intersection>();
+
+	private static int debugCompute = 0;
+	private static int debugRenderSeries = 0;
 
 	@Override
 	public void compute(Bounds bo, Plot p, ISeriesRenderingHints isrh)
 			throws ChartException {
 
-		final SeriesRenderingHints srh = (SeriesRenderingHints) isrh;
+		debugCompute++;
 
 		vennseries = (VennSeries) getSeries();
+		this.leaderLineAttributes = vennseries.getLeaderLineAttributes();
+		this.leaderLineStyle = vennseries.getLeaderLineStyle();
+		this.leaderLineLength = vennseries.getLeaderLineLength();
+		this.titleLabel = vennseries.getTitle();
+		this.titlePosition = vennseries.getTitlePosition();
+		this.seriesPalette = getSeriesDefinition().getSeriesPalette();
 
-		assignedSeriesDefinition = new ArrayList<double[]>();
-		NumberDataSet allVennDataSets = (NumberDataSet) vennseries.getDataSet();
+		this.idserver = getXServer();
 
-		bounds = getCellBounds()
-				.adjustedInstance(p.getClientArea().getInsets());
+		Bounds cellBounds = getCellBounds();
+		computeTitleArea(cellBounds);
+		bounds = cellBounds;
+
+		/*
+		 * For debugging reasons
+		 * 
+		 */
+		Double[] dataSetOne = new Double[] { 1.0, 2.0 ,3.0,4.0};
+		Double[] dataSetTwo = new Double[] { 1.0,5.0,6.0};
+		Double[] dataSetThree = new Double[] { 12.0, 1231.0, 435.0, 756765.0, 324.0 };
+		int dataSetCount = 3;
+		datasets = new ArrayList<Double[]>();
+		datasets.add(dataSetOne);
+		datasets.add(dataSetTwo);
+		// datasets.add(dataSetThree);
+		/*
+		 * End debugging
+		 */
+		circleList = new ArrayList<Circle>();
+		for (Double[] d : datasets) {
+			Double[] dataSetWithoutDuplicates = deleteDuplicateEntries(d);
+			circleList.add(new Circle(dataSetWithoutDuplicates));
+		}
+
+		initializeCircles();
+
 		final SeriesDefinition sd = getSeriesDefinition();
+
+		final SeriesRenderingHints srh = (SeriesRenderingHints) isrh;
+
+		assignedSeriesDefinition = new ArrayList<Double[]>();
+		NumberDataSet allVennDataSets = (NumberDataSet) vennseries.getDataSet();
 
 		duplicateValues = new Hashtable<Double, Double>();
 
-		// for (double d1 : assignedSeriesDefinition.get(0)) {
-		// for (double d2 : assignedSeriesDefinition.get(1)) {
-		// if (d1 == d2) {
-		// duplicateValues.put(d1, d2);
-		// }
-		// }
-		// }
+	}
+
+	private Double[] deleteDuplicateEntries(Double[] d) {
+		HashSet<Double>  dAsHash = new HashSet<Double>();
+		for (int i = 0; i < d.length; i++) {
+			dAsHash.add(d[i]);
+		}
+		return  dAsHash.toArray(new Double[]{});
+	}
+
+	private void initializeCircles() {
+		if (datasets.size() == 1) {
+			computeCircleWithOneDataSet();
+		} else if (datasets.size() == 2) {
+			computeCirclesWithTwoDataSets();
+		} else if (datasets.size() == 3) {
+			computeCirclesWithThreeDataSets();
+		}
+	}
+
+	private void computeCircleWithOneDataSet() {
+
+		Circle circleOne = circleList.get(0);
+		Double[] dataSetOne = (Double[]) circleOne.getDataSet();
+
+		double radUnit;
+		if (bounds.getHeight() > bounds.getWidth()) {
+			radUnit = bounds.getWidth() / dataSetOne.length;
+		} else {
+			radUnit = bounds.getHeight() / dataSetOne.length;
+		}
+		double radius = (radUnit * (dataSetOne.length - 1)) / 2;
+		double xm = bounds.getLeft() + bounds.getWidth() / 2;
+		double ym = bounds.getTop() + bounds.getHeight() / 2;
+
+		circleOne.setXm(xm);
+		circleOne.setYm(ym);
+		circleOne.setRad(radius);
+		circleOne.setBackGroundColor((seriesPalette != null) ? seriesPalette
+				.getEntries().get(0) : ColorDefinitionImpl.RED());
+	}
+
+	private void computeCirclesWithThreeDataSets() {
+
+	}
+
+	private Double[] computeIntersections(Double[] dataSetOne,
+			Double[] dataSetTwo) {
+
+		HashSet<Double> duplicates = new HashSet<Double>();
+		
+		HashSet<Double> dataSetOneAsHash = new HashSet<Double>();
+		for (Double d : dataSetOne) {
+			dataSetOneAsHash.add(d);
+		}
+		for (double d : dataSetTwo) {
+//			dataSetOneAsHash.add(d);
+			if (dataSetOneAsHash.contains(d)){
+				duplicates.add(d);
+			}
+		}
+		return duplicates.toArray(new Double[] {});
+
+	}
+
+	private void computeCirclesWithTwoDataSets() {
+		Circle circleOne = circleList.get(0);
+		Double[] dataSetOne = (Double[]) circleOne.getDataSet();
+
+		Circle circleTwo = circleList.get(1);
+		Double[] dataSetTwo = (Double[]) circleTwo.getDataSet();
+
+		Double[] duplicates = computeIntersections(dataSetOne, dataSetTwo);
+
+		double radiusOne = 0;
+		double xmOne = 0;
+		double ymOne = 0;
+
+		double radiusTwo = 0;
+		double xmTwo = 0;
+		double ymTwo = 0;
+
+		// DataSetOne is completely in DataSetTwo
+		if (duplicates.length >= dataSetOne.length){
+			double radUnit;
+			if (bounds.getHeight() > bounds.getWidth()) {
+				radUnit = bounds.getWidth() / dataSetTwo.length;
+			} else {
+				radUnit = bounds.getHeight() / dataSetTwo.length;
+			}
+			
+			radiusTwo = (radUnit * (dataSetTwo.length - 1)) / 2;
+			xmTwo = bounds.getLeft() + bounds.getWidth() / 2;
+			ymTwo = bounds.getTop() + bounds.getHeight() / 2;
+			
+			radiusOne = (radUnit*(dataSetOne.length-1))/2;
+			xmOne = bounds.getLeft()+bounds.getWidth()/2;
+			ymOne = bounds.getTop() + bounds.getHeight()/2;
+		}
+		// DataSetTwo is completely in DataSetOne
+		else if (duplicates.length >= dataSetTwo.length){
+			double radUnit;
+			if (bounds.getHeight() > bounds.getWidth()) {
+				radUnit = bounds.getWidth() / dataSetOne.length;
+			} else {
+				radUnit = bounds.getHeight() / dataSetOne.length;
+			}
+			
+			radiusTwo = (radUnit * (dataSetTwo.length - 1)) / 2;
+			xmTwo = bounds.getLeft() + bounds.getWidth() / 2;
+			ymTwo = bounds.getTop() + bounds.getHeight() / 2;
+			
+			radiusOne = (radUnit*(dataSetTwo.length-1))/2;
+			xmOne = bounds.getLeft()+bounds.getWidth()/2;
+			ymOne = bounds.getTop() + bounds.getHeight()/2;
+		}
+		// If there are no intersections
+		else if(duplicates.length == 0) {
+			double radUnit;
+			radUnit = bounds.getWidth() /(dataSetOne.length+dataSetTwo.length+1);
+			
+			radiusOne = (radUnit*dataSetOne.length)/2;
+			xmOne = bounds.getLeft()+radiusOne;
+			ymOne = bounds.getTop() + bounds.getHeight()/2;
+			
+			radiusTwo = (radUnit*dataSetTwo.length)/2;
+			xmTwo = bounds.getLeft()+2*radiusOne+radUnit+radiusTwo;
+			ymTwo = bounds.getTop()+bounds.getHeight()/2;
+		}
+		// If there are at least one intersection
+		else{
+			double radUnit;
+			radUnit = bounds.getWidth() /(dataSetOne.length+dataSetTwo.length-duplicates.length);
+			
+			radiusOne = (radUnit*dataSetOne.length)/2;
+			xmOne = bounds.getLeft()+radiusOne;
+			ymOne = bounds.getTop() + bounds.getHeight()/2;
+			
+			radiusTwo = (radUnit*dataSetTwo.length)/2;
+			xmTwo = bounds.getLeft()+2*radiusOne+radiusTwo-(radUnit*duplicates.length);
+			ymTwo = bounds.getTop() + bounds.getHeight()/2;
+			
+			Intersection intersectionOne = new Intersection();
+			intersectionOne.computeLocationPoints(xmOne, ymOne,radiusOne,xmTwo,ymTwo,radiusTwo);
+			
+			interSectionList.add(intersectionOne);
+		}
+		circleOne.setBackGroundColor(this.seriesPalette.getEntries().get(0));
+		circleOne.setXm(xmOne);
+		circleOne.setYm(ymOne);
+		circleOne.setRad(radiusOne);
+		
+		circleTwo.setXm(xmTwo);
+		circleTwo.setYm(ymTwo);
+		circleTwo.setRad(radiusTwo);
+		circleTwo.setBackGroundColor(this.seriesPalette.getEntries().get(1));
+	}
+
+	private void computeTitleArea(Bounds cellBounds) throws ChartException {
+		titleContainerBounds = null;
+		if (titleLabel.isSetVisible()) {
+			if (titlePosition == null) {
+				throw new ChartException(ChartEngineExtensionPlugin.ID,
+						ChartException.UNDEFINED_VALUE,
+						"exception.unspecified.visible.series.title");
+			}
+
+			// Compute the bounding box ( location and size ) of a label.
+			final BoundingBox bb = cComp.computeBox(idserver, IConstants.BELOW,
+					titleLabel, 0, 0);
+
+			titleContainerBounds = goFactory.createBounds(0, 0, 0, 0);
+
+			switch (titlePosition.getValue()) {
+			case Position.BELOW:
+				cellBounds.setHeight(cellBounds.getHeight() - bb.getHeight());
+				titleContainerBounds.set(cellBounds.getLeft(), cellBounds
+						.getTop()
+						+ cellBounds.getHeight(), cellBounds.getWidth(),
+						cellBounds.getHeight());
+				break;
+			case Position.ABOVE:
+				titleContainerBounds.set(cellBounds.getLeft(), cellBounds
+						.getTop(), cellBounds.getWidth(), bb.getHeight());
+				cellBounds.setTop(cellBounds.getTop() + bb.getHeight());
+				cellBounds.setHeight(cellBounds.getHeight() - bb.getHeight());
+				break;
+			case Position.LEFT:
+				cellBounds.setWidth(cellBounds.getWidth() - bb.getWidth());
+				titleContainerBounds.set(cellBounds.getLeft(), cellBounds
+						.getTop(), bb.getWidth(), cellBounds.getHeight());
+				cellBounds.setLeft(cellBounds.getLeft() + bb.getWidth());
+				break;
+			case Position.RIGHT:
+				cellBounds.setWidth(cellBounds.getWidth() - bb.getWidth());
+				titleContainerBounds.set(cellBounds.getLeft()
+						+ cellBounds.getWidth(), cellBounds.getTop(), bb
+						.getWidth(), cellBounds.getHeight());
+				break;
+			default:
+				throw new IllegalArgumentException(
+						"exception.illegal.pie.series.title.position");
+			}
+		}
 	}
 
 	@Override
@@ -90,158 +357,167 @@ public class Venn extends BaseRenderer {
 	public void renderSeries(IPrimitiveRenderer ipr, Plot p,
 			ISeriesRenderingHints isrh) throws ChartException {
 
+		debugRenderSeries++;
+
 		if (idr == null)
 			idr = getDevice();
 
-		Location plotLocation = goFactory.createLocation(150, 75);
-		double plotWidth = 400;
-		double plotHeight = 400;
-
-		double r1 = plotWidth / 3;
-		double xm1 = plotLocation.getX() + r1;
-		double ym1 = plotLocation.getY() + 2 * r1;
-
-		double r2 = plotWidth / 3;
-		double xm2 = plotLocation.getX() + 2 * r2;
-		double ym2 = plotLocation.getY() + 2 * r2;
-
-		double r3 = plotWidth / 3;
-		double xm3 = (xm2 - xm1) / 2 + xm1;
-		double ym3 = plotLocation.getY() + r3;
-
-		ArcRenderEvent circle1 = (ArcRenderEvent) ((EventObjectCache) idr)
-				.getEventObject(
-						WrappedStructureSource.createSeries(vennseries),
-						ArcRenderEvent.class);
-		circle1.setOutline(LineAttributesImpl.create(ColorDefinitionImpl.BLACK(), LineStyle.SOLID_LITERAL, 3));
-
-		circle1.setTopLeft(goFactory.createLocation(xm1 - r1, ym1 - r1));
-		circle1.setWidth(2 * r1);
-		circle1.setHeight(2 * r1);
-		circle1.setStartAngle(0);
-		circle1.setAngleExtent(360);
-		circle1.setBackground(ColorDefinitionImpl.GREEN().brighter());
-
-		ArcRenderEvent circle2 = (ArcRenderEvent) circle1.copy();
-
-		circle2.setTopLeft(goFactory.createLocation(xm2 - r2, ym2 - r2));
-		circle2.setWidth(2 * r2);
-		circle2.setHeight(2 * r2);
-		circle2.setStartAngle(0);
-		circle2.setAngleExtent(360);
-		circle2.setBackground(ColorDefinitionImpl.BLUE().darker());
-
-		ArcRenderEvent circle3 = (ArcRenderEvent) circle1.copy();
-
-		circle3.setTopLeft(goFactory.createLocation(xm3 - r3, ym3 - r3));
-		circle3.setWidth(2 * r2);
-		circle3.setHeight(2 * r2);
-		circle3.setStartAngle(0);
-		circle3.setAngleExtent(360);
-		circle3.setBackground(ColorDefinitionImpl.RED().brighter());
-
-		ArrayList<Location> allLocs = new ArrayList<Location>();
-
-		computePolygonLocationsC1C2(xm1,ym1,r1,xm2,ym2,r2,allLocs);
-
-		Location[] allPoints = (Location[]) allLocs.toArray(new Location[] {});
-		PolygonRenderEvent poly1 = (PolygonRenderEvent) ((EventObjectCache) idr)
-				.getEventObject(
-						WrappedStructureSource.createSeries(vennseries),
-						PolygonRenderEvent.class);
-
-		poly1.setPoints(allPoints);
-		poly1.setBackground(ColorDefinitionImpl.CYAN().darker());
+		for (Circle circle : circleList) {
+			circle.render(idr, vennseries);
+		}
 		
+		for(Intersection intersection : interSectionList){
+//			intersection.renderIntersectionPoints(idr, vennseries);
+			intersection.renderInterSection(idr, vennseries);
+		}
 		
-		
-		allLocs = new ArrayList<Location>();
+		// RectangleRenderEvent lrec1c20 = new RectangleRenderEvent(
+		// ((EventObjectCache) idr).getEventObject(WrappedStructureSource
+		// .createSeries(vennseries), RectangleRenderEvent.class));
+		// RectangleRenderEvent plotarea = (RectangleRenderEvent)
+		// lrec1c20.copy();
+		// plotarea.setBounds(bounds);
+		// plotarea.setBackground(ColorDefinitionImpl.BLACK());
+		// idr.fillRectangle(plotarea);
+		//
+		// RectangleRenderEvent titleareat = (RectangleRenderEvent) lrec1c20
+		// .copy();
+		// titleareat.setBounds(titleContainerBounds);
+		// titleareat.setBackground(ColorDefinitionImpl.BLUE());
+		// idr.fillRectangle(titleareat);
+		//		
 
-		computePolygonLocationsC2C3(xm2, ym2, r2, xm3, ym3, r3, allLocs);
+//		circleList.get(1).render(idr, vennseries);
+//		circleList.get(0).render(idr, vennseries);
 
-		Location[] allPoints2 = (Location[]) allLocs.toArray(new Location[] {});
-		PolygonRenderEvent poly2 = (PolygonRenderEvent) poly1.copy();
+		/*
+		 * Location plotLocation = goFactory.createLocation(150, 75); double
+		 * plotWidth = 400; double plotHeight = 400;
+		 * 
+		 * double r1 = plotWidth / 3; double xm1 = plotLocation.getX() + r1;
+		 * double ym1 = plotLocation.getY() + 2 * r1;
+		 * 
+		 * double r2 = plotWidth / 4; double xm2 = plotLocation.getX() + 2 * r2;
+		 * double ym2 = plotLocation.getY() + 2 * r2;
+		 * 
+		 * double r3 = plotWidth / 3; double xm3 = (xm2 - xm1) / 2 + xm1; double
+		 * ym3 = plotLocation.getY() + r3;
+		 * 
+		 * ArcRenderEvent circle1 = (ArcRenderEvent) ((EventObjectCache) idr)
+		 * .getEventObject( WrappedStructureSource.createSeries(vennseries),
+		 * ArcRenderEvent.class);
+		 * circle1.setOutline(LineAttributesImpl.create(ColorDefinitionImpl
+		 * .BLACK(), LineStyle.SOLID_LITERAL, 3));
+		 * 
+		 * circle1.setTopLeft(goFactory.createLocation(xm1 - r1, ym1 - r1));
+		 * circle1.setWidth(2 * r1); circle1.setHeight(2 * r1);
+		 * circle1.setStartAngle(0); circle1.setAngleExtent(360);
+		 * circle1.setBackground(ColorDefinitionImpl.GREEN().brighter());
+		 * 
+		 * ArcRenderEvent circle2 = (ArcRenderEvent) circle1.copy();
+		 * 
+		 * circle2.setTopLeft(goFactory.createLocation(xm2 - r2, ym2 - r2));
+		 * circle2.setWidth(2 * r2); circle2.setHeight(2 * r2);
+		 * circle2.setStartAngle(0); circle2.setAngleExtent(360);
+		 * circle2.setBackground(ColorDefinitionImpl.BLUE().darker());
+		 * 
+		 * ArcRenderEvent circle3 = (ArcRenderEvent) circle1.copy();
+		 * 
+		 * circle3.setTopLeft(goFactory.createLocation(xm3 - r3, ym3 - r3));
+		 * circle3.setWidth(2 * r2); circle3.setHeight(2 * r2);
+		 * circle3.setStartAngle(0); circle3.setAngleExtent(360);
+		 * circle3.setBackground(ColorDefinitionImpl.RED().brighter());
+		 * 
+		 * ArrayList<Location> allLocs = new ArrayList<Location>();
+		 * 
+		 * computePolygonLocationsC1C2(xm1, ym1, r1, xm2, ym2, r2, allLocs);
+		 * 
+		 * Location[] allPoints = (Location[]) allLocs.toArray(new Location[]
+		 * {}); PolygonRenderEvent poly1 = (PolygonRenderEvent)
+		 * ((EventObjectCache) idr) .getEventObject(
+		 * WrappedStructureSource.createSeries(vennseries),
+		 * PolygonRenderEvent.class);
+		 * 
+		 * poly1.setPoints(allPoints);
+		 * poly1.setBackground(ColorDefinitionImpl.CYAN().darker());
+		 * 
+		 * allLocs = new ArrayList<Location>();
+		 * 
+		 * computePolygonLocationsC2C3(xm2, ym2, r2, xm3, ym3, r3, allLocs);
+		 * 
+		 * Location[] allPoints2 = (Location[]) allLocs.toArray(new Location[]
+		 * {}); PolygonRenderEvent poly2 = (PolygonRenderEvent) poly1.copy();
+		 * 
+		 * poly2.setPoints(allPoints2);
+		 * poly2.setBackground(ColorDefinitionImpl.PINK());
+		 * 
+		 * allLocs = new ArrayList<Location>();
+		 * 
+		 * computePolygonLocationsC1C3(xm1, ym1, r1, xm3, ym3, r3, allLocs);
+		 * 
+		 * Location[] allPoints3 = (Location[]) allLocs.toArray(new Location[]
+		 * {}); PolygonRenderEvent poly3 = (PolygonRenderEvent) poly1.copy();
+		 * poly3.setPoints(allPoints3);
+		 * poly3.setBackground(ColorDefinitionImpl.YELLOW());
+		 * 
+		 * allLocs = new ArrayList<Location>();
+		 * 
+		 * computePolygonLocationC1C2C3(xm1, ym1, r1, xm2, ym2, r2, xm3, ym3,
+		 * r3, allLocs); Location[] allPoints4 = (Location[])
+		 * allLocs.toArray(new Location[] {}); PolygonRenderEvent poly4 =
+		 * (PolygonRenderEvent) poly1.copy(); poly4.setPoints(allPoints4);
+		 * poly4.setBackground(ColorDefinitionImpl.WHITE());
+		 * 
+		 * // poly2.setPoints(allPoints3); //
+		 * poly2.setBackground(ColorDefinitionImpl.PINK());
+		 * 
+		 * RectangleRenderEvent lrec1c20 = new RectangleRenderEvent(
+		 * ((EventObjectCache) idr).getEventObject(WrappedStructureSource
+		 * .createSeries(vennseries), RectangleRenderEvent.class));
+		 * 
+		 * // CIRCLE C1 - C2 Location[] c1c2 =
+		 * computeCircleIntersectionsC1C2(xm1, xm2, ym1, ym2, r1, r2);
+		 * lrec1c20.setBounds(BoundsImpl.create(c1c2[0].getX(), c1c2[0].getY(),
+		 * 10, 10)); lrec1c20.setBackground(ColorDefinitionImpl.BLACK());
+		 * 
+		 * RectangleRenderEvent lrec1c21 = (RectangleRenderEvent)
+		 * lrec1c20.copy(); lrec1c21.setBounds(BoundsImpl.create(c1c2[1].getX(),
+		 * c1c2[1].getY(), 10, 10));
+		 * 
+		 * Location[] c1c3 = computeCircleIntersectionsC1C3(xm1, xm3, ym1, ym3,
+		 * r1, r3); RectangleRenderEvent lrec1c30 = (RectangleRenderEvent)
+		 * lrec1c20.copy(); lrec1c30.setBounds(BoundsImpl.create(c1c3[0].getX(),
+		 * c1c3[0].getY(), 10, 10));
+		 * lrec1c30.setBackground(ColorDefinitionImpl.BLACK());
+		 * 
+		 * RectangleRenderEvent lrec1c31 = (RectangleRenderEvent)
+		 * lrec1c20.copy(); lrec1c31.setBounds(BoundsImpl.create(c1c3[1].getX(),
+		 * c1c3[1].getY(), 10, 10));
+		 * 
+		 * Location[] c2c3 = computeCircleIntersectionsC2C3(xm2, xm3, ym2, ym3,
+		 * r2, r3); RectangleRenderEvent lrec2c30 = (RectangleRenderEvent)
+		 * lrec1c20.copy(); lrec2c30.setBounds(BoundsImpl.create(c2c3[0].getX(),
+		 * c2c3[0].getY(), 10, 10));
+		 * lrec2c30.setBackground(ColorDefinitionImpl.BLACK());
+		 * 
+		 * RectangleRenderEvent lrec2c31 = (RectangleRenderEvent)
+		 * lrec1c20.copy(); lrec2c31.setBounds(BoundsImpl.create(c2c3[1].getX(),
+		 * c2c3[1].getY(), 10, 10));
+		 * 
+		 * System.out.println("c1c2"); System.out.println("0x=" +
+		 * c1c2[0].getX()); System.out.println("0y=" + c1c2[0].getY());
+		 * System.out.println("1x=" + c1c2[1].getX()); System.out.println("1y="
+		 * + c1c2[1].getY());
+		 */
 
-		poly2.setPoints(allPoints2);
-		poly2.setBackground(ColorDefinitionImpl.PINK());
-
-		
-		
-		
-		
-		allLocs = new ArrayList<Location>();
-
-		computePolygonLocationsC1C3(xm1,ym1,r1,xm3,ym3,r3,allLocs);
-
-		Location[] allPoints3 = (Location[]) allLocs.toArray(new Location[] {});
-		PolygonRenderEvent poly3 = (PolygonRenderEvent) poly1.copy();
-		poly3.setPoints(allPoints3);
-		poly3.setBackground(ColorDefinitionImpl.YELLOW());
-		
-		allLocs = new ArrayList<Location>();
-		
-		computePolygonLocationC1C2C3(xm1,ym1,r1,xm2,ym2,r2,xm3,ym3,r3,allLocs);
-		Location[] allPoints4 = (Location[]) allLocs.toArray(new Location[]{});
-		PolygonRenderEvent poly4 = (PolygonRenderEvent) poly1.copy();
-		poly4.setPoints(allPoints4);
-		poly4.setBackground(ColorDefinitionImpl.WHITE());
-		
-		
-//		poly2.setPoints(allPoints3);
-//		poly2.setBackground(ColorDefinitionImpl.PINK());
-
-				
-		RectangleRenderEvent lre1 = new RectangleRenderEvent(((EventObjectCache) idr)
-				.getEventObject(WrappedStructureSource.createSeries(vennseries),
-						RectangleRenderEvent.class));
-		
-		// CIRCLE C1 - C2
-		Location[] c1c2 = computeCircleIntersectionsC1C2(xm1, xm2, ym1, ym2, r1, r2);
-		lre1.setBounds(BoundsImpl.create(c1c2[0].getX(), c1c2[0].getY(), 10, 10));
-		lre1.setBackground(ColorDefinitionImpl.BLACK());
-		
-		RectangleRenderEvent lre2 = (RectangleRenderEvent) lre1.copy();
-		lre2.setBounds(BoundsImpl.create(c1c2[1].getX(), c1c2[1].getY(), 10, 10));
-
-		
-		Location[] c1c3 = computeCircleIntersectionsC1C3(xm1, xm3, ym1, ym3, r1, r3);
-		RectangleRenderEvent lre3 = (RectangleRenderEvent) lre1.copy();
-		lre3.setBounds(BoundsImpl.create(c1c3[0].getX(), c1c3[0].getY(), 10, 10));
-		lre3.setBackground(ColorDefinitionImpl.BLACK());
-		
-		RectangleRenderEvent lre4 = (RectangleRenderEvent) lre1.copy();
-		lre4.setBounds(BoundsImpl.create(c1c3[1].getX(), c1c3[1].getY(), 10, 10));
-		
-		Location[] c2c3 = computeCircleIntersectionsC2C3(xm2, xm3, ym2, ym3, r2, r3);
-		RectangleRenderEvent lre5 = (RectangleRenderEvent) lre1.copy();
-		lre5.setBounds(BoundsImpl.create(c2c3[0].getX(), c2c3[0].getY(), 10, 10));
-		lre5.setBackground(ColorDefinitionImpl.BLACK());
-		
-		
-		RectangleRenderEvent lre6 = (RectangleRenderEvent) lre1.copy();
-		lre6.setBounds(BoundsImpl.create(c2c3[1].getX(), c2c3[1].getY(), 10, 10));
-		
-		System.out.println("c1c2");
-		System.out.println("0x="+c1c2[0].getX());
-		System.out.println("0y="+c1c2[0].getY());
-		System.out.println("1x="+c1c2[1].getX());
-		System.out.println("1y="+c1c2[1].getY());
-		
-
-
-		idr.fillArc(circle1);
-		idr.fillArc(circle2);
-		idr.fillArc(circle3);
-		idr.fillPolygon(poly1);
-		idr.fillPolygon(poly2);
-		idr.fillPolygon(poly3);
-		idr.fillPolygon(poly4);
-//		idr.fillRectangle(lre1);
-//		idr.fillRectangle(lre2);
-//		idr.fillRectangle(lre3);
-//		idr.fillRectangle(lre4);
-//		idr.fillRectangle(lre5);
-//		idr.fillRectangle(lre6);
+		/*
+		 * // idr.fillArc(circle1); idr.fillArc(circle2); idr.fillArc(circle3);
+		 * // idr.fillPolygon(poly1); // idr.fillPolygon(poly2); //
+		 * idr.fillPolygon(poly3); // idr.fillPolygon(poly4); //
+		 * idr.fillRectangle(lrec1c20); // idr.fillRectangle(lrec1c21); //
+		 * idr.fillRectangle(lrec1c30); // idr.fillRectangle(lrec1c31);
+		 * idr.fillRectangle(lrec2c31); idr.fillRectangle(lrec2c31);
+		 */
 		/*
 		 * double[] m1 = new double[] { 1, 3, 5 }; double[] m2 = new double[] {
 		 * 1, 4, 5 };
@@ -328,6 +604,9 @@ public class Venn extends BaseRenderer {
 		 * 
 		 * 
 		 * 
+		 * 
+		 * 
+		 * 
 		 * poly.setOutline(LineAttributesImpl.create(ColorDefinitionImpl.BLACK(),
 		 * LineStyle.SOLID_LITERAL, 2));
 		 * poly.setBackground(ColorDefinitionImpl.GREEN().darker());
@@ -356,55 +635,56 @@ public class Venn extends BaseRenderer {
 		 */
 	}
 
-
 	private void computePolygonLocationC1C2C3(double xm1, double ym1,
 			double r1, double xm2, double ym2, double r2, double xm3,
 			double ym3, double r3, ArrayList<Location> allLocs) {
 
-		Location loc0 = computeCircleIntersectionsC1C2(xm1, xm2, ym1, ym2, r1, r2)[1];
-		Location loc1 = computeCircleIntersectionsC1C3(xm1, xm3, ym1, ym3, r1, r3)[0];
-		Location loc2 = computeCircleIntersectionsC2C3(xm2, xm3, ym2, ym3, r1, r3)[0];
-		
-		
-		double y00 = ym1-loc2.getY();
-		double startAngle0 = Math.toDegrees(Math.asin(y00/r1));
-		
-		double y01 = ym1-loc0.getY();
-		double endAngle0 = Math.toDegrees(Math.asin(y01/r1));
-		
-		double angleExtent0 = endAngle0-startAngle0;
-		
-		System.out.println("startAngle"+startAngle0);
-		System.out.println("endAngle"+endAngle0);
-		System.out.println("angleextent"+angleExtent0);
+		Location loc0 = computeCircleIntersectionsC1C2(xm1, xm2, ym1, ym2, r1,
+				r2)[1];
+		Location loc1 = computeCircleIntersectionsC1C3(xm1, xm3, ym1, ym3, r1,
+				r3)[0];
+		Location loc2 = computeCircleIntersectionsC2C3(xm2, xm3, ym2, ym3, r1,
+				r3)[0];
+
+		double y00 = ym1 - loc2.getY();
+		double startAngle0 = Math.toDegrees(Math.asin(y00 / r1));
+
+		double y01 = ym1 - loc0.getY();
+		double endAngle0 = Math.toDegrees(Math.asin(y01 / r1));
+
+		double angleExtent0 = endAngle0 - startAngle0;
+
+		System.out.println("startAngle" + startAngle0);
+		System.out.println("endAngle" + endAngle0);
+		System.out.println("angleextent" + angleExtent0);
 		createLocationPoints(r1, xm1, ym1, startAngle0, angleExtent0, allLocs);
 
-		
-		double y10 = ym2-loc0.getY();
-		double startAngle1 = 90+Math.toDegrees(Math.acos(y10/r2));
-		
-		double y11 = ym2-loc1.getY();
-		double endAngle1 = 180-Math.toDegrees(Math.asin(y11/r2));
-		
-		double angleExtent1 = endAngle1-startAngle1;
-		
+		double y10 = ym2 - loc0.getY();
+		double startAngle1 = 90 + Math.toDegrees(Math.acos(y10 / r2));
+
+		double y11 = ym2 - loc1.getY();
+		double endAngle1 = 180 - Math.toDegrees(Math.asin(y11 / r2));
+
+		double angleExtent1 = endAngle1 - startAngle1;
+
 		createLocationPoints(r2, xm2, ym2, startAngle1, angleExtent1, allLocs);
-		
+
 		double y20 = ym3 - loc1.getY();
-		double startAngle2 = 180+Math.toDegrees(Math.asin(y20/-r3));
-		System.out.println("start"+startAngle2);
+		double startAngle2 = 180 + Math.toDegrees(Math.asin(y20 / -r3));
+		System.out.println("start" + startAngle2);
 		double y21 = ym3 - loc2.getY();
-		double endAngle2 = 360-Math.toDegrees(Math.asin(y21/-r3));
-		System.out.println("end"+endAngle2);
-		double angleExtent2 = endAngle2-startAngle2;
-		
+		double endAngle2 = 360 - Math.toDegrees(Math.asin(y21 / -r3));
+		System.out.println("end" + endAngle2);
+		double angleExtent2 = endAngle2 - startAngle2;
+
 		createLocationPoints(r3, xm3, ym3, startAngle2, angleExtent2, allLocs);
 	}
 
 	private void computePolygonLocationsC1C3(double xm1, double ym1, double r1,
 			double xm3, double ym3, double r3, ArrayList<Location> allLocs) {
 
-		Location[] intersectionC1C3 = computeCircleIntersectionsC1C3(xm1, xm3, ym1, ym3, r1, r3);
+		Location[] intersectionC1C3 = computeCircleIntersectionsC1C3(xm1, xm3,
+				ym1, ym3, r1, r3);
 		System.out.println("IntersectionC1C3");
 		for (int i = 0; i < intersectionC1C3.length; i++) {
 			System.out.println(i + "x=" + intersectionC1C3[i].getX());
@@ -414,33 +694,33 @@ public class Venn extends BaseRenderer {
 		double y1 = ym1 - intersectionC1C3[0].getY();
 		double startAngle1 = Math.toDegrees(Math.asin(y1 / r1));
 		double dY = ym1 - intersectionC1C3[1].getY();
-		double endAngle1 = 90+Math.toDegrees(Math.acos(dY / r1));
+		double endAngle1 = 90 + Math.toDegrees(Math.acos(dY / r1));
 		double angleExtent1 = startAngle1 - endAngle1;
 		System.out.println("startAngle:" + startAngle1);
 		System.out.println("angleExtent:" + angleExtent1);
 
 		double y2 = ym3 - intersectionC1C3[1].getY();
-		double startAngle2 = 180+Math.toDegrees(Math.asin(y2 / r3));
+		double startAngle2 = 180 - Math.toDegrees(Math.asin(y2 / r3));
 		double dY2 = ym3 - intersectionC1C3[0].getY();
-		double endAngle2 = 0-Math.toDegrees(Math.asin(dY2 / r3));
+		double endAngle2 = 360 + Math.toDegrees(Math.asin(dY2 / r3));
 		double angleExtent2 = startAngle2 - endAngle2;
 		System.out.println("startAngle:" + startAngle2);
-		System.out.println("endAngle:"+endAngle2);
+		System.out.println("endAngle:" + endAngle2);
 
-		
 		createLocationPoints(r1, xm1, ym1, startAngle1, Math.abs(angleExtent1),
 				allLocs);
 		createLocationPoints(r3, xm3, ym3, startAngle2, Math.abs(angleExtent2),
 				allLocs);
-		
-		System.out.println("Punkte"+allLocs.size());
+
+		System.out.println("Punkte" + allLocs.size());
 
 	}
 
 	private void computePolygonLocationsC2C3(double xm2, double ym2, double r2,
 			double xm3, double ym3, double r3, ArrayList<Location> allLocs) {
 
-		Location[] intersectionC2C3 = computeCircleIntersectionsC2C3(xm2, xm3, ym2, ym3, r2, r3);
+		Location[] intersectionC2C3 = computeCircleIntersectionsC2C3(xm2, xm3,
+				ym2, ym3, r2, r3);
 		System.out.println("IntersectionC2C3");
 		for (int i = 0; i < intersectionC2C3.length; i++) {
 			System.out.println(i + "x=" + intersectionC2C3[i].getX());
@@ -448,7 +728,7 @@ public class Venn extends BaseRenderer {
 		}
 
 		double y1 = ym3 - intersectionC2C3[0].getY();
-		double startAngle1 = -180-Math.toDegrees(Math.asin(y1 / r3));
+		double startAngle1 = -180 - Math.toDegrees(Math.asin(y1 / r3));
 		double dY = ym3 - intersectionC2C3[1].getY();
 		double endAngle1 = Math.toDegrees(Math.asin(dY / r3));
 		double angleExtent1 = startAngle1 - endAngle1;
@@ -458,16 +738,15 @@ public class Venn extends BaseRenderer {
 		double y2 = ym2 - intersectionC2C3[1].getY();
 		double startAngle2 = Math.toDegrees(Math.asin(y2 / r2));
 		double dY2 = ym2 - intersectionC2C3[0].getY();
-		double endAngle2 = 180-Math.toDegrees(Math.asin(dY2 / r2));
+		double endAngle2 = 180 - Math.toDegrees(Math.asin(dY2 / r2));
 		double angleExtent2 = startAngle2 - endAngle2;
 		System.out.println("startAngle:" + startAngle2);
-		System.out.println("endAngle:"+endAngle2);
+		System.out.println("endAngle:" + endAngle2);
 
-		
 		createLocationPoints(r3, xm3, ym3, startAngle1, Math.abs(angleExtent1),
 				allLocs);
-		
-		System.out.println("Punkte"+allLocs.size());
+
+		System.out.println("Punkte" + allLocs.size());
 		createLocationPoints(r2, xm2, ym2, startAngle2, Math.abs(angleExtent2),
 				allLocs);
 
@@ -475,8 +754,8 @@ public class Venn extends BaseRenderer {
 
 	private void computePolygonLocationsC1C2(double xm1, double ym1, double r1,
 			double xm2, double ym2, double r2, ArrayList<Location> allLocs) {
-		Location[] intersectionC1C2 = computeCircleIntersectionsC1C2(xm1, xm2, ym1,
-				ym2, r1, r2);
+		Location[] intersectionC1C2 = computeCircleIntersectionsC1C2(xm1, xm2,
+				ym1, ym2, r1, r2);
 		double y1 = ym1 - intersectionC1C2[0].getY();
 		double startAngle1 = Math.toDegrees(Math.asin(y1 / r1));
 
@@ -538,7 +817,7 @@ public class Venn extends BaseRenderer {
 					goFactory.createLocation(x2, y2) };
 		}
 	}
-	
+
 	private Location[] computeCircleIntersectionsC1C3(double xm1, double xm3,
 			double ym1, double ym3, double r1, double r3) {
 		double a = (-2 * xm1 + 2 * xm3);
@@ -564,7 +843,7 @@ public class Venn extends BaseRenderer {
 					goFactory.createLocation(x2, y2) };
 		}
 	}
-	
+
 	private Location[] computeCircleIntersectionsC2C3(double xm2, double xm3,
 			double ym2, double ym3, double r1, double r3) {
 		double a = (-2 * xm2 + 2 * xm3);
