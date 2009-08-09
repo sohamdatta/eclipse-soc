@@ -4,12 +4,16 @@ import java.util.ArrayList;
 
 import org.eclipse.birt.chart.model.data.BubbleDataSet;
 import org.eclipse.birt.chart.model.data.DataSet;
+import org.eclipse.birt.chart.model.data.NumberDataSet;
 import org.eclipse.birt.chart.model.data.impl.BubbleDataSetImpl;
 import org.eclipse.birt.chart.model.data.impl.DataSetImpl;
+import org.eclipse.birt.chart.model.data.impl.NumberDataSetImpl;
+import org.eclipse.emf.ecore.EObject;
+import org.eclipse.emf.ecore.EReference;
 
 public class VennDataSetImpl extends DataSetImpl implements VennDataSet {
 
-	private ArrayList<DataSet> dataSets;
+	private DataSet[] dataSets;
 
 	protected VennDataSetImpl(){
 		super();
@@ -24,48 +28,41 @@ public class VennDataSetImpl extends DataSetImpl implements VennDataSet {
 	}
 	
 	private void initialize() {
-		dataSets = new ArrayList<DataSet>(3);
+		dataSets = new DataSet[3];
 	}
 	
 	public VennDataSet copyInstance( )
 	{
 		VennDataSetImpl dest = new VennDataSetImpl( );
 		dest.set( this );
+		dest.dataSets = this.dataSets;
 		return dest;
 	}
 
 	protected void set( VennDataSet src )
 	{
 		super.set( src );
-
-	}
-	
-	
-	@Override
-	public Object getValues() {
-		return super.getValues();
+		
 	}
 
-	@Override
-	protected void set(DataSet src) {
-		addDataSet(src);
-	}
-
-	@Override
-	public void setValues(Object newValues) {
-		super.setValues(newValues);
+	public static VennDataSet create( EObject parent, EReference ref )
+	{
+		return new VennDataSetImpl( );
 	}
 
 	@Override
 	public void addDataSet(DataSet data) {
-		if (this.dataSets.size()<3){
-			dataSets.add(data);
+		for (int i = 0; i < this.dataSets.length; i++) {
+			if (null != dataSets[i]){
+				dataSets[i] = data;
+				break;
+			}
 		}
 	}
 
 	@Override
 	public DataSet[] getDataSets() {
-		return dataSets.toArray(new DataSet[]{});
+		return dataSets;
 	}
-
+	
 }

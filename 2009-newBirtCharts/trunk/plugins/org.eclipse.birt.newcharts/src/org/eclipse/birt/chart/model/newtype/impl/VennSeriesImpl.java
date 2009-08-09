@@ -1,6 +1,7 @@
 package org.eclipse.birt.chart.model.newtype.impl;
 
 import org.eclipse.birt.chart.model.attribute.LeaderLineStyle;
+import org.eclipse.birt.chart.model.attribute.LineAttributes;
 import org.eclipse.birt.chart.model.attribute.LineStyle;
 import org.eclipse.birt.chart.model.attribute.Position;
 import org.eclipse.birt.chart.model.attribute.impl.ColorDefinitionImpl;
@@ -20,8 +21,12 @@ import org.eclipse.emf.ecore.EReference;
 public class VennSeriesImpl extends SeriesImpl implements VennSeries{
 
 	
-	private static final String TITLE_DEFAULT = "default venn title";
-	private String title = TITLE_DEFAULT;
+	private static Label TITLE_DEFAULT ;
+	private Label title = TITLE_DEFAULT;
+	private LineAttributes leaderLineAttributes;
+	private double leaderLineLength;
+	private LeaderLineStyle leaderLineStyle;
+	private Position titlePosition;
 	
 	public static VennSeries create(EObject parent, EReference ref){
 		return new VennSeriesImpl();
@@ -41,16 +46,26 @@ public class VennSeriesImpl extends SeriesImpl implements VennSeries{
 	protected void set( VennSeries src )
 	{
 		super.set( src );
-		src.setTitle(this.getTitle());
+//		src.setTitle(this.getTitle());
+//		src.setTitlePosition(this.getTitlePosition());
+//		src.setLeaderLineAttributes(this.getLeaderLineAttributes());
+//		src.setLeaderLineLength(this.getLeaderLineLength());
+//		src.setLeaderLineStyle(this.getLeaderLineStyle());
+		this.setTitle(src.getTitle());
+		this.setTitlePosition(src.getTitlePosition());
+		this.setLeaderLineAttributes(src.getLeaderLineAttributes());
+		this.setLeaderLineLength(src.getLeaderLineLength());
+		this.setLeaderLineStyle(src.getLeaderLineStyle());
+		
 	}
 
 	@Override
-	public String getTitle() {
+	public Label getTitle() {
 		return this.title;
 	}
 
 	@Override
-	public void setTitle(String title) {
+	public void setTitle(Label title) {
 		this.title = title;
 	}
 	
@@ -75,6 +90,50 @@ public class VennSeriesImpl extends SeriesImpl implements VennSeries{
 	protected final void initialize( )
 	{
 		super.initialize( );
+		TITLE_DEFAULT = LabelImpl.create();
+		TITLE_DEFAULT.getCaption().setValue("Default Venn Diagram Title");
+		TITLE_DEFAULT.setVisible(false);
+		setTitle(TITLE_DEFAULT);
+	}
+
+	@Override
+	public LineAttributes getLeaderLineAttributes() {
+		return this.leaderLineAttributes;
+	}
+
+	@Override
+	public double getLeaderLineLength() {
+		return this.leaderLineLength;
+	}
+
+	@Override
+	public LeaderLineStyle getLeaderLineStyle() {
+		return this.leaderLineStyle;
+	}
+
+	@Override
+	public void setLeaderLineAttributes(LineAttributes value) {
+		this.leaderLineAttributes = value;
+	}
+
+	@Override
+	public void setLeaderLineLength(double value) {
+		this.leaderLineLength = value;
+	}
+
+	@Override
+	public void setLeaderLineStyle(LeaderLineStyle value) {
+		this.leaderLineStyle = value;
+	}
+
+	@Override
+	public Position getTitlePosition() {
+		return this.titlePosition;
+	}
+
+	@Override
+	public void setTitlePosition(Position p) {
+		this.titlePosition = p;
 	}
 	
 }
