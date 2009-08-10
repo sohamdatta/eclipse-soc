@@ -6277,6 +6277,7 @@ public class Grid extends Canvas
                 redraw(clientArea.x,clientArea.y,clientArea.width,clientArea.height,false);
 
                 selectionEvent = new Event();
+                selectionEvent.item = item;
             }
             else if (ctrl)
             {
