@@ -6960,6 +6960,7 @@ public class Grid extends Canvas
         if (selectionEvent != null)
         {
             selectionEvent.stateMask = e.stateMask;
+            selectionEvent.item = item;//should do this
             selectionEvent.button = e.button;
             selectionEvent.x = e.x;
             selectionEvent.y = e.y;
@@ -7056,7 +7057,7 @@ public class Grid extends Canvas
     private void onMouseUp(MouseEvent e)
     {
     	cellSelectedOnLastMouseDown = false;
-
+    	GridItem item = getItem(new Point(e.x, e.y));
         if (resizingColumn)
         {
             resizingColumn = false;
@@ -7102,6 +7103,7 @@ public class Grid extends Canvas
             if (followupCellSelectionEventOwed)
             {
             	Event se = new Event();
+            	se.item = item;
             	se.button = e.button;
             	se.stateMask = e.stateMask;
             	se.x = e.x;
@@ -7130,7 +7132,7 @@ public class Grid extends Canvas
     		return;  //a mouseexit event should occur immediately
     	}
 
-
+    	GridItem item = getItem(new Point(e.x, e.y));
         //if populated will be fired at end of method.
         Event selectionEvent = null;
 
@@ -7327,6 +7329,7 @@ public class Grid extends Canvas
         if (selectionEvent != null)
         {
             selectionEvent.stateMask = e.stateMask;
+            selectionEvent.item = item;
             selectionEvent.button = e.button;
             selectionEvent.x = e.x;
             selectionEvent.y = e.y;
