@@ -5,6 +5,7 @@ import org.eclipse.birt.chart.model.attribute.LineAttributes;
 import org.eclipse.birt.chart.model.attribute.Position;
 import org.eclipse.birt.chart.model.component.Label;
 import org.eclipse.birt.chart.model.component.Series;
+import org.eclipse.birt.chart.model.newtype.impl.IntersectionColorType;
 
 public interface VennSeries extends Series {
 
@@ -23,5 +24,8 @@ public interface VennSeries extends Series {
 	
 	void setTitlePosition(Position p);
 	Position getTitlePosition();
+	
+	IntersectionColorType getIntersectionColorType();
+	void setIntersectionColorType(IntersectionColorType colorType);
 	
 }

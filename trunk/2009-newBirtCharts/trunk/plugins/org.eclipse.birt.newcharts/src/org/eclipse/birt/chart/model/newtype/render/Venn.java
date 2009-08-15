@@ -49,15 +49,13 @@ import org.eclipse.birt.chart.model.layout.Legend;
 import org.eclipse.birt.chart.model.layout.Plot;
 import org.eclipse.birt.chart.model.newtype.VennSeries;
 import org.eclipse.birt.chart.model.newtype.data.VennDataSet;
+import org.eclipse.birt.chart.model.newtype.impl.IntersectionColorType;
 import org.eclipse.birt.chart.plugin.ChartEngineExtensionPlugin;
 import org.eclipse.birt.chart.render.BaseRenderer;
 import org.eclipse.birt.chart.render.ISeriesRenderingHints;
 
 public class Venn extends BaseRenderer {
 
-	ArrayList<Double[]> assignedSeriesDefinition;
-
-	private Hashtable<Double, Double> duplicateValues;
 	private DataPointHints dph = null;
 
 	protected static final IGObjectFactory goFactory = GObjectFactory
@@ -77,13 +75,13 @@ public class Venn extends BaseRenderer {
 
 	private Bounds bounds = null;
 
-	private ArrayList<Circle> circleList;
-
-	private ArrayList<Double[]> datasets;
+	private ArrayList<Circle> circleList = new ArrayList<Circle>();
 
 	private Palette seriesPalette;
 
 	private ArrayList<Intersection> interSectionList = new ArrayList<Intersection>();
+
+	private IntersectionColorType intersectionColorType;
 
 	private static int debugCompute = 0;
 	private static int debugRenderSeries = 0;
@@ -101,6 +99,7 @@ public class Venn extends BaseRenderer {
 		this.titleLabel = vennseries.getTitle();
 		this.titlePosition = vennseries.getTitlePosition();
 		this.seriesPalette = getSeriesDefinition().getSeriesPalette();
+		this.intersectionColorType = vennseries.getIntersectionColorType();
 
 		this.idserver = getXServer();
 
@@ -111,50 +110,29 @@ public class Venn extends BaseRenderer {
 		/*
 		 * For debugging reasons
 		 */
-		Double[] dataSetThree = new Double[] { 1.0, 2.0, 3.0, 4.0};
-		Double[] dataSetTwo = new Double[] { 6.0,5.0 };
-		Double[] dataSetOne = new Double[] { 7.0,8.0 };
-		int dataSetCount = 3;
-		datasets = new ArrayList<Double[]>();
-		datasets.add(dataSetTwo);
-		datasets.add(dataSetThree);
-		 datasets.add(dataSetOne);
+		Double[] dataSetOne = new Double[] { 1.0,2.0,3.0 };
+		Double[] dataSetTwo = new Double[] { 1.0,2.0,4.0 };
+		Double[] dataSetThree = new Double[] { 1.0,3.0,4.0 };
+
+		// String[] dataSetOne = new String[] { "abc", "cde", "fgh", "asdsada",
+		// "dasdsadsa" };
+		// String[] dataSetTwo = new String[] { "abc", "cde", "zyu" };
+		// String[] dataSetThree = new String[] { "ikl", "da", "fdas" };
+		circleList.add(new Circle(dataSetThree));
+		circleList.add(new Circle(dataSetTwo));
+		circleList.add(new Circle(dataSetOne));
 		/*
 		 * End debugging
 		 */
-		circleList = new ArrayList<Circle>();
-		for (Double[] d : datasets) {
-			Double[] dataSetWithoutDuplicates = deleteDuplicateEntries(d);
-			circleList.add(new Circle(dataSetWithoutDuplicates));
-		}
-
 		initializeCircles();
-
-		final SeriesDefinition sd = getSeriesDefinition();
-
-		final SeriesRenderingHints srh = (SeriesRenderingHints) isrh;
-
-		assignedSeriesDefinition = new ArrayList<Double[]>();
-		NumberDataSet allVennDataSets = (NumberDataSet) vennseries.getDataSet();
-
-		duplicateValues = new Hashtable<Double, Double>();
-
 	}
 
-	private Double[] deleteDuplicateEntries(Double[] d) {
-		HashSet<Double> dAsHash = new HashSet<Double>();
-		for (int i = 0; i < d.length; i++) {
-			dAsHash.add(d[i]);
-		}
-		return dAsHash.toArray(new Double[] {});
-	}
-
-	private void initializeCircles() {
-		if (datasets.size() == 1) {
+	private void initializeCircles() throws ChartException {
+		if (circleList.size() == 1) {
 			computeCircleWithOneDataSet();
-		} else if (datasets.size() == 2) {
+		} else if (circleList.size() == 2) {
 			computeCirclesWithTwoDataSets();
-		} else if (datasets.size() == 3) {
+		} else if (circleList.size() == 3) {
 			computeCirclesWithThreeDataSets();
 		}
 	}
@@ -162,7 +140,7 @@ public class Venn extends BaseRenderer {
 	private void computeCircleWithOneDataSet() {
 
 		Circle circleOne = circleList.get(0);
-		Double[] dataSetOne = (Double[]) circleOne.getDataSet();
+		Object[] dataSetOne = (Object[]) circleOne.getDataSet();
 
 		double radUnit;
 		if (bounds.getHeight() > bounds.getWidth()) {
@@ -183,12 +161,12 @@ public class Venn extends BaseRenderer {
 
 	private void computeCirclesWithTwoDataSets() {
 		Circle circleOne = circleList.get(0);
-		Double[] dataSetOne = (Double[]) circleOne.getDataSet();
+		Object[] dataSetOne = (Object[]) circleOne.getDataSet();
 
 		Circle circleTwo = circleList.get(1);
-		Double[] dataSetTwo = (Double[]) circleTwo.getDataSet();
+		Object[] dataSetTwo = (Object[]) circleTwo.getDataSet();
 
-		Double[] duplicates = computeIntersections(dataSetOne, dataSetTwo);
+		Object[] duplicates = computeIntersectionData(dataSetOne, dataSetTwo);
 
 		double radiusOne = 0;
 		double xmOne = 0;
@@ -287,103 +265,577 @@ public class Venn extends BaseRenderer {
 		circleTwo.setBackGroundColor(this.seriesPalette.getEntries().get(1));
 	}
 
-	private void computeCirclesWithThreeDataSets() {
+	private void computeCirclesWithThreeDataSets() throws ChartException {
 
 		Circle circleOne = circleList.get(0);
-		Double[] dataSetOne = (Double[]) circleOne.getDataSet();
+		Object[] dataSetOne = (Object[]) circleOne.getDataSet();
 
 		Circle circleTwo = circleList.get(1);
-		Double[] dataSetTwo = (Double[]) circleTwo.getDataSet();
+		Object[] dataSetTwo = (Object[]) circleTwo.getDataSet();
 
 		Circle circleThree = circleList.get(2);
-		Double[] dataSetThree = (Double[]) circleThree.getDataSet();
+		Object[] dataSetThree = (Object[]) circleThree.getDataSet();
 
-		Double[] duplicatesCircleOneCircleTwo = computeIntersections(
+		Object[] duplicatesCircleOneCircleTwo = computeIntersectionData(
 				dataSetOne, dataSetTwo);
-		Double[] duplicatesCircleOneCircleThree = computeIntersections(
+		Object[] duplicatesCircleOneCircleThree = computeIntersectionData(
 				dataSetOne, dataSetThree);
-		Double[] duplicatesCircleTwoCircleThree = computeIntersections(
+		Object[] duplicatesCircleTwoCircleThree = computeIntersectionData(
 				dataSetTwo, dataSetThree);
 
-		// There are no intersections
-		if (0 == duplicatesCircleOneCircleThree.length
-				&& duplicatesCircleOneCircleTwo.length == 0
-				&& duplicatesCircleTwoCircleThree.length == 0) {
-			
-			int maxHeight = (dataSetOne.length>dataSetTwo.length)? dataSetOne.length + dataSetThree.length
-					- duplicatesCircleOneCircleThree.length: dataSetTwo.length + dataSetThree.length
-					- duplicatesCircleTwoCircleThree.length;
-			
-			int maxWidth = dataSetOne.length + dataSetTwo.length
-					- duplicatesCircleOneCircleTwo.length;
+		int intersectionCount = computerIntersectionCount(
+				duplicatesCircleOneCircleThree, duplicatesCircleOneCircleTwo,
+				duplicatesCircleTwoCircleThree);
 
-			double radUnit;
+		// There are no intersections
+		if (0 == intersectionCount) {
+			computeThreeCirclesWithoutIntersection(circleOne, circleTwo,
+					circleThree, duplicatesCircleOneCircleTwo,
+					duplicatesCircleOneCircleThree,
+					duplicatesCircleTwoCircleThree);
+		}
+		// There are only one intersection
+		if (1 <= intersectionCount && 4 > intersectionCount) {
+			computeThreeCirclesWithOneIntersection(circleOne, circleTwo,
+					circleThree, duplicatesCircleOneCircleTwo,
+					duplicatesCircleOneCircleThree,
+					duplicatesCircleTwoCircleThree, intersectionCount);
+		}
+
+		// There are only two intersection
+		if (4 <= intersectionCount && 7 > intersectionCount) {
+			computeThreeCirclesWithTwoIntersection(circleOne, circleTwo,
+					circleThree, duplicatesCircleOneCircleTwo,
+					duplicatesCircleOneCircleThree,
+					duplicatesCircleTwoCircleThree, intersectionCount);
+		}
+
+		// There are three intersection
+		if (7 == intersectionCount) {
+			computeThreeCirclesWithThreeIntersection(circleOne, circleTwo,
+					circleThree, duplicatesCircleOneCircleTwo,
+					duplicatesCircleOneCircleThree,
+					duplicatesCircleTwoCircleThree, intersectionCount);
+		}
+		circleOne.setBackGroundColor(seriesPalette.getEntries().get(0));
+		circleTwo.setBackGroundColor(seriesPalette.getEntries().get(1));
+		circleThree.setBackGroundColor(seriesPalette.getEntries().get(2));
+	}
+
+	private void computeThreeCirclesWithThreeIntersection(Circle circleOne,
+			Circle circleTwo, Circle circleThree,
+			Object[] duplicatesCircleOneCircleTwo,
+			Object[] duplicatesCircleOneCircleThree,
+			Object[] duplicatesCircleTwoCircleThree, int intersectionCount) {
+
+		Object[] dataSetOne = (Object[]) circleOne.getDataSet();
+		Object[] dataSetTwo = (Object[]) circleTwo.getDataSet();
+		Object[] dataSetThree = (Object[]) circleThree.getDataSet();
+
+		int maxHeight = ((dataSetOne.length+dataSetThree.length-duplicatesCircleOneCircleThree.length)
+				>(dataSetTwo.length+dataSetThree.length-duplicatesCircleTwoCircleThree.length))?
+						(dataSetOne.length+dataSetThree.length-duplicatesCircleOneCircleThree.length):
+							(dataSetTwo.length+dataSetThree.length-duplicatesCircleTwoCircleThree.length);
+
+		int maxWidth = ((dataSetOne.length+dataSetTwo.length-duplicatesCircleOneCircleThree.length)
+				>(dataSetTwo.length+dataSetThree.length-duplicatesCircleTwoCircleThree.length))?
+						(dataSetOne.length+dataSetTwo.length-duplicatesCircleOneCircleThree.length):
+							(dataSetTwo.length+dataSetThree.length-duplicatesCircleTwoCircleThree.length);
+
+		double radUnit = 0.0;
+		if (bounds.getHeight() > bounds.getWidth()) {
+			if (maxHeight > maxWidth) {
+				radUnit = bounds.getWidth() / maxHeight;
+			} else {
+				radUnit = bounds.getWidth() / maxWidth;
+			}
+		} else {
+			if (maxHeight > maxWidth) {
+				radUnit = bounds.getHeight() / maxHeight;
+			} else {
+				radUnit = bounds.getHeight() / maxWidth;
+			}
+		}
+
+		double offsetX = (bounds.getWidth()-maxWidth*radUnit)/2;
+		double offsetY = (bounds.getHeight()-maxHeight*radUnit)/2;
+
+		double radiusOne = (dataSetOne.length*radUnit)/2;
+		double radiusTwo = (dataSetTwo.length*radUnit)/2;
+		double radiusThree = (dataSetThree.length*radUnit)/2;
+
+		double xmOne = bounds.getLeft()+offsetX+radiusOne;
+		double ymOne = bounds.getTop()+bounds.getHeight()-offsetY-radiusOne;;
+
+		double xmTwo = xmOne-duplicatesCircleOneCircleTwo.length*radUnit+radiusTwo+radiusOne;
+		double ymTwo = ymOne-radiusOne+duplicatesCircleOneCircleTwo.length*radUnit-radiusTwo;
+
+		double xmThree = xmOne+radiusOne-duplicatesCircleOneCircleThree.length*radUnit;
+		double ymThree = ymOne-radiusOne+duplicatesCircleOneCircleThree.length*radUnit-radiusThree;
+
+		circleOne.setXm(xmOne);
+		circleOne.setYm(ymOne);
+		circleOne.setRad(radiusOne);
+
+		circleTwo.setXm(xmTwo);
+		circleTwo.setYm(ymTwo);
+		circleTwo.setRad(radiusTwo);
+
+		circleThree.setXm(xmThree);
+		circleThree.setYm(ymThree);
+		circleThree.setRad(radiusThree);
+	}
+
+	private void computeThreeCirclesWithoutIntersection(Circle circleOne,
+			Circle circleTwo, Circle circleThree,
+			Object[] duplicatesCircleOneCircleTwo,
+			Object[] duplicatesCircleOneCircleThree,
+			Object[] duplicatesCircleTwoCircleThree) {
+
+		Object[] dataSetOne = (Object[]) circleOne.getDataSet();
+		Object[] dataSetTwo = (Object[]) circleTwo.getDataSet();
+		Object[] dataSetThree = (Object[]) circleThree.getDataSet();
+
+		double offsetX = 0;
+		double offsetY = 0;
+
+		double radiusOne = 0;
+		double xmOne = 0;
+		double ymOne = 0;
+
+		double radiusTwo = 0;
+		double xmTwo = 0;
+		double ymTwo = 0;
+
+		double radiusThree = 0;
+		double xmThree = 0;
+		double ymThree = 0;
+		double radUnit = 0;
+
+		int maxHeight = (dataSetOne.length > dataSetTwo.length) ? dataSetOne.length
+				+ dataSetThree.length - duplicatesCircleOneCircleThree.length
+				: dataSetTwo.length + dataSetThree.length
+						- duplicatesCircleTwoCircleThree.length;
+
+		int maxWidth = dataSetOne.length + dataSetTwo.length
+				- duplicatesCircleOneCircleTwo.length;
+
+		if (bounds.getHeight() > bounds.getWidth()) {
+			if (maxHeight > maxWidth) {
+				radUnit = bounds.getWidth() / maxHeight;
+			} else {
+				radUnit = bounds.getWidth() / maxWidth;
+			}
+		} else {
+			if (maxHeight > maxWidth) {
+				radUnit = bounds.getHeight() / maxHeight;
+			} else {
+				radUnit = bounds.getHeight() / maxWidth;
+			}
+		}
+
+		offsetX = (bounds.getWidth() - maxWidth * radUnit) / 2;
+		offsetY = (bounds.getHeight() - maxHeight * radUnit) / 2;
+
+		radiusOne = (dataSetOne.length * radUnit) / 2;
+		xmOne = offsetX + radiusOne;
+		ymOne = bounds.getTop() + bounds.getHeight() - offsetY - radiusOne;
+
+		radiusTwo = (dataSetTwo.length * radUnit) / 2;
+		xmTwo = bounds.getLeft() + bounds.getWidth() - offsetX - radiusTwo;
+		ymTwo = bounds.getTop() + bounds.getHeight() - offsetY - radiusTwo;
+
+		radiusThree = (dataSetThree.length * radUnit) / 2;
+		xmThree = bounds.getLeft() + bounds.getWidth() / 2;
+		ymThree = bounds.getTop() + offsetY + radiusThree;
+
+		circleOne.setXm(xmOne);
+		circleOne.setYm(ymOne);
+		circleOne.setRad(radiusOne);
+
+		circleTwo.setXm(xmTwo);
+		circleTwo.setYm(ymTwo);
+		circleTwo.setRad(radiusTwo);
+
+		circleThree.setXm(xmThree);
+		circleThree.setYm(ymThree);
+		circleThree.setRad(radiusThree);
+	}
+
+	private void computeThreeCirclesWithOneIntersection(Circle circleOne,
+			Circle circleTwo, Circle circleThree,
+			Object[] duplicatesCircleOneCircleTwo,
+			Object[] duplicatesCircleOneCircleThree,
+			Object[] duplicatesCircleTwoCircleThree, int intersectionCount)
+			throws ChartException {
+
+		Object[] dataSetOne = (Object[]) circleOne.getDataSet();
+		Object[] dataSetTwo = (Object[]) circleTwo.getDataSet();
+		Object[] dataSetThree = (Object[]) circleThree.getDataSet();
+
+		double offsetX = 0;
+		double offsetY = 0;
+
+		double radiusOne = 0;
+		double xmOne = 0;
+		double ymOne = 0;
+
+		double radiusTwo = 0;
+		double xmTwo = 0;
+		double ymTwo = 0;
+
+		double radiusThree = 0;
+		double xmThree = 0;
+		double ymThree = 0;
+		double radUnit = 0;
+
+		Intersection intersection = new Intersection();
+
+		// Intersection between circleOne and circleThree
+		if (1 == intersectionCount) {
+			int maxWidth = (dataSetOne.length > dataSetThree.length) ? dataSetOne.length
+					+ dataSetTwo.length + 1
+					: dataSetThree.length + dataSetTwo.length + 1;
+			int maxHeight = ((dataSetOne.length + dataSetThree.length - duplicatesCircleOneCircleThree.length) > dataSetTwo.length) ? (dataSetOne.length
+					+ dataSetThree.length - duplicatesCircleOneCircleThree.length)
+					: dataSetTwo.length;
+			if (bounds.getHeight() > bounds.getWidth()) {
+				if (maxHeight > maxWidth) {
+					radUnit = bounds.getWidth() / (maxHeight + 1);
+				} else {
+					radUnit = bounds.getWidth() / (maxWidth + 1);
+				}
+			} else {
+				if (maxHeight > maxWidth) {
+					radUnit = bounds.getHeight() / (maxHeight + 1);
+				} else {
+					radUnit = bounds.getHeight() / (maxWidth + 1);
+				}
+			}
+
+			offsetX = (bounds.getWidth() - maxWidth * radUnit) / 2;
+			offsetY = (bounds.getHeight() - (dataSetOne.length
+					+ dataSetThree.length - duplicatesCircleOneCircleThree.length)
+					* radUnit) / 2;
+
+			radiusOne = dataSetOne.length * radUnit / 2;
+			radiusTwo = dataSetTwo.length * radUnit / 2;
+			radiusThree = dataSetThree.length * radUnit / 2;
+
+			xmOne = (radiusOne > radiusThree) ? bounds.getLeft() + offsetX
+					+ radiusOne : bounds.getLeft() + offsetX + radiusThree;
+			xmTwo = bounds.getLeft() + bounds.getWidth() - offsetX - radiusTwo;
+			xmThree = xmOne;
+
+			ymOne = bounds.getTop() - offsetY + bounds.getHeight() - radiusOne;
+			ymThree = bounds.getTop() + offsetY + radiusThree;
+			ymTwo = bounds.getTop() + bounds.getHeight() / 2;
+
+			// intersection.computeLocationPoints(xmThree, ymThree, radiusThree,
+			// xmOne, ymOne, radiusOne);
+			// intersection.setBackGround(createColor(
+			// (ColorDefinition) seriesPalette.getEntries().get(0),
+			// (ColorDefinition) seriesPalette.getEntries().get(2)));
+
+		}
+		// Intersection between circleOne and circleTwo
+		if (2 == intersectionCount) {
+			int maxWidth = ((dataSetOne.length + dataSetTwo.length - duplicatesCircleOneCircleTwo.length) > dataSetThree.length) ? (dataSetOne.length
+					+ dataSetTwo.length - duplicatesCircleOneCircleTwo.length)
+					: dataSetThree.length;
+			int maxHeight = (dataSetOne.length > dataSetTwo.length) ? dataSetOne.length
+					+ dataSetThree.length + 1
+					: dataSetTwo.length + dataSetThree.length + 1;
 			if (bounds.getHeight() > bounds.getWidth()) {
 				if (maxHeight > maxWidth) {
 					radUnit = bounds.getWidth() / maxHeight;
 				} else {
 					radUnit = bounds.getWidth() / maxWidth;
 				}
-			} 
-			else {
+			} else {
 				if (maxHeight > maxWidth) {
 					radUnit = bounds.getHeight() / maxHeight;
 				} else {
 					radUnit = bounds.getHeight() / maxWidth;
 				}
 			}
-			
-			double offsetX =   (bounds.getWidth()-maxWidth*radUnit)/2;
-			double offsetY = (bounds.getHeight()-maxHeight*radUnit)/2;
-			
-			double radiusOne = (dataSetOne.length*radUnit)/2;
-			double xmOne = offsetX+radiusOne;
-			double ymOne = bounds.getTop()+bounds.getHeight()- offsetY-radiusOne;
-			
-			double radiusTwo = (dataSetTwo.length*radUnit)/2;
-			double xmTwo = bounds.getLeft()+bounds.getWidth()-offsetX-radiusTwo;
-			double ymTwo = bounds.getTop()+bounds.getHeight()- offsetY-radiusTwo;
-			
-			double radiusThree = (dataSetThree.length*radUnit)/2;
-			double xmThree = bounds.getLeft()+bounds.getWidth()/2 ;
-			double ymThree = bounds.getTop()+offsetY + radiusThree;
-			
-			
-			circleOne.setXm(xmOne);
-			circleOne.setYm(ymOne);
-			circleOne.setRad(radiusOne);
-			circleOne.setBackGroundColor(seriesPalette.getEntries().get(0));
-			
-			circleTwo.setXm(xmTwo);
-			circleTwo.setYm(ymTwo);
-			circleTwo.setRad(radiusTwo);
-			circleTwo.setBackGroundColor(seriesPalette.getEntries().get(1));
-			
-			circleThree.setXm(xmThree);
-			circleThree.setYm(ymThree);
-			circleThree.setRad(radiusThree);
-			circleThree.setBackGroundColor(seriesPalette.getEntries().get(2));
+
+			offsetX = (bounds.getWidth() - (dataSetOne.length
+					+ dataSetTwo.length - duplicatesCircleOneCircleTwo.length)
+					* radUnit) / 2;
+			offsetY = (bounds.getHeight() - maxHeight * radUnit) / 2;
+
+			radiusOne = (dataSetOne.length * radUnit) / 2;
+			radiusThree = (dataSetThree.length * radUnit) / 2;
+			radiusTwo = (dataSetTwo.length * radUnit) / 2;
+
+			xmOne = offsetX + bounds.getLeft() + radiusOne;
+			xmTwo = bounds.getLeft() + bounds.getWidth() - offsetX - radiusTwo;
+			xmThree = bounds.getLeft() + bounds.getWidth() / 2;
+
+			ymOne = (radiusOne > radiusTwo) ? bounds.getTop()
+					+ bounds.getHeight() - offsetY - radiusOne : bounds
+					.getTop()
+					+ bounds.getHeight() - offsetY - radiusTwo;
+			ymTwo = ymOne;
+			ymThree = bounds.getTop() + offsetY + radiusThree;
+
+			// intersection.computeLocationPoints(xmOne, ymOne, radiusOne,
+			// xmTwo,
+			// ymTwo, radiusTwo);
+			//
+			// intersection.setBackGround(createColor(
+			// (ColorDefinition) seriesPalette.getEntries().get(0),
+			// (ColorDefinition) seriesPalette.getEntries().get(1)));
 		}
+		// Intersection between circleTwo and circleThree
+		if (3 == intersectionCount) {
+			int maxWidth = (dataSetTwo.length > dataSetThree.length) ? dataSetTwo.length
+					+ dataSetOne.length + 1
+					: dataSetThree.length + dataSetOne.length + 1;
+			int maxHeight = ((dataSetTwo.length + dataSetThree.length - duplicatesCircleTwoCircleThree.length) > dataSetOne.length) ? (dataSetTwo.length
+					+ dataSetThree.length - duplicatesCircleTwoCircleThree.length)
+					: dataSetOne.length;
+			if (bounds.getHeight() > bounds.getWidth()) {
+				if (maxHeight > maxWidth) {
+					radUnit = bounds.getWidth() / maxHeight;
+				} else {
+					radUnit = bounds.getWidth() / maxWidth;
+				}
+			} else {
+				if (maxHeight > maxWidth) {
+					radUnit = bounds.getHeight() / maxHeight;
+				} else {
+					radUnit = bounds.getHeight() / maxWidth;
+				}
+			}
+
+			offsetX = (bounds.getWidth() - maxWidth * radUnit) / 2;
+			offsetY = (bounds.getHeight() - (dataSetTwo.length
+					+ dataSetThree.length - duplicatesCircleTwoCircleThree.length)
+					* radUnit) / 2;
+
+			radiusOne = dataSetOne.length * radUnit / 2;
+			radiusTwo = dataSetTwo.length * radUnit / 2;
+			radiusThree = dataSetThree.length * radUnit / 2;
+
+			xmOne = bounds.getLeft() + offsetX + radiusOne;
+			xmTwo = (radiusTwo > radiusThree) ? bounds.getLeft()
+					+ bounds.getWidth() - offsetX - radiusTwo : bounds
+					.getLeft()
+					+ bounds.getWidth() - radiusThree;
+			xmThree = xmTwo;
+
+			ymOne = bounds.getTop() + bounds.getHeight() / 2;
+			ymTwo = bounds.getTop() - offsetY + bounds.getHeight() - radiusTwo;
+			ymThree = bounds.getTop() + offsetY + radiusThree;
+
+			// intersection.computeLocationPoints(xmTwo, ymTwo, radiusTwo,
+			// xmThree, ymThree, radiusThree);
+			// intersection.setBackGround(createColor(
+			// (ColorDefinition) seriesPalette.getEntries().get(0),
+			// (ColorDefinition) seriesPalette.getEntries().get(2)));
+		}
+
+		circleOne.setXm(xmOne);
+		circleOne.setYm(ymOne);
+		circleOne.setRad(radiusOne);
+
+		circleTwo.setXm(xmTwo);
+		circleTwo.setYm(ymTwo);
+		circleTwo.setRad(radiusTwo);
+
+		circleThree.setXm(xmThree);
+		circleThree.setYm(ymThree);
+		circleThree.setRad(radiusThree);
+
+		interSectionList.add(intersection);
+	}
+
+	private void computeThreeCirclesWithTwoIntersection(Circle circleOne,
+			Circle circleTwo, Circle circleThree,
+			Object[] duplicatesCircleOneCircleTwo,
+			Object[] duplicatesCircleOneCircleThree,
+			Object[] duplicatesCircleTwoCircleThree, int intersectionCount) {
+
+		Object[] dataSetOne = (Object[]) circleOne.getDataSet();
+		Object[] dataSetTwo = (Object[]) circleTwo.getDataSet();
+		Object[] dataSetThree = (Object[]) circleThree.getDataSet();
+
+		double maxWidth = dataSetOne.length + dataSetTwo.length
+				+ dataSetThree.length - duplicatesCircleOneCircleThree.length
+				- duplicatesCircleOneCircleTwo.length
+				- duplicatesCircleTwoCircleThree.length;
+
+		double maxHeight = (dataSetOne.length > dataSetTwo.length) ? ((dataSetOne.length > dataSetThree.length) ? dataSetOne.length
+				: dataSetThree.length)
+				: ((dataSetTwo.length > dataSetThree.length) ? dataSetTwo.length
+						: dataSetThree.length);
+
+		double radUnit = 0.0;
+
+		if (bounds.getHeight() > bounds.getWidth()) {
+			if (maxHeight > maxWidth) {
+				radUnit = bounds.getWidth() / maxHeight;
+			} else {
+				radUnit = bounds.getWidth() / maxWidth;
+			}
+		} else {
+			if (maxHeight > maxWidth) {
+				radUnit = bounds.getHeight() / maxHeight;
+			} else {
+				radUnit = bounds.getHeight() / maxWidth;
+			}
+		}
+
+		double offsetX = (bounds.getWidth() - maxWidth * radUnit) / 2;
+
+		double radiusOne = (dataSetOne.length * radUnit) / 2;
+		double radiusTwo = (dataSetTwo.length * radUnit) / 2;
+		double radiusThree = (dataSetThree.length * radUnit) / 2;
+
+		double xmOne = 0.0;
+
+		double xmTwo = 0;
+
+		double xmThree = 0;
+
+		double ymOne = bounds.getTop() + bounds.getHeight() / 2;
+		double ymTwo = ymOne;
+		double ymThree = ymOne;
+
+		// intersection 1+3 & 1+2
+		if (4 == intersectionCount) {
+			xmOne = bounds.getLeft() + offsetX + 2 * radiusThree + radiusOne
+					- duplicatesCircleOneCircleThree.length * radUnit;
+			xmTwo = bounds.getLeft() + bounds.getWidth() - offsetX - radiusTwo;
+			xmThree = bounds.getLeft() + offsetX + radiusThree;
+		}
+		// intersection 1+3 & 2+3
+		if (5 == intersectionCount) {
+			xmOne = bounds.getLeft() + offsetX + radiusOne;
+			xmTwo = bounds.getWidth() + bounds.getLeft() - offsetX - radiusTwo;
+			xmThree = bounds.getLeft() + 2 * radiusOne + offsetX
+					- duplicatesCircleOneCircleThree.length * radUnit
+					+ radiusThree;
+		}
+		// intersection 1+2 & 2+3
+		if (6 == intersectionCount) {
+			xmOne = bounds.getLeft() + offsetX + radiusOne;
+			xmTwo = bounds.getLeft() + offsetX + 2 * radiusOne
+					- duplicatesCircleOneCircleTwo.length * radUnit + radiusTwo;
+			xmThree = bounds.getLeft() + bounds.getWidth() - offsetX
+					- radiusThree;
+		}
+
+		circleOne.setXm(xmOne);
+		circleOne.setYm(ymOne);
+		circleOne.setRad(radiusOne);
+		circleOne.setBackGroundColor(seriesPalette.getEntries().get(0));
+
+		circleTwo.setXm(xmTwo);
+		circleTwo.setYm(ymTwo);
+		circleTwo.setRad(radiusTwo);
+		circleTwo.setBackGroundColor(seriesPalette.getEntries().get(1));
+
+		circleThree.setXm(xmThree);
+		circleThree.setYm(ymThree);
+		circleThree.setRad(radiusThree);
+		circleThree.setBackGroundColor(seriesPalette.getEntries().get(2));
 
 	}
 
-	private Double[] computeIntersections(Double[] dataSetOne,
-			Double[] dataSetTwo) {
+	private Fill createColor(ColorDefinition fill1, ColorDefinition fill2)
+			throws ChartException {
 
-		HashSet<Double> duplicates = new HashSet<Double>();
+		if (this.intersectionColorType == IntersectionColorType.ADDITIVE_COLOR) {
+			int r = (Math.abs(fill1.getRed() + fill2.getRed()) > 255) ? 255
+					: Math.abs(fill1.getRed() + fill2.getRed());
+			int g = (Math.abs(fill1.getGreen() + fill2.getGreen()) > 255) ? 255
+					: Math.abs(fill1.getGreen() + fill2.getGreen());
+			int b = (Math.abs(fill1.getBlue() + fill2.getBlue()) > 255) ? 255
+					: Math.abs(fill1.getBlue() + fill2.getBlue());
+			return ColorDefinitionImpl.create(r, g, b);
+		} else if (this.intersectionColorType == IntersectionColorType.ADDITIVE_COLOR) {
+			int r = (Math.abs(fill1.getRed() - fill2.getRed()) < 0) ? 0 : Math
+					.abs(fill1.getRed() - fill2.getRed());
+			int g = (Math.abs(fill1.getGreen() - fill2.getGreen()) < 0) ? 0
+					: Math.abs(fill1.getGreen() - fill2.getGreen());
+			int b = (Math.abs(fill1.getBlue() - fill2.getBlue()) < 0) ? 0
+					: Math.abs(fill1.getBlue() - fill2.getBlue());
+			return ColorDefinitionImpl.create(r, g, b);
+		} else {
+			throw new ChartException(
+					ChartException.UNDEFINED_VALUE,
+					"intersection color type has to be a supported value of enum IntersectionColorType");
+		}
+	}
 
-		HashSet<Double> dataSetOneAsHash = new HashSet<Double>();
-		for (Double d : dataSetOne) {
+	private int computerIntersectionCount(
+			Object[] duplicatesCircleOneCircleThree,
+			Object[] duplicatesCircleOneCircleTwo,
+			Object[] duplicatesCircleTwoCircleThree) {
+
+		if (0 == duplicatesCircleOneCircleThree.length
+				&& duplicatesCircleOneCircleTwo.length == 0
+				&& duplicatesCircleTwoCircleThree.length == 0) {
+			return 0;
+		}
+
+		else if (0 < duplicatesCircleOneCircleThree.length
+				&& duplicatesCircleOneCircleTwo.length == 0
+				&& duplicatesCircleTwoCircleThree.length == 0) {
+			return 1;
+		} else if (0 == duplicatesCircleOneCircleThree.length
+				&& 0 < duplicatesCircleOneCircleTwo.length
+				&& duplicatesCircleTwoCircleThree.length == 0) {
+			return 2;
+		} else if (0 == duplicatesCircleOneCircleThree.length
+				&& duplicatesCircleOneCircleTwo.length == 0
+				&& duplicatesCircleTwoCircleThree.length > 0) {
+			return 3;
+		}
+
+		else if (0 < duplicatesCircleOneCircleThree.length
+				&& duplicatesCircleOneCircleTwo.length > 0
+				&& duplicatesCircleTwoCircleThree.length == 0) {
+			return 4;
+		} else if (0 < duplicatesCircleOneCircleThree.length
+				&& 0 == duplicatesCircleOneCircleTwo.length
+				&& duplicatesCircleTwoCircleThree.length > 0) {
+			return 5;
+		} else if (0 == duplicatesCircleOneCircleThree.length
+				&& duplicatesCircleOneCircleTwo.length > 0
+				&& duplicatesCircleTwoCircleThree.length > 0) {
+			return 6;
+		}
+
+		else if (0 < duplicatesCircleOneCircleThree.length
+				&& duplicatesCircleOneCircleTwo.length > 0
+				&& duplicatesCircleTwoCircleThree.length > 0) {
+			return 7;
+		}
+
+		else {
+			return -1;
+		}
+	}
+
+	private Object[] computeIntersectionData(Object[] dataSetOne,
+			Object[] dataSetTwo) {
+
+		HashSet<Object> duplicates = new HashSet<Object>();
+
+		HashSet<Object> dataSetOneAsHash = new HashSet<Object>();
+		for (Object d : dataSetOne) {
 			dataSetOneAsHash.add(d);
 		}
-		for (double d : dataSetTwo) {
-			// dataSetOneAsHash.add(d);
+		for (Object d : dataSetTwo) {
 			if (dataSetOneAsHash.contains(d)) {
 				duplicates.add(d);
 			}
 		}
-		return duplicates.toArray(new Double[] {});
-
+		return duplicates.toArray(new Object[] {});
 	}
 
 	private void computeTitleArea(Bounds cellBounds) throws ChartException {
@@ -453,8 +905,8 @@ public class Venn extends BaseRenderer {
 		for (Circle circle : circleList) {
 			circle.render(idr, vennseries);
 		}
-//		circleList.get(2).render(idr, vennseries);
-		
+		// circleList.get(2).render(idr, vennseries);
+
 		for (Intersection intersection : interSectionList) {
 			// intersection.renderIntersectionPoints(idr, vennseries);
 			intersection.renderInterSection(idr, vennseries);
@@ -686,6 +1138,29 @@ public class Venn extends BaseRenderer {
 		 * ((EventObjectCache) idr) .getEventObject(
 		 * WrappedStructureSource.createSeries(vennseries),
 		 * PolygonRenderEvent.class);
+		 * 
+		 * 
+		 * 
+		 * 
+		 * 
+		 * 
+		 * 
+		 * 
+		 * 
+		 * 
+		 * 
+		 * 
+		 * 
+		 * 
+		 * 
+		 * 
+		 * 
+		 * 
+		 * 
+		 * 
+		 * 
+		 * 
+		 * 
 		 * 
 		 * 
 		 * 

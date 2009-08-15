@@ -1,6 +1,8 @@
 package org.eclipse.birt.chart.model.newtype.render;
 
 
+import java.util.HashSet;
+
 import org.eclipse.birt.chart.device.IDeviceRenderer;
 import org.eclipse.birt.chart.event.ArcRenderEvent;
 import org.eclipse.birt.chart.event.EventObjectCache;
@@ -14,13 +16,13 @@ import org.eclipse.birt.chart.model.component.Series;
 
 public class Circle {
 
-	private Object dataSet;
+	private Object[] dataSet;
 	private double xm;
 	private double rad;
 	double ym;
 	private Fill backgroundColor;
 	
-	public Object getDataSet() {
+	public Object[]  getDataSet() {
 		return dataSet;
 	}
 
@@ -40,16 +42,24 @@ public class Circle {
 		return (ColorDefinitionImpl) this.backgroundColor;
 	}
 
-	public Circle(Object[] d) {
-		setDataSet(d);
+	public Circle(Object[] object) {
+		setDataSet(object);
 	}
 
-	private void setDataSet(Object  d) {
+	private void setDataSet(Object[]  d) {
 		if (d instanceof Double[]){
-			this.dataSet = d;
+			HashSet<Double> dAsHash = new HashSet<Double>();
+			for (int i = 0; i < d.length; i++) {
+				dAsHash.add((Double)d[i]);
+			}
+			this.dataSet = dAsHash.toArray(new Double[] {});
 		}
 		else if (d instanceof String[]){
-			this.dataSet = d;
+			HashSet<String> dAsHash = new HashSet<String>();
+			for (int i = 0; i < d.length; i++) {
+				dAsHash.add((String)d[i]);
+			}
+			this.dataSet = dAsHash.toArray(new String[] {});
 		}
 	}
 

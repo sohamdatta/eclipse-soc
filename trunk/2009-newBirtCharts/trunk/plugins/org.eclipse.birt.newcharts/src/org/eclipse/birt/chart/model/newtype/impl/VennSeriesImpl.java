@@ -27,6 +27,7 @@ public class VennSeriesImpl extends SeriesImpl implements VennSeries{
 	private double leaderLineLength;
 	private LeaderLineStyle leaderLineStyle;
 	private Position titlePosition;
+	private IntersectionColorType intersectionColorType;
 	
 	public static VennSeries create(EObject parent, EReference ref){
 		return new VennSeriesImpl();
@@ -56,6 +57,7 @@ public class VennSeriesImpl extends SeriesImpl implements VennSeries{
 		this.setLeaderLineAttributes(src.getLeaderLineAttributes());
 		this.setLeaderLineLength(src.getLeaderLineLength());
 		this.setLeaderLineStyle(src.getLeaderLineStyle());
+		this.setIntersectionColorType(src.getIntersectionColorType());
 		
 	}
 
@@ -134,6 +136,14 @@ public class VennSeriesImpl extends SeriesImpl implements VennSeries{
 	@Override
 	public void setTitlePosition(Position p) {
 		this.titlePosition = p;
+	}
+	
+	public void setIntersectionColorType(IntersectionColorType colorType){
+		this.intersectionColorType = colorType;
+	}
+	
+	public IntersectionColorType getIntersectionColorType(){
+		return this.intersectionColorType;
 	}
 	
 }
