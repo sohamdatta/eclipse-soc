@@ -1,5 +1,10 @@
 package org.eclipse.birt.newcharts.views;
 
+import org.eclipse.birt.chart.computation.withaxes.StackGroup;
+import org.eclipse.birt.chart.computation.withaxes.StackedSeriesLookup;
+import org.eclipse.birt.chart.datafeed.StockDataPointDefinition;
+import org.eclipse.birt.chart.datafeed.StockDataSetProcessorImpl;
+import org.eclipse.birt.chart.datafeed.StockEntry;
 import org.eclipse.birt.chart.model.Chart;
 import org.eclipse.birt.chart.model.ChartWithAxes;
 import org.eclipse.birt.chart.model.ChartWithoutAxes;
@@ -7,20 +12,27 @@ import org.eclipse.birt.chart.model.attribute.ChartDimension;
 import org.eclipse.birt.chart.model.attribute.ColorDefinition;
 import org.eclipse.birt.chart.model.attribute.Fill;
 import org.eclipse.birt.chart.model.attribute.FontDefinition;
+import org.eclipse.birt.chart.model.attribute.IntersectionType;
 import org.eclipse.birt.chart.model.attribute.LegendItemType;
 import org.eclipse.birt.chart.model.attribute.LineStyle;
 import org.eclipse.birt.chart.model.attribute.Position;
 import org.eclipse.birt.chart.model.attribute.Text;
 import org.eclipse.birt.chart.model.attribute.impl.ColorDefinitionImpl;
+import org.eclipse.birt.chart.model.attribute.impl.DataPointImpl;
 import org.eclipse.birt.chart.model.component.Axis;
 import org.eclipse.birt.chart.model.component.Series;
 import org.eclipse.birt.chart.model.component.impl.SeriesImpl;
+import org.eclipse.birt.chart.model.data.DataSet;
+import org.eclipse.birt.chart.model.data.NumberDataElement;
 import org.eclipse.birt.chart.model.data.NumberDataSet;
 import org.eclipse.birt.chart.model.data.SeriesDefinition;
+import org.eclipse.birt.chart.model.data.StockDataSet;
 import org.eclipse.birt.chart.model.data.TextDataSet;
 import org.eclipse.birt.chart.model.data.impl.DataSetImpl;
+import org.eclipse.birt.chart.model.data.impl.NumberDataElementImpl;
 import org.eclipse.birt.chart.model.data.impl.NumberDataSetImpl;
 import org.eclipse.birt.chart.model.data.impl.SeriesDefinitionImpl;
+import org.eclipse.birt.chart.model.data.impl.StockDataSetImpl;
 import org.eclipse.birt.chart.model.data.impl.TextDataSetImpl;
 import org.eclipse.birt.chart.model.impl.ChartWithAxesImpl;
 import org.eclipse.birt.chart.model.impl.ChartWithoutAxesImpl;
@@ -35,7 +47,16 @@ import org.eclipse.birt.chart.model.newtype.VennSeries;
 import org.eclipse.birt.chart.model.newtype.data.VennDataSet;
 import org.eclipse.birt.chart.model.newtype.data.VennDataSetImpl;
 import org.eclipse.birt.chart.model.newtype.impl.DonutSeriesImpl;
+import org.eclipse.birt.chart.model.newtype.impl.IntersectionColorType;
 import org.eclipse.birt.chart.model.newtype.impl.VennSeriesImpl;
+import org.eclipse.emf.common.notify.Notification;
+import org.eclipse.emf.common.util.EList;
+import org.eclipse.emf.common.util.TreeIterator;
+import org.eclipse.emf.ecore.EClass;
+import org.eclipse.emf.ecore.EObject;
+import org.eclipse.emf.ecore.EReference;
+import org.eclipse.emf.ecore.EStructuralFeature;
+import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -43,6 +64,7 @@ import org.eclipse.swt.widgets.TabFolder;
 import org.eclipse.swt.widgets.TabItem;
 import org.eclipse.ui.internal.dnd.SwtUtil;
 import org.eclipse.ui.part.ViewPart;
+import org.eclipse.ui.presentations.StackDropResult;
 
 public class NewChartsView extends ViewPart {
 
@@ -86,7 +108,7 @@ public class NewChartsView extends ViewPart {
     ChartWithoutAxes chart = ChartWithoutAxesImpl.create();
     chart.setDimension( ChartDimension.TWO_DIMENSIONAL_LITERAL );
     
-    chart.getTitle().getLabel().getCaption().setValue( "additive color wheel" );
+    chart.getTitle().getLabel().getCaption().setValue("three datasets with one intersection" );
     adjustFont( chart.getTitle().getLabel().getCaption().getFont() );
     
     Legend legend = chart.getLegend();
@@ -95,23 +117,24 @@ public class NewChartsView extends ViewPart {
     adjustFont( legend.getText().getFont() );
     
     TextDataSet categoryValues = TextDataSetImpl.create( new String[]{
-      "amount1", "amount2"} );//$NON-NLS-1$ //$NON-NLS-2$
+      "amount1", "amount2","amount3"} );//$NON-NLS-1$ //$NON-NLS-2$
     
     
+    NumberDataSet seriesOneValues = NumberDataSetImpl.create(
+      new double[]{1,2,3,4,5});
     
-    NumberDataSet seriesOneValues = NumberDataSetImpl.create( new double[]{1,3,5} );
-    NumberDataSet seriesTwoValues = NumberDataSetImpl.create( new double[]{2,3,7} );
     
-    VennDataSet allDataSets = VennDataSetImpl.create(seriesOneValues);
-    allDataSets.addDataSet( seriesTwoValues );
+//    VennDataSet allDataSets = VennDataSetImpl.create(seriesOneValues);
+//    allDataSets.addDataSet( seriesTwoValues );
     
     // Base Series
     SeriesDefinition baseSeriesDefinition = SeriesDefinitionImpl.create();
     chart.getSeriesDefinitions().add( baseSeriesDefinition );
     
     final Fill[] fiaBase = {
-      ColorDefinitionImpl.BLUE(),
-      ColorDefinitionImpl.ORANGE()
+      ColorDefinitionImpl.RED(),
+      ColorDefinitionImpl.GREEN(),
+      ColorDefinitionImpl.BLUE()
     };
     baseSeriesDefinition.getSeriesPalette().getEntries().clear();
     for( int i = 0; i < fiaBase.length; i++ ) {
@@ -122,15 +145,24 @@ public class NewChartsView extends ViewPart {
     seBase.setDataSet( categoryValues );
     baseSeriesDefinition.getSeries().add( seBase );
     
+    
     // Add new Venn Series
     SeriesDefinition baseSeriesDefinition1 = SeriesDefinitionImpl.create();
     baseSeriesDefinition.getSeriesDefinitions().add( baseSeriesDefinition1 );
     
     VennSeries seVenn1 = ( VennSeries )VennSeriesImpl.create();
-
-    
-//    seVenn1.setDataSet( seriesOneValues );
+    seVenn1.getTitle().getCaption().setValue( "Super Label" );
+    adjustFont( seVenn1.getTitle().getCaption().getFont() );
+    seVenn1.getTitle().setVisible( false );
+    seVenn1.setTitlePosition( Position.BELOW_LITERAL );
+    seVenn1.setIntersectionColorType( IntersectionColorType.ADDITIVE_COLOR );
+//    seVenn1.getDataDefinition().add( seriesOneValues );
+//    seVenn1.getDataDefinition().add( seriesTwoValues );
+//
     seVenn1.setDataSet(seriesOneValues );
+//    seVenn1.getDataPoint().
+    
+    
 //    seVenn1.setDataSet( "dataset2", seriesTwoValues );
     
     
@@ -232,10 +264,10 @@ public class NewChartsView extends ViewPart {
     // 3) Orthogonal Series
     PieSeries sePie = ( PieSeries )PieSeriesImpl.create();
     sePie.getTitle().getCaption().setColor( ColorDefinitionImpl.BLACK() );
-    sePie.setTitlePosition( Position.ABOVE_LITERAL );
+    sePie.setTitlePosition( Position.BELOW_LITERAL );
     sePie.getTitle().setVisible( true );
     sePie.setDataSet( seriesOneValues );
-    sePie.setExplosion( 5000 );
+    sePie.setExplosion( 50 );
     sePie.setRotation( 40 );
     sePie.getLabel().setVisible( true );
     sePie.getLabel().getCaption().setValue( "LABEL" );
@@ -294,7 +326,7 @@ public class NewChartsView extends ViewPart {
   }
 
   private void adjustFont( FontDefinition font ) {
-    font.setSize( 8 );
+    font.setSize(8);
     font.setName( "Verdana" );
   }
 
