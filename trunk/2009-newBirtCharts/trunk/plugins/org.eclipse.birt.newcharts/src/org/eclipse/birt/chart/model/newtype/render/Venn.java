@@ -68,20 +68,16 @@ public class Venn extends BaseRenderer {
 	private Label titleLabel;
 
 	private Bounds titleContainerBounds;
-
 	private Position titlePosition;
-
 	private IDisplayServer idserver;
-
 	private Bounds bounds = null;
+	private Palette seriesPalette;
+	private IntersectionColorType intersectionColorType;
 
 	private ArrayList<Circle> circleList = new ArrayList<Circle>();
-
-	private Palette seriesPalette;
-
 	private ArrayList<Intersection> interSectionList = new ArrayList<Intersection>();
 
-	private IntersectionColorType intersectionColorType;
+	private Fill backGroundColor;
 
 	private static int debugCompute = 0;
 	private static int debugRenderSeries = 0;
@@ -100,6 +96,7 @@ public class Venn extends BaseRenderer {
 		this.titlePosition = vennseries.getTitlePosition();
 		this.seriesPalette = getSeriesDefinition().getSeriesPalette();
 		this.intersectionColorType = vennseries.getIntersectionColorType();
+		this.backGroundColor = p.getBackground();
 
 		this.idserver = getXServer();
 
@@ -110,17 +107,19 @@ public class Venn extends BaseRenderer {
 		/*
 		 * For debugging reasons
 		 */
-		Double[] dataSetOne = new Double[] { 1.0,2.0,3.0 };
-		Double[] dataSetTwo = new Double[] { 1.0,2.0,4.0 };
-		Double[] dataSetThree = new Double[] { 1.0,3.0,4.0 };
+		Double[] dataSetOne = new Double[] { 1.0, 2.0, 3.0, 9.0, 10.0 };
+		Double[] dataSetTwo = new Double[] { 1.0, 2.0, 3.0,4.0, 5.0 };
+//		Double[] dataSetTwo = new Double[]{4.0,99.0,88.0};
+		Double[] dataSetThree = new Double[] { 1.0,4.0,7.0, 6.0 };
 
 		// String[] dataSetOne = new String[] { "abc", "cde", "fgh", "asdsada",
 		// "dasdsadsa" };
 		// String[] dataSetTwo = new String[] { "abc", "cde", "zyu" };
 		// String[] dataSetThree = new String[] { "ikl", "da", "fdas" };
-		circleList.add(new Circle(dataSetThree));
+
 		circleList.add(new Circle(dataSetTwo));
 		circleList.add(new Circle(dataSetOne));
+		circleList.add(new Circle(dataSetThree));
 		/*
 		 * End debugging
 		 */
@@ -129,10 +128,22 @@ public class Venn extends BaseRenderer {
 
 	private void initializeCircles() throws ChartException {
 		if (circleList.size() == 1) {
+			circleList.get(0).setBackGroundColor(
+					seriesPalette.getEntries().get(0));
 			computeCircleWithOneDataSet();
 		} else if (circleList.size() == 2) {
+			circleList.get(0).setBackGroundColor(
+					seriesPalette.getEntries().get(0));
+			circleList.get(1).setBackGroundColor(
+					seriesPalette.getEntries().get(1));
 			computeCirclesWithTwoDataSets();
 		} else if (circleList.size() == 3) {
+			circleList.get(0).setBackGroundColor(
+					seriesPalette.getEntries().get(0));
+			circleList.get(1).setBackGroundColor(
+					seriesPalette.getEntries().get(1));
+			circleList.get(2).setBackGroundColor(
+					seriesPalette.getEntries().get(2));
 			computeCirclesWithThreeDataSets();
 		}
 	}
@@ -159,7 +170,7 @@ public class Venn extends BaseRenderer {
 				.getEntries().get(0) : ColorDefinitionImpl.RED());
 	}
 
-	private void computeCirclesWithTwoDataSets() {
+	private void computeCirclesWithTwoDataSets() throws ChartException {
 		Circle circleOne = circleList.get(0);
 		Object[] dataSetOne = (Object[]) circleOne.getDataSet();
 
@@ -251,10 +262,11 @@ public class Venn extends BaseRenderer {
 			Intersection intersectionOne = new Intersection();
 			intersectionOne.computeLocationPoints(xmOne, ymOne, radiusOne,
 					xmTwo, ymTwo, radiusTwo);
-
+			intersectionOne.setBackGround(createColor(circleOne.getBackGroundColor(), circleTwo.getBackGroundColor()));
+			
+			
 			interSectionList.add(intersectionOne);
 		}
-		circleOne.setBackGroundColor(this.seriesPalette.getEntries().get(0));
 		circleOne.setXm(xmOne);
 		circleOne.setYm(ymOne);
 		circleOne.setRad(radiusOne);
@@ -262,7 +274,6 @@ public class Venn extends BaseRenderer {
 		circleTwo.setXm(xmTwo);
 		circleTwo.setYm(ymTwo);
 		circleTwo.setRad(radiusTwo);
-		circleTwo.setBackGroundColor(this.seriesPalette.getEntries().get(1));
 	}
 
 	private void computeCirclesWithThreeDataSets() throws ChartException {
@@ -283,9 +294,12 @@ public class Venn extends BaseRenderer {
 		Object[] duplicatesCircleTwoCircleThree = computeIntersectionData(
 				dataSetTwo, dataSetThree);
 
+		Object[] duplicatesCircleOneTwoThree = computeIntersectionData(
+				duplicatesCircleOneCircleTwo, dataSetThree);
+
 		int intersectionCount = computerIntersectionCount(
 				duplicatesCircleOneCircleThree, duplicatesCircleOneCircleTwo,
-				duplicatesCircleTwoCircleThree);
+				duplicatesCircleTwoCircleThree, duplicatesCircleOneTwoThree);
 
 		// There are no intersections
 		if (0 == intersectionCount) {
@@ -317,30 +331,33 @@ public class Venn extends BaseRenderer {
 					duplicatesCircleOneCircleThree,
 					duplicatesCircleTwoCircleThree, intersectionCount);
 		}
-		circleOne.setBackGroundColor(seriesPalette.getEntries().get(0));
-		circleTwo.setBackGroundColor(seriesPalette.getEntries().get(1));
-		circleThree.setBackGroundColor(seriesPalette.getEntries().get(2));
 	}
 
 	private void computeThreeCirclesWithThreeIntersection(Circle circleOne,
 			Circle circleTwo, Circle circleThree,
 			Object[] duplicatesCircleOneCircleTwo,
 			Object[] duplicatesCircleOneCircleThree,
-			Object[] duplicatesCircleTwoCircleThree, int intersectionCount) {
+			Object[] duplicatesCircleTwoCircleThree, int intersectionCount)
+			throws ChartException {
 
 		Object[] dataSetOne = (Object[]) circleOne.getDataSet();
 		Object[] dataSetTwo = (Object[]) circleTwo.getDataSet();
 		Object[] dataSetThree = (Object[]) circleThree.getDataSet();
 
-		int maxHeight = ((dataSetOne.length+dataSetThree.length-duplicatesCircleOneCircleThree.length)
-				>(dataSetTwo.length+dataSetThree.length-duplicatesCircleTwoCircleThree.length))?
-						(dataSetOne.length+dataSetThree.length-duplicatesCircleOneCircleThree.length):
-							(dataSetTwo.length+dataSetThree.length-duplicatesCircleTwoCircleThree.length);
+		Intersection intersectionOneTwo = new Intersection();
+		Intersection intersectionOneThree = new Intersection();
+		Intersection intersectionTwoThree = new Intersection();
+		Intersection intersectionOneTwoThree = new Intersection();
 
-		int maxWidth = ((dataSetOne.length+dataSetTwo.length-duplicatesCircleOneCircleThree.length)
-				>(dataSetTwo.length+dataSetThree.length-duplicatesCircleTwoCircleThree.length))?
-						(dataSetOne.length+dataSetTwo.length-duplicatesCircleOneCircleThree.length):
-							(dataSetTwo.length+dataSetThree.length-duplicatesCircleTwoCircleThree.length);
+		int maxHeight = ((dataSetOne.length + dataSetThree.length - duplicatesCircleOneCircleThree.length) > (dataSetTwo.length
+				+ dataSetThree.length - duplicatesCircleTwoCircleThree.length)) ? (dataSetOne.length
+				+ dataSetThree.length - duplicatesCircleOneCircleThree.length)
+				: (dataSetTwo.length + dataSetThree.length - duplicatesCircleTwoCircleThree.length);
+
+		int maxWidth = ((dataSetOne.length + dataSetTwo.length - duplicatesCircleOneCircleThree.length) > (dataSetTwo.length
+				+ dataSetThree.length - duplicatesCircleTwoCircleThree.length)) ? (dataSetOne.length
+				+ dataSetTwo.length - duplicatesCircleOneCircleThree.length)
+				: (dataSetTwo.length + dataSetThree.length - duplicatesCircleTwoCircleThree.length);
 
 		double radUnit = 0.0;
 		if (bounds.getHeight() > bounds.getWidth()) {
@@ -357,21 +374,60 @@ public class Venn extends BaseRenderer {
 			}
 		}
 
-		double offsetX = (bounds.getWidth()-maxWidth*radUnit)/2;
-		double offsetY = (bounds.getHeight()-maxHeight*radUnit)/2;
+		double offsetX = (bounds.getWidth() - maxWidth * radUnit) / 2;
+		double offsetY = (bounds.getHeight() - maxHeight * radUnit) / 2;
 
-		double radiusOne = (dataSetOne.length*radUnit)/2;
-		double radiusTwo = (dataSetTwo.length*radUnit)/2;
-		double radiusThree = (dataSetThree.length*radUnit)/2;
+		double radiusOne = (dataSetOne.length * radUnit) / 2;
+		double radiusTwo = (dataSetTwo.length * radUnit) / 2;
+		double radiusThree = (dataSetThree.length * radUnit) / 2;
 
-		double xmOne = bounds.getLeft()+offsetX+radiusOne;
-		double ymOne = bounds.getTop()+bounds.getHeight()-offsetY-radiusOne;;
+		double xmOne = bounds.getLeft() + offsetX + radiusOne;
+		double ymOne = bounds.getTop() + bounds.getHeight() - offsetY
+				- radiusOne;
+		;
 
-		double xmTwo = xmOne-duplicatesCircleOneCircleTwo.length*radUnit+radiusTwo+radiusOne;
-		double ymTwo = ymOne-radiusOne+duplicatesCircleOneCircleTwo.length*radUnit-radiusTwo;
+		double xmTwo = xmOne - duplicatesCircleOneCircleTwo.length * radUnit
+				+ radiusTwo + radiusOne;
+		double ymTwo = ymOne - radiusOne + duplicatesCircleOneCircleTwo.length
+				* radUnit - radiusTwo;
 
-		double xmThree = xmOne+radiusOne-duplicatesCircleOneCircleThree.length*radUnit;
-		double ymThree = ymOne-radiusOne+duplicatesCircleOneCircleThree.length*radUnit-radiusThree;
+		double xmThree = xmOne + radiusOne
+				- duplicatesCircleOneCircleThree.length * radUnit;
+		double ymThree = ymOne - radiusOne
+				+ duplicatesCircleOneCircleThree.length * radUnit - radiusThree;
+
+		intersectionOneTwoThree.computeLocationPoints(xmOne, ymOne, radiusOne,
+				xmTwo, ymTwo, radiusTwo, xmThree, ymThree, radiusThree);
+		intersectionOneTwo.computeLocationPoints(xmOne, ymOne, radiusOne,
+				xmTwo, ymTwo, radiusTwo);
+		intersectionOneThree.computeLocationPoints(xmOne, ymOne, radiusOne,
+				xmThree, ymThree, radiusThree);
+		intersectionTwoThree.computeLocationPoints(xmThree, ymThree,
+				radiusThree, xmTwo, ymTwo, radiusTwo);
+
+		ColorDefinition middleColor = (ColorDefinition) createColor(circleOne
+				.getBackGroundColor(), circleTwo.getBackGroundColor());
+		middleColor = (ColorDefinition) createColor(middleColor, circleThree
+				.getBackGroundColor());
+		intersectionOneTwoThree.setBackGround(middleColor);
+
+		ColorDefinition mixedColor =(ColorDefinition) createColor(circleOne.getBackGroundColor(), circleTwo.getBackGroundColor());
+		if (duplicatesCircleOneCircleTwo.length == 0) {
+			mixedColor.setTransparency(50);
+		}
+		intersectionOneTwo.setBackGround(mixedColor);
+
+		mixedColor =(ColorDefinition) createColor(circleOne.getBackGroundColor(), circleThree.getBackGroundColor());
+		if (duplicatesCircleOneCircleThree.length == 0) {
+			mixedColor.setTransparency(50);
+		}
+		intersectionOneThree.setBackGround(mixedColor);
+
+		mixedColor =(ColorDefinition) createColor(circleThree.getBackGroundColor(), circleTwo.getBackGroundColor());
+		if (duplicatesCircleTwoCircleThree.length == 0) {
+			mixedColor.setTransparency(50);
+		}
+		intersectionTwoThree.setBackGround(mixedColor);
 
 		circleOne.setXm(xmOne);
 		circleOne.setYm(ymOne);
@@ -384,6 +440,11 @@ public class Venn extends BaseRenderer {
 		circleThree.setXm(xmThree);
 		circleThree.setYm(ymThree);
 		circleThree.setRad(radiusThree);
+
+		interSectionList.add(intersectionOneTwo);
+		interSectionList.add(intersectionOneThree);
+		interSectionList.add(intersectionTwoThree);
+		interSectionList.add(intersectionOneTwoThree);
 	}
 
 	private void computeThreeCirclesWithoutIntersection(Circle circleOne,
@@ -531,9 +592,11 @@ public class Venn extends BaseRenderer {
 			ymThree = bounds.getTop() + offsetY + radiusThree;
 			ymTwo = bounds.getTop() + bounds.getHeight() / 2;
 
-			// intersection.computeLocationPoints(xmThree, ymThree, radiusThree,
-			// xmOne, ymOne, radiusOne);
-			// intersection.setBackGround(createColor(
+			intersection.computeLocationPoints(xmOne, ymOne, radiusOne,
+					xmThree, ymThree, radiusThree);
+			intersection.setBackGround(createColor(circleOne
+					.getBackGroundColor(), circleThree.getBackGroundColor()));
+			// intersection.setBackGround(ColorDefinitionImpl.CYAN());
 			// (ColorDefinition) seriesPalette.getEntries().get(0),
 			// (ColorDefinition) seriesPalette.getEntries().get(2)));
 
@@ -580,13 +643,10 @@ public class Venn extends BaseRenderer {
 			ymTwo = ymOne;
 			ymThree = bounds.getTop() + offsetY + radiusThree;
 
-			// intersection.computeLocationPoints(xmOne, ymOne, radiusOne,
-			// xmTwo,
-			// ymTwo, radiusTwo);
-			//
-			// intersection.setBackGround(createColor(
-			// (ColorDefinition) seriesPalette.getEntries().get(0),
-			// (ColorDefinition) seriesPalette.getEntries().get(1)));
+			intersection.computeLocationPoints(xmOne, ymOne, radiusOne, xmTwo,
+					ymTwo, radiusTwo);
+			intersection.setBackGround(createColor(circleOne
+					.getBackGroundColor(), circleTwo.getBackGroundColor()));
 		}
 		// Intersection between circleTwo and circleThree
 		if (3 == intersectionCount) {
@@ -630,11 +690,10 @@ public class Venn extends BaseRenderer {
 			ymTwo = bounds.getTop() - offsetY + bounds.getHeight() - radiusTwo;
 			ymThree = bounds.getTop() + offsetY + radiusThree;
 
-			// intersection.computeLocationPoints(xmTwo, ymTwo, radiusTwo,
-			// xmThree, ymThree, radiusThree);
-			// intersection.setBackGround(createColor(
-			// (ColorDefinition) seriesPalette.getEntries().get(0),
-			// (ColorDefinition) seriesPalette.getEntries().get(2)));
+			intersection.computeLocationPoints(xmTwo, ymTwo, radiusTwo,
+					xmThree, ymThree, radiusThree);
+			intersection.setBackGround(createColor(circleTwo
+					.getBackGroundColor(), circleThree.getBackGroundColor()));
 		}
 
 		circleOne.setXm(xmOne);
@@ -656,7 +715,8 @@ public class Venn extends BaseRenderer {
 			Circle circleTwo, Circle circleThree,
 			Object[] duplicatesCircleOneCircleTwo,
 			Object[] duplicatesCircleOneCircleThree,
-			Object[] duplicatesCircleTwoCircleThree, int intersectionCount) {
+			Object[] duplicatesCircleTwoCircleThree, int intersectionCount)
+			throws ChartException {
 
 		Object[] dataSetOne = (Object[]) circleOne.getDataSet();
 		Object[] dataSetTwo = (Object[]) circleTwo.getDataSet();
@@ -694,30 +754,47 @@ public class Venn extends BaseRenderer {
 		double radiusTwo = (dataSetTwo.length * radUnit) / 2;
 		double radiusThree = (dataSetThree.length * radUnit) / 2;
 
-		double xmOne = 0.0;
-
+		double xmOne = 0;
 		double xmTwo = 0;
-
 		double xmThree = 0;
 
 		double ymOne = bounds.getTop() + bounds.getHeight() / 2;
 		double ymTwo = ymOne;
 		double ymThree = ymOne;
 
-		// intersection 1+3 & 1+2
+		Intersection intersectionOne = new Intersection();
+		Intersection intersectionTwo = new Intersection();
+
+		// intersection 3+1&1+2
 		if (4 == intersectionCount) {
 			xmOne = bounds.getLeft() + offsetX + 2 * radiusThree + radiusOne
 					- duplicatesCircleOneCircleThree.length * radUnit;
 			xmTwo = bounds.getLeft() + bounds.getWidth() - offsetX - radiusTwo;
 			xmThree = bounds.getLeft() + offsetX + radiusThree;
+			intersectionOne.computeLocationPoints(xmThree, ymThree,
+					radiusThree, xmOne, ymOne, radiusOne);
+			intersectionTwo.computeLocationPoints(xmOne, ymOne, radiusOne,
+					xmTwo, ymTwo, radiusTwo);
+			intersectionOne.setBackGround(createColor(circleOne
+					.getBackGroundColor(), circleThree.getBackGroundColor()));
+			intersectionTwo.setBackGround(createColor(circleOne
+					.getBackGroundColor(), circleTwo.getBackGroundColor()));
 		}
-		// intersection 1+3 & 2+3
+		// intersection 1+3 & 3+2
 		if (5 == intersectionCount) {
 			xmOne = bounds.getLeft() + offsetX + radiusOne;
 			xmTwo = bounds.getWidth() + bounds.getLeft() - offsetX - radiusTwo;
 			xmThree = bounds.getLeft() + 2 * radiusOne + offsetX
 					- duplicatesCircleOneCircleThree.length * radUnit
 					+ radiusThree;
+			intersectionOne.computeLocationPoints(xmOne, ymOne, radiusOne,
+					xmThree, ymThree, radiusThree);
+			intersectionTwo.computeLocationPoints(xmThree, ymThree,
+					radiusThree, xmTwo, ymTwo, radiusTwo);
+			intersectionOne.setBackGround(createColor(circleOne
+					.getBackGroundColor(), circleThree.getBackGroundColor()));
+			intersectionTwo.setBackGround(createColor(circleTwo
+					.getBackGroundColor(), circleThree.getBackGroundColor()));
 		}
 		// intersection 1+2 & 2+3
 		if (6 == intersectionCount) {
@@ -726,23 +803,32 @@ public class Venn extends BaseRenderer {
 					- duplicatesCircleOneCircleTwo.length * radUnit + radiusTwo;
 			xmThree = bounds.getLeft() + bounds.getWidth() - offsetX
 					- radiusThree;
+			intersectionOne.computeLocationPoints(xmOne, ymOne, radiusOne,
+					xmTwo, ymTwo, radiusTwo);
+			intersectionTwo.computeLocationPoints(xmTwo, ymTwo, radiusTwo,
+					xmThree, ymThree, radiusThree);
+			intersectionOne.setBackGround(createColor(circleOne
+					.getBackGroundColor(), circleTwo.getBackGroundColor()));
+			intersectionTwo.setBackGround(createColor(circleTwo
+					.getBackGroundColor(), circleThree.getBackGroundColor()));
+			// intersectionOne.setBackGround(ColorDefinitionImpl.GREEN());
+			// intersectionTwo.setBackGround(ColorDefinitionImpl.GREEN());
 		}
 
 		circleOne.setXm(xmOne);
 		circleOne.setYm(ymOne);
 		circleOne.setRad(radiusOne);
-		circleOne.setBackGroundColor(seriesPalette.getEntries().get(0));
 
 		circleTwo.setXm(xmTwo);
 		circleTwo.setYm(ymTwo);
 		circleTwo.setRad(radiusTwo);
-		circleTwo.setBackGroundColor(seriesPalette.getEntries().get(1));
 
 		circleThree.setXm(xmThree);
 		circleThree.setYm(ymThree);
 		circleThree.setRad(radiusThree);
-		circleThree.setBackGroundColor(seriesPalette.getEntries().get(2));
 
+		interSectionList.add(intersectionOne);
+		interSectionList.add(intersectionTwo);
 	}
 
 	private Fill createColor(ColorDefinition fill1, ColorDefinition fill2)
@@ -756,7 +842,7 @@ public class Venn extends BaseRenderer {
 			int b = (Math.abs(fill1.getBlue() + fill2.getBlue()) > 255) ? 255
 					: Math.abs(fill1.getBlue() + fill2.getBlue());
 			return ColorDefinitionImpl.create(r, g, b);
-		} else if (this.intersectionColorType == IntersectionColorType.ADDITIVE_COLOR) {
+		} else if (this.intersectionColorType == IntersectionColorType.SUBTRACTIVE_COLOR) {
 			int r = (Math.abs(fill1.getRed() - fill2.getRed()) < 0) ? 0 : Math
 					.abs(fill1.getRed() - fill2.getRed());
 			int g = (Math.abs(fill1.getGreen() - fill2.getGreen()) < 0) ? 0
@@ -774,7 +860,8 @@ public class Venn extends BaseRenderer {
 	private int computerIntersectionCount(
 			Object[] duplicatesCircleOneCircleThree,
 			Object[] duplicatesCircleOneCircleTwo,
-			Object[] duplicatesCircleTwoCircleThree) {
+			Object[] duplicatesCircleTwoCircleThree,
+			Object[] duplicatesCircleOneTwoThree) {
 
 		if (0 == duplicatesCircleOneCircleThree.length
 				&& duplicatesCircleOneCircleTwo.length == 0
@@ -808,12 +895,11 @@ public class Venn extends BaseRenderer {
 				&& duplicatesCircleOneCircleTwo.length > 0
 				&& duplicatesCircleTwoCircleThree.length > 0) {
 			return 6;
-		}
 
-		else if (0 < duplicatesCircleOneCircleThree.length
-				&& duplicatesCircleOneCircleTwo.length > 0
-				&& duplicatesCircleTwoCircleThree.length > 0) {
+		} else if (0 < duplicatesCircleOneTwoThree.length) {
+
 			return 7;
+
 		}
 
 		else {
@@ -1138,6 +1224,8 @@ public class Venn extends BaseRenderer {
 		 * ((EventObjectCache) idr) .getEventObject(
 		 * WrappedStructureSource.createSeries(vennseries),
 		 * PolygonRenderEvent.class);
+		 * 
+		 * 
 		 * 
 		 * 
 		 * 
