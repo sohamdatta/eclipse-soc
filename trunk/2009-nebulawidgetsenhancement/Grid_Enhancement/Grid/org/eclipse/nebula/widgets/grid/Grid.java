@@ -593,11 +593,6 @@ public class Grid extends Canvas
     private boolean hasSpanning = false;
     
     /**
-     * use extensible span method <em>setAreaSpan</em> or not
-     */
-    private boolean useExtensibleSpanMethod = false;
-    
-    /**
      * Tell if a point (column,row) is painted or not.
      */
     private boolean[][] hasBeenPainted = new boolean[0][0];
