@@ -1808,7 +1808,7 @@ public class Grid extends Canvas
      * @param colIndex column index in <em>columns</em>
      * @param rowIndex row index in <em>items</em>
      * @return if not found in <em>areas</em> return null;else return its spanning area.
-     * @see getAllSpanAreas()
+     * @see #getAllSpanAreas()
      */
     private Rectangle getASpanningArea(int colIndex,int rowIndex)
     {
