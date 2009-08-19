@@ -9,5 +9,4 @@ Require-Bundle: org.eclipse.zest.layout,
  org.eclipse.draw2d,
  org.eclipse.jface,
  org.eclipse.equinox.common,
- widgets,
- viewers
+ org.eclipse.zest.core
