@@ -22,12 +22,12 @@ import org.eclipse.zest.core.widgets.GraphContainer;
 import org.eclipse.zest.core.widgets.GraphItem;
 import org.eclipse.zest.core.widgets.GraphNode;
 import org.eclipse.zest.core.widgets.ZestStyles;
-import org.eclipse.zest.layout.algorithms.CompositeLayoutAlgorithm;
-import org.eclipse.zest.layout.algorithms.GridLayoutAlgorithm;
-import org.eclipse.zest.layout.algorithms.HorizontalShiftAlgorithm;
-import org.eclipse.zest.layout.algorithms.RadialLayoutAlgorithm;
-import org.eclipse.zest.layout.algorithms.TreeLayoutAlgorithm;
-import org.eclipse.zest.layout.interfaces.LayoutAlgorithm;
+import org.eclipse.zest.layouts.LayoutAlgorithm;
+import org.eclipse.zest.layouts.algorithms.CompositeLayoutAlgorithm;
+import org.eclipse.zest.layouts.algorithms.GridLayoutAlgorithm;
+import org.eclipse.zest.layouts.algorithms.HorizontalShiftAlgorithm;
+import org.eclipse.zest.layouts.algorithms.RadialLayoutAlgorithm;
+import org.eclipse.zest.layouts.algorithms.TreeLayoutAlgorithm;
 
 public class ContainerResizeGraphSnippet {
 
@@ -35,18 +35,24 @@ public class ContainerResizeGraphSnippet {
 	private static Image classImage;
 
 	public static void createContainer(Graph g) {
-		GraphContainer a = new GraphContainer(g, SWT.NONE, "SomeClass.java", classImage);
+		GraphContainer a = new GraphContainer(g, SWT.NONE);
+		a.setText("SomeClass.java");
+		a.setImage(classImage);
 		int r = (int) ((Math.random() * 3) + 1);
 		r = 2;
 		populateContainer(a, g, r, true);
 		for (int i = 0; i < 4; i++) {
-			GraphContainer b = new GraphContainer(g, SWT.NONE, "SomeNestedClass.java", classImage);
+			GraphContainer b = new GraphContainer(g, SWT.NONE);
+			b.setText("SomeTestedClass.java");
+			b.setImage(classImage);
 			r = (int) ((Math.random() * 3) + 1);
 			r = 2;
 			populateContainer(b, g, r, false);
 			new GraphConnection(g, SWT.NONE, a, b);
 			for (int j = 0; j < 4; j++) {
-				GraphContainer c = new GraphContainer(g, SWT.NONE, "DefaultAction.java", classImage);
+				GraphContainer c = new GraphContainer(g, SWT.NONE);
+				c.setText("DefaultAction.java");
+				c.setImage(classImage);
 				r = (int) ((Math.random() * 3) + 1);
 				r = 2;
 				populateContainer(c, g, r, true);
@@ -56,20 +62,36 @@ public class ContainerResizeGraphSnippet {
 	}
 
 	public static void populateContainer(GraphContainer c, Graph g, int number, boolean radial) {
-		GraphNode a = new GraphNode(c, ZestStyles.NODES_FISHEYE | ZestStyles.NODES_HIDE_TEXT, "SomeClass.java", classImage);
+		GraphNode a = new GraphNode(c, ZestStyles.NODES_FISHEYE
+				| ZestStyles.NODES_HIDE_TEXT);
+		a.setText("SomeClass.java");
+		a.setImage(classImage);
 		for (int i = 0; i < 4; i++) {
-			GraphNode b = new GraphNode(c, ZestStyles.NODES_FISHEYE | ZestStyles.NODES_HIDE_TEXT, "SomeNestedClass.java", classImage);
+			GraphNode b = new GraphNode(c, ZestStyles.NODES_FISHEYE
+					| ZestStyles.NODES_HIDE_TEXT);
+			b.setText("SomeNestedClass.java");
+			b.setImage(classImage);
 			new GraphConnection(g, SWT.NONE, a, b);
 			for (int j = 0; j < 4; j++) {
-				GraphNode d = new GraphNode(c, ZestStyles.NODES_FISHEYE | ZestStyles.NODES_HIDE_TEXT, "DefaultAction.java", classImage);
+				GraphNode d = new GraphNode(c, ZestStyles.NODES_FISHEYE
+						| ZestStyles.NODES_HIDE_TEXT);
+				d.setText("DefaultAction.java");
+				d.setImage(classImage);
 				new GraphConnection(g, SWT.NONE, b, d);
 				if (number > 2) {
 					for (int k = 0; k < 4; k++) {
-						GraphNode e = new GraphNode(c, ZestStyles.NODES_FISHEYE | ZestStyles.NODES_HIDE_TEXT, "LastAction(Hero).java", classImage);
+						GraphNode e = new GraphNode(c, ZestStyles.NODES_FISHEYE
+								| ZestStyles.NODES_HIDE_TEXT);
+						e.setText("LastAction(Hero).java");
+						e.setImage(classImage);
 						new GraphConnection(g, SWT.NONE, d, e);
 						if (number > 3) {
 							for (int l = 0; l < 4; l++) {
-								GraphNode f = new GraphNode(c, ZestStyles.NODES_FISHEYE | ZestStyles.NODES_HIDE_TEXT, "LastAction(Hero).java", classImage);
+								GraphNode f = new GraphNode(c,
+										ZestStyles.NODES_FISHEYE
+												| ZestStyles.NODES_HIDE_TEXT);
+								f.setText("LastAction(Hero).java");
+								f.setImage(classImage);
 								new GraphConnection(g, SWT.NONE, e, f);
 							}
 						}

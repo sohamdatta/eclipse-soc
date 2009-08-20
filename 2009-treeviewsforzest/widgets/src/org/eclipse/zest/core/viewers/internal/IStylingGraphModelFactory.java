@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2005-2006, CHISEL Group, University of Victoria, Victoria, BC, Canada.
+ * Copyright 2005-2009, CHISEL Group, University of Victoria, Victoria, BC, Canada.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -93,7 +93,8 @@ public interface IStylingGraphModelFactory {
 	 *            the user model data used for the destination node.
 	 * @return the created or retrieved connection for the given graph.
 	 */
-	public GraphConnection createConnection(Graph graph, Object element, Object source, Object dest);
+	public GraphConnection createConnection(Graph graph, Object element,
+			Object source, Object dest);
 
 	/**
 	 * Restyles the given graph items according to the label provider supplied

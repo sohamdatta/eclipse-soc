@@ -7,8 +7,8 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.zest.core.widgets.Graph;
 import org.eclipse.zest.core.widgets.GraphConnection;
 import org.eclipse.zest.core.widgets.GraphNode;
-import org.eclipse.zest.layout.algorithms.RadialLayoutAlgorithm;
-import org.eclipse.zest.layout.interfaces.LayoutAlgorithm;
+import org.eclipse.zest.layouts.LayoutAlgorithm;
+import org.eclipse.zest.layouts.algorithms.RadialLayoutAlgorithm;
 
 public class RadialLayoutExample {
 	public static void main(String[] args) {

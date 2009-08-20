@@ -5,6 +5,7 @@ Bundle-SymbolicName: org.eclipse.zest.layout
 Bundle-Version: 1.0.0.qualifier
 Bundle-RequiredExecutionEnvironment: J2SE-1.4
 Require-Bundle: org.eclipse.draw2d
-Export-Package: org.eclipse.zest.layout.algorithms,
- org.eclipse.zest.layout.dataStructures,
- org.eclipse.zest.layout.interfaces
+Export-Package: org.eclipse.zest.layouts,
+ org.eclipse.zest.layouts.algorithms,
+ org.eclipse.zest.layouts.dataStructures,
+ org.eclipse.zest.layouts.interfaces

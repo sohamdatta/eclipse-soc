@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2005-2006, CHISEL Group, University of Victoria, Victoria, BC, Canada.
+ * Copyright 2005-2009, CHISEL Group, University of Victoria, Victoria, BC, Canada.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -15,46 +15,55 @@ import org.eclipse.swt.graphics.Color;
 import org.eclipse.ui.services.IDisposable;
 
 /**
- * An extension to label providers, to supply styles for connections based upon 
+ * An extension to label providers, to supply styles for connections based upon
  * relationships, rather than on connected nodes.
+ * 
  * @author Del Myers
  * @see #IGraphContentProvider
  * @see #IEntityStyleProvider
- *
+ * 
  */
-//@tag bug(151327-Styles) : created to solve this bug
+// @tag bug(151327-Styles) : created to solve this bug
 public interface IConnectionStyleProvider extends IDisposable {
 	/**
-	 * Returns the style flags for this connection. Valid flags are those
-	 * that begin with CONNECTION in @see org.eclipse.zest.core.ZestStyles. Check
+	 * Returns the style flags for this connection. Valid flags are those that
+	 * begin with CONNECTION in @see org.eclipse.zest.core.ZestStyles. Check
 	 * ZestStyles for legal combinations.
-	 * @param rel the relationship represented by this connection.
+	 * 
+	 * @param rel
+	 *            the relationship represented by this connection.
 	 * @return the style flags for this connection.
 	 * @see org.eclipse.zest.core.widgets.ZestStyles
 	 */
 	public int getConnectionStyle(Object rel);
-	
+
 	/**
-	 * Returns the color for the connection. Null for default.  Any resources created by this class must be disposed by
-	 * this class.
-	 * @param rel the relationship represented by this connection.
+	 * Returns the color for the connection. Null for default. Any resources
+	 * created by this class must be disposed by this class.
+	 * 
+	 * @param rel
+	 *            the relationship represented by this connection.
 	 * @return the color.
 	 * @see #dispose()
 	 */
 	public Color getColor(Object rel);
-	
+
 	/**
-	 * Returns the highlighted color for this connection. Null for default.  Any resources created by this class must be disposed by
-	 * this class.
-	 * @param rel the relationship represented by this connection.
+	 * Returns the highlighted color for this connection. Null for default. Any
+	 * resources created by this class must be disposed by this class.
+	 * 
+	 * @param rel
+	 *            the relationship represented by this connection.
 	 * @return the highlighted color. Null for default.
 	 * @see #dispose()
 	 */
 	public Color getHighlightColor(Object rel);
-	
+
 	/**
 	 * Returns the line width of the connection. -1 for default.
-	 * @param rel the relationship represented by this connection.
+	 * 
+	 * @param rel
+	 *            the relationship represented by this connection.
 	 * @return the line width for the connection. -1 for default.
 	 */
 	public int getLineWidth(Object rel);

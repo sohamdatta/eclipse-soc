@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2005-2006, CHISEL Group, University of Victoria, Victoria, BC,
+ * Copyright 2005-2009, CHISEL Group, University of Victoria, Victoria, BC,
  * Canada. All rights reserved. This program and the accompanying materials are
  * made available under the terms of the Eclipse Public License v1.0 which
  * accompanies this distribution, and is available at
@@ -88,7 +88,7 @@ public interface IEntityStyleProvider extends IDisposable {
 	 *         node is selected.
 	 */
 	// @tag ADJACENT : Removed highlight adjacent
-	//public boolean highlightAdjacentEntities(Object entity);
+	// public boolean highlightAdjacentEntities(Object entity);
 	/**
 	 * Returns the color that adjacent entities will be drawn when this entity
 	 * is selected. Will be ignored if HighlightAdjacentEntities() returns
@@ -102,7 +102,7 @@ public interface IEntityStyleProvider extends IDisposable {
 	 * @see #dispose()
 	 */
 	// @tag ADJACENT : Removed highlight adjacent
-	//public Color getAdjacentEntityHighlightColor(Object entity);
+	// public Color getAdjacentEntityHighlightColor(Object entity);
 	/**
 	 * Returns the colour that this node should be coloured. This will be
 	 * ignored if getNodeColour returns null. Any resources created by this

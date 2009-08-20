@@ -1,3 +1,13 @@
+/*******************************************************************************
+ * Copyright 2005-2009, CHISEL Group, University of Victoria, Victoria, BC,
+ * Canada. All rights reserved. This program and the accompanying materials are
+ * made available under the terms of the Eclipse Public License v1.0 which
+ * accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ * 
+ * Contributors: The Chisel Group, University of Victoria 
+ *               Mateusz Matela
+ ******************************************************************************/
 package org.eclipse.zest.core.widgets;
 
 import java.util.ArrayList;
@@ -53,7 +63,7 @@ public class GraphNode extends GraphItem {
 	private boolean visible = true;
 
 	protected Graph graph;
-	protected NodeContainerAdapter parent;
+	protected IContainer parent;
 
 	/** The internal node. */
 	protected Object internalNode;
@@ -65,55 +75,20 @@ public class GraphNode extends GraphItem {
 	private boolean isDisposed = false;
 	private boolean hasCustomTooltip;
 
-	public GraphNode(Graph graphModel, int style) {
+	public GraphNode(IContainer graphModel, int style) {
 		this(graphModel, style, null);
 	}
 
-	public GraphNode(Graph graphModel, int style, Object data) {
+	public GraphNode(IContainer graphModel, int style, String text) {
+		this(graphModel, style, text, null, null);
+	}
+
+	public GraphNode(IContainer graphModel, int style, Object data) {
 		this(graphModel, style, "" /* text */, null /* image */, data);
 	}
 
-	public GraphNode(Graph graphModel, int style, String text) {
-		this(graphModel, style, text, null);
-	}
-
-	public GraphNode(Graph graphModel, int style, String text, Object data) {
-		this(graphModel, style, text, null /* image */, data);
-	}
-
-	public GraphNode(Graph graphModel, int style, String text, Image image) {
-		this(graphModel, style, text, image, null);
-	}
-
-	public GraphNode(Graph graphModel, int style, String text, Image image, Object data) {
-		this(NodeContainerAdapter.get(graphModel), style, text, image, data);
-	}
-
-	public GraphNode(GraphContainer graphModel, int style) {
-		this(graphModel, style, null);
-	}
-
-	public GraphNode(GraphContainer graphModel, int style, Object data) {
-		this(graphModel, style, "" /* text */, null /* image */, data);
-	}
-
-	public GraphNode(GraphContainer graphModel, int style, String text) {
-		this(graphModel, style, text, null);
-	}
-
-	public GraphNode(GraphContainer graphModel, int style, String text, Object data) {
-		this(graphModel, style, text, null /* image */, data);
-	}
-
-	public GraphNode(GraphContainer graphModel, int style, String text, Image image) {
-		this(graphModel, style, text, image, null);
-	}
-
-	public GraphNode(GraphContainer graphModel, int style, String text, Image image, Object data) {
-		this(NodeContainerAdapter.get(graphModel), style, text, image, data);
-	}
-
-	private GraphNode(NodeContainerAdapter graphModel, int style, String text, Image image, Object data) {
+	private GraphNode(IContainer graphModel, int style, String text,
+			Image image, Object data) {
 		super(graphModel.getGraph(), style, data);
 		initModel(graphModel, text, image);
 		if (nodeFigure == null) {
@@ -130,7 +105,7 @@ public class GraphNode extends GraphItem {
 
 	static int count = 0;
 
-	protected void initModel(NodeContainerAdapter graphModel, String text, Image image) {
+	protected void initModel(IContainer graphModel, String text, Image image) {
 		this.nodeStyle |= graphModel.getGraph().getNodeStyle();
 		this.parent = graphModel;
 		this.sourceConnections = new ArrayList();
@@ -176,7 +151,8 @@ public class GraphNode extends GraphItem {
 		super.dispose();
 		this.isDisposed = true;
 		while (getSourceConnections().size() > 0) {
-			GraphConnection connection = (GraphConnection) getSourceConnections().get(0);
+			GraphConnection connection = (GraphConnection) getSourceConnections()
+					.get(0);
 			if (!connection.isDisposed()) {
 				connection.dispose();
 			} else {
@@ -184,7 +160,8 @@ public class GraphNode extends GraphItem {
 			}
 		}
 		while (getTargetConnections().size() > 0) {
-			GraphConnection connection = (GraphConnection) getTargetConnections().get(0);
+			GraphConnection connection = (GraphConnection) getTargetConnections()
+					.get(0);
 			if (!connection.isDisposed()) {
 				connection.dispose();
 			} else {
@@ -204,8 +181,9 @@ public class GraphNode extends GraphItem {
 	}
 
 	/**
-	 * Determines if this node has a fixed size or if it is packed to the size of its contents.
-	 * To set a node to pack, set its size (-1, -1)  
+	 * Determines if this node has a fixed size or if it is packed to the size
+	 * of its contents. To set a node to pack, set its size (-1, -1)
+	 * 
 	 * @return
 	 */
 	public boolean isSizeFixed() {
@@ -254,7 +232,9 @@ public class GraphNode extends GraphItem {
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see org.eclipse.mylar.zest.core.internal.graphmodel.IGraphModelNode#isSelected()
+	 * @see
+	 * org.eclipse.mylar.zest.core.internal.graphmodel.IGraphModelNode#isSelected
+	 * ()
 	 */
 	public boolean isSelected() {
 		return selected;
@@ -385,8 +365,9 @@ public class GraphNode extends GraphItem {
 			return;
 		}
 		IFigure parentFigure = nodeFigure.getParent();
-		if (parentFigure instanceof ZestRootLayer)
+		if (parentFigure instanceof ZestRootLayer) {
 			((ZestRootLayer) parentFigure).highlightNode(nodeFigure);
+		}
 		highlighted = HIGHLIGHT_ON;
 		updateFigureForModel(getNodeFigure());
 	}
@@ -401,15 +382,16 @@ public class GraphNode extends GraphItem {
 		}
 
 		IFigure parentFigure = nodeFigure.getParent();
-		if (parentFigure instanceof ZestRootLayer)
+		if (parentFigure instanceof ZestRootLayer) {
 			((ZestRootLayer) parentFigure).unHighlightNode(nodeFigure);
+		}
 
 		highlighted = HIGHLIGHT_NONE;
 		updateFigureForModel(nodeFigure);
 
 	}
 
-	protected void refreshBounds() {
+	void refreshBounds() {
 		Point loc = this.getLocation();
 		Dimension size = this.getSize();
 		Rectangle bounds = new Rectangle(loc, size);
@@ -424,7 +406,8 @@ public class GraphNode extends GraphItem {
 			if (fishEyeBounds != null) {
 				fishEyeFigure.getParent().translateToRelative(fishEyeBounds);
 				fishEyeFigure.getParent().translateFromParent(fishEyeBounds);
-				fishEyeFigure.getParent().setConstraint(fishEyeFigure, fishEyeBounds);
+				fishEyeFigure.getParent().setConstraint(fishEyeFigure,
+						fishEyeBounds);
 			}
 		}
 	}
@@ -468,7 +451,8 @@ public class GraphNode extends GraphItem {
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see org.eclipse.swt.widgets.Item#setImage(org.eclipse.swt.graphics.Image)
+	 * @see
+	 * org.eclipse.swt.widgets.Item#setImage(org.eclipse.swt.graphics.Image)
 	 */
 	public void setImage(Image image) {
 		super.setImage(image);
@@ -497,7 +481,8 @@ public class GraphNode extends GraphItem {
 	 */
 	public void setNodeStyle(int nodeStyle) {
 		this.nodeStyle = nodeStyle;
-		this.cacheLabel = ((this.nodeStyle & ZestStyles.NODES_CACHE_LABEL) > 0) ? true : false;
+		this.cacheLabel = ((this.nodeStyle & ZestStyles.NODES_CACHE_LABEL) > 0) ? true
+				: false;
 	}
 
 	public void setSize(double width, double height) {
@@ -527,12 +512,14 @@ public class GraphNode extends GraphItem {
 	public void setVisible(boolean visible) {
 		this.visible = visible;
 		this.getFigure().setVisible(visible);
-		for (Iterator iterator2 = sourceConnections.iterator(); iterator2.hasNext();) {
+		for (Iterator iterator2 = sourceConnections.iterator(); iterator2
+				.hasNext();) {
 			GraphConnection connection = (GraphConnection) iterator2.next();
 			connection.setVisible(visible);
 		}
 
-		for (Iterator iterator2 = targetConnections.iterator(); iterator2.hasNext();) {
+		for (Iterator iterator2 = targetConnections.iterator(); iterator2
+				.hasNext();) {
 			GraphConnection connection = (GraphConnection) iterator2.next();
 			connection.setVisible(visible);
 		}
@@ -556,7 +543,7 @@ public class GraphNode extends GraphItem {
 	protected IFigure fishEye(boolean enable, boolean animate) {
 		if (isDisposed) {
 			// If a fisheyed figure is still left on the canvas, we could get
-			// called once more after the dispose is called.  Since we cleaned
+			// called once more after the dispose is called. Since we cleaned
 			// up everything on dispose, we can just return null here.
 			return null;
 		}
@@ -569,11 +556,13 @@ public class GraphNode extends GraphItem {
 
 			Rectangle rectangle = calculateFishEyeBounds();
 
-			if (rectangle == null)
+			if (rectangle == null) {
 				return null;
+			}
 
-			//Add the fisheye
-			this.getGraphModel().fishEye(nodeFigure, fishEyeFigure, rectangle, true);
+			// Add the fisheye
+			this.getGraphModel().fishEye(nodeFigure, fishEyeFigure, rectangle,
+					true);
 			if (fishEyeFigure != null) {
 				isFisheyeEnabled = true;
 			}
@@ -581,12 +570,13 @@ public class GraphNode extends GraphItem {
 
 		} else {
 			isFisheyeEnabled = false;
-			this.getGraphModel().removeFishEye(fishEyeFigure, nodeFigure, animate);
+			this.getGraphModel().removeFishEye(fishEyeFigure, nodeFigure,
+					animate);
 			return null;
 		}
 	}
 
-	NodeContainerAdapter getParent() {
+	IContainer getParent() {
 		return parent;
 	}
 
@@ -605,11 +595,13 @@ public class GraphNode extends GraphItem {
 		GraphLabel figure = (GraphLabel) currentFigure;
 		IFigure toolTip;
 
-		if (!checkStyle(ZestStyles.NODES_HIDE_TEXT) && !figure.getText().equals(this.getText())) {
+		if (!checkStyle(ZestStyles.NODES_HIDE_TEXT)
+				&& !figure.getText().equals(this.getText())) {
 			figure.setText(this.getText());
 		}
-		if (figure.getIcon() != getImage())
+		if (figure.getIcon() != getImage()) {
 			figure.setIcon(getImage());
+		}
 
 		if (highlighted == HIGHLIGHT_ON) {
 			figure.setForegroundColor(getForegroundColor());
@@ -623,8 +615,9 @@ public class GraphNode extends GraphItem {
 
 		figure.setBorderWidth(getBorderWidth());
 
-		if (figure.getFont() != getFont())
+		if (figure.getFont() != getFont()) {
 			figure.setFont(getFont());
+		}
 
 		if (this.getTooltip() == null && hasCustomTooltip == false) {
 			// if we have a custom tooltip, don't try and create our own.
@@ -647,7 +640,8 @@ public class GraphNode extends GraphItem {
 	protected IFigure createFigureForModel() {
 		GraphNode node = this;
 		boolean cacheLabel = (this).cacheLabel();
-		final GraphLabel label = new GraphLabel(node.getText(), node.getImage(), cacheLabel);
+		final GraphLabel label = new GraphLabel(node.getText(),
+				node.getImage(), cacheLabel);
 		label.setFont(this.font);
 		if (checkStyle(ZestStyles.NODES_HIDE_TEXT)) {
 			label.setText("");
@@ -655,18 +649,24 @@ public class GraphNode extends GraphItem {
 		updateFigureForModel(label);
 		label.addFigureListener(new FigureListener() {
 			private Dimension previousSize = label.getBounds().getSize();
+
 			public void figureMoved(IFigure source) {
-				if (Animation.isAnimating() || getLayout().isMinimized())
+				if (Animation.isAnimating() || getLayout().isMinimized()) {
 					return;
+				}
 				Rectangle newBounds = nodeFigure.getBounds();
 				if (!newBounds.getSize().equals(previousSize)) {
 					previousSize = newBounds.getSize();
-					if (size.width >= 0 && size.height >= 0)
+					if (size.width >= 0 && size.height >= 0) {
 						size = newBounds.getSize();
-					currentLocation = new PrecisionPoint(nodeFigure.getBounds().getTopLeft());
+					}
+					currentLocation = new PrecisionPoint(nodeFigure.getBounds()
+							.getTopLeft());
 					parent.getLayoutContext().fireNodeResizedEvent(getLayout());
-				} else if (currentLocation.x != newBounds.x || currentLocation.y != newBounds.y) {
-					currentLocation = new PrecisionPoint(nodeFigure.getBounds().getTopLeft());
+				} else if (currentLocation.x != newBounds.x
+						|| currentLocation.y != newBounds.y) {
+					currentLocation = new PrecisionPoint(nodeFigure.getBounds()
+							.getTopLeft());
 					parent.getLayoutContext().fireNodeMovedEvent(getLayout());
 				}
 			}
@@ -677,7 +677,8 @@ public class GraphNode extends GraphItem {
 	private IFigure createFishEyeFigure() {
 		GraphNode node = this;
 		boolean cacheLabel = this.cacheLabel();
-		GraphLabel label = new GraphLabel(node.getText(), node.getImage(), cacheLabel);
+		GraphLabel label = new GraphLabel(node.getText(), node.getImage(),
+				cacheLabel);
 
 		if (highlighted == HIGHLIGHT_ON) {
 			label.setForegroundColor(getForegroundColor());
@@ -704,11 +705,14 @@ public class GraphNode extends GraphItem {
 		Dimension newSize = fishEyeFigure.getPreferredSize();
 		Rectangle currentSize = rectangle.getCopy();
 		nodeFigure.translateToAbsolute(currentSize);
-		int expandedH = Math.max((newSize.height - currentSize.height) / 2 + 1, 0);
-		int expandedW = Math.max((newSize.width - currentSize.width) / 2 + 1, 0);
+		int expandedH = Math.max((newSize.height - currentSize.height) / 2 + 1,
+				0);
+		int expandedW = Math
+				.max((newSize.width - currentSize.width) / 2 + 1, 0);
 		Dimension expandAmount = new Dimension(expandedW, expandedH);
 		nodeFigure.translateToAbsolute(rectangle);
-		rectangle.expand(new Insets(expandAmount.height, expandAmount.width, expandAmount.height, expandAmount.width));
+		rectangle.expand(new Insets(expandAmount.height, expandAmount.width,
+				expandAmount.height, expandAmount.width));
 		if (expandedH <= 0 && expandedW <= 0) {
 			return null;
 		}
@@ -755,7 +759,10 @@ public class GraphNode extends GraphItem {
 		return NODE;
 	}
 
-	IFigure getFigure() {
+	/**
+	 * @noreference This method is not intended to be referenced by clients.
+	 */
+	public IFigure getFigure() {
 		if (this.nodeFigure == null) {
 			initFigure();
 		}
@@ -764,7 +771,10 @@ public class GraphNode extends GraphItem {
 
 	private InternalNodeLayout layout;
 
-	InternalNodeLayout getLayout() {
+	/**
+	 * @noreference This method is not intended to be referenced by clients.
+	 */
+	public InternalNodeLayout getLayout() {
 		if (layout == null) {
 			layout = new InternalNodeLayout(this);
 		}
@@ -772,7 +782,8 @@ public class GraphNode extends GraphItem {
 	}
 
 	void applyLayoutChanges() {
-		if (layout != null)
+		if (layout != null) {
 			layout.applyLayout();
+		}
 	}
 }

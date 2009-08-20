@@ -20,7 +20,7 @@ import org.eclipse.zest.core.widgets.GraphItem;
 import org.eclipse.zest.core.widgets.GraphNode;
 import org.eclipse.zest.core.widgets.LayoutFilter;
 import org.eclipse.zest.core.widgets.ZestStyles;
-import org.eclipse.zest.layout.algorithms.TreeLayoutAlgorithm;
+import org.eclipse.zest.layouts.algorithms.TreeLayoutAlgorithm;
 
 /**
  * This snippet shows how to filter elements in the layout.  The Data on the tree
@@ -93,7 +93,7 @@ public class FilterGraphSnippet {
 					Object data = connection.getData();
 					if ( data != null && data instanceof Boolean ) {
 						// If the data is false, don't filter, otherwise, filter.
-						return ((Boolean)data).booleanValue();
+						return ((Boolean) data).booleanValue();
 					}
 					return true;
 				}

@@ -1,3 +1,13 @@
+/*******************************************************************************
+ * Copyright 2005-2009, CHISEL Group, University of Victoria, Victoria, BC,
+ * Canada. All rights reserved. This program and the accompanying materials are
+ * made available under the terms of the Eclipse Public License v1.0 which
+ * accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ * 
+ * Contributors: The Chisel Group, University of Victoria 
+ *               Mateusz Matela
+ ******************************************************************************/
 package org.eclipse.zest.core.widgets;
 
 import org.eclipse.draw2d.ChopboxAnchor;
@@ -19,8 +29,8 @@ import org.eclipse.zest.core.widgets.internal.LoopAnchor;
 import org.eclipse.zest.core.widgets.internal.PolylineArcConnection;
 import org.eclipse.zest.core.widgets.internal.RoundedChopboxAnchor;
 import org.eclipse.zest.core.widgets.internal.ZestRootLayer;
-import org.eclipse.zest.layout.interfaces.ConnectionLayout;
-import org.eclipse.zest.layout.interfaces.NodeLayout;
+import org.eclipse.zest.layouts.interfaces.ConnectionLayout;
+import org.eclipse.zest.layouts.interfaces.NodeLayout;
 
 /*
  * This is the graph connection model which stores the source and destination
@@ -63,7 +73,8 @@ public class GraphConnection extends GraphItem {
 	private boolean highlighted;
 	private boolean hasCustomTooltip;
 
-	public GraphConnection(Graph graphModel, int style, GraphNode source, GraphNode destination) {
+	public GraphConnection(Graph graphModel, int style, GraphNode source,
+			GraphNode destination) {
 		super(graphModel, style);
 
 		this.connectionStyle |= graphModel.getConnectionStyle();
@@ -93,8 +104,11 @@ public class GraphConnection extends GraphItem {
 		(source).addSourceConnection(this);
 		(destination).addTargetConnection(this);
 
-		if (source.getParent().getItemType() == GraphItem.CONTAINER && destination.getParent().getItemType() == GraphItem.CONTAINER && (source.getParent() == destination.getParent())) {
-			// 196189: Edges should not draw on the edge layer if both the src and dest are in the same container
+		if (source.getParent().getItemType() == GraphItem.CONTAINER
+				&& destination.getParent().getItemType() == GraphItem.CONTAINER
+				&& (source.getParent() == destination.getParent())) {
+			// 196189: Edges should not draw on the edge layer if both the src
+			// and dest are in the same container
 			// https://bugs.eclipse.org/bugs/show_bug.cgi?id=196189
 			graph.addConnection(this, false);
 		} else {
@@ -102,18 +116,20 @@ public class GraphConnection extends GraphItem {
 		}
 
 		if ((source.getParent()).getItemType() == GraphItem.CONTAINER) {
-			// If the container of the source is a container, we need to draw another
-			// arc on that arc layer
+			// If the container of the source is a container, we need to draw
+			// another arc on that arc layer
 			sourceContainerConnectionFigure = doCreateFigure();
-			((GraphContainer) source.getParent().getAdaptee()).addConnectionFigure((PolylineConnection) sourceContainerConnectionFigure);
+			((GraphContainer) source.getParent())
+					.addConnectionFigure(sourceContainerConnectionFigure);
 			this.setVisible(false);
 		}
 
-		if ((destination.getParent()).getItemType() == GraphItem.CONTAINER) { //&& src_destSameContainer == false) {
-			// If the container of the source is a container, we need to draw another
-			// arc on that arc layer
+		if ((destination.getParent()).getItemType() == GraphItem.CONTAINER) {
+			// If the container of the source is a container, we need to draw
+			// another arc on that arc layer
 			targetContainerConnectionFigure = doCreateFigure();
-			((GraphContainer) destination.getParent().getAdaptee()).addConnectionFigure((PolylineConnection) targetContainerConnectionFigure);
+			((GraphContainer) destination.getParent())
+					.addConnectionFigure(targetContainerConnectionFigure);
 			this.setVisible(false);
 		}
 		graph.registerItem(this);
@@ -125,11 +141,13 @@ public class GraphConnection extends GraphItem {
 		}
 		connectionFigure = null;
 		if (sourceContainerConnectionFigure != null) {
-			sourceContainerConnectionFigure.getParent().remove(sourceContainerConnectionFigure);
+			sourceContainerConnectionFigure.getParent().remove(
+					sourceContainerConnectionFigure);
 			sourceContainerConnectionFigure = null;
 		}
 		if (targetContainerConnectionFigure != null) {
-			targetContainerConnectionFigure.getParent().remove(targetContainerConnectionFigure);
+			targetContainerConnectionFigure.getParent().remove(
+					targetContainerConnectionFigure);
 			targetContainerConnectionFigure = null;
 		}
 
@@ -142,10 +160,12 @@ public class GraphConnection extends GraphItem {
 		(getDestination()).removeTargetConnection(this);
 		graph.removeConnection(this);
 		if (sourceContainerConnectionFigure != null) {
-			sourceContainerConnectionFigure.getParent().remove(sourceContainerConnectionFigure);
+			sourceContainerConnectionFigure.getParent().remove(
+					sourceContainerConnectionFigure);
 		}
 		if (targetContainerConnectionFigure != null) {
-			targetContainerConnectionFigure.getParent().remove(targetContainerConnectionFigure);
+			targetContainerConnectionFigure.getParent().remove(
+					targetContainerConnectionFigure);
 		}
 	}
 
@@ -178,7 +198,8 @@ public class GraphConnection extends GraphItem {
 		StringBuffer buffer = new StringBuffer("GraphModelConnection: ");
 		buffer.append(sourceNode != null ? sourceNode.getText() : "null");
 		buffer.append(isDirected() ? " --> " : " --- ");
-		buffer.append(destinationNode != null ? destinationNode.getText() : "null");
+		buffer.append(destinationNode != null ? destinationNode.getText()
+				: "null");
 		buffer.append("  (weight=").append(getWeightInLayout()).append(")");
 		return buffer.toString();
 	}
@@ -388,8 +409,10 @@ public class GraphConnection extends GraphItem {
 			return;
 		}
 		IFigure parentFigure = connectionFigure.getParent();
-		if (parentFigure instanceof ZestRootLayer)
-			((ZestRootLayer) parentFigure).highlightConnection(connectionFigure);
+		if (parentFigure instanceof ZestRootLayer) {
+			((ZestRootLayer) parentFigure)
+					.highlightConnection(connectionFigure);
+		}
 		highlighted = true;
 		updateFigure(connectionFigure);
 	}
@@ -402,8 +425,10 @@ public class GraphConnection extends GraphItem {
 			return;
 		}
 		IFigure parentFigure = connectionFigure.getParent();
-		if (parentFigure instanceof ZestRootLayer)
-			((ZestRootLayer) parentFigure).unHighlightConnection(connectionFigure);
+		if (parentFigure instanceof ZestRootLayer) {
+			((ZestRootLayer) parentFigure)
+					.unHighlightConnection(connectionFigure);
+		}
 		highlighted = false;
 		updateFigure(connectionFigure);
 	}
@@ -427,16 +452,19 @@ public class GraphConnection extends GraphItem {
 	}
 
 	/**
-	 * Sets the curve depth of the arc.  The curve depth is defined as 
-	 * the maximum distance from any point on the chord (i.e. a vector
-	 * normal to the chord with magnitude d).
+	 * Sets the curve depth of the arc. The curve depth is defined as the
+	 * maximum distance from any point on the chord (i.e. a vector normal to the
+	 * chord with magnitude d).
 	 * 
-	 * If 0 is set, a Polyline Connection will be used, otherwise a 
-	 * PolylineArcConnectoin will be used.  Negative depths are also supported.
-	 * @param depth The depth of the curve
+	 * If 0 is set, a Polyline Connection will be used, otherwise a
+	 * PolylineArcConnectoin will be used. Negative depths are also supported.
+	 * 
+	 * @param depth
+	 *            The depth of the curve
 	 */
 	public void setCurveDepth(int depth) {
-		if (this.curveDepth == 0 && depth != 0 || this.curveDepth != 0 && depth == 0) {
+		if (this.curveDepth == 0 && depth != 0 || this.curveDepth != 0
+				&& depth == 0) {
 			// There is currently no curve, so we have to create
 			// a curved connection
 			graph.removeConnection(this);
@@ -462,7 +490,9 @@ public class GraphConnection extends GraphItem {
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see org.eclipse.mylar.zest.core.internal.graphmodel.GraphItem#setVisible(boolean)
+	 * @see
+	 * org.eclipse.mylar.zest.core.internal.graphmodel.GraphItem#setVisible(
+	 * boolean)
 	 */
 	public void setVisible(boolean visible) {
 		if (getSource().isVisible() && getDestination().isVisible() && visible) {
@@ -509,15 +539,25 @@ public class GraphConnection extends GraphItem {
 		}
 	}
 
+	/**
+	 * @since 2.0
+	 */
 	public boolean isDirected() {
-		return ZestStyles.checkStyle(connectionStyle, ZestStyles.CONNECTIONS_DIRECTED);
+		return ZestStyles.checkStyle(connectionStyle,
+				ZestStyles.CONNECTIONS_DIRECTED);
 	}
 
+	/**
+	 * @since 2.0
+	 */
 	public void setDirected(boolean directed) {
-		if (directed)
-			setConnectionStyle(connectionStyle | ZestStyles.CONNECTIONS_DIRECTED);
-		else
-			setConnectionStyle(connectionStyle & (-1 - ZestStyles.CONNECTIONS_DIRECTED));
+		if (directed) {
+			setConnectionStyle(connectionStyle
+					| ZestStyles.CONNECTIONS_DIRECTED);
+		} else {
+			setConnectionStyle(connectionStyle
+					& (-1 - ZestStyles.CONNECTIONS_DIRECTED));
+		}
 	}
 
 	PolylineConnection getSourceContainerConnectionFigure() {
@@ -580,7 +620,8 @@ public class GraphConnection extends GraphItem {
 		}
 
 		IFigure toolTip;
-		if (this.getTooltip() == null && getText() != null && getText().length() > 0 && hasCustomTooltip == false) {
+		if (this.getTooltip() == null && getText() != null
+				&& getText().length() > 0 && hasCustomTooltip == false) {
 			toolTip = new Label();
 			((Label) toolTip).setText(getText());
 		} else {
@@ -597,8 +638,8 @@ public class GraphConnection extends GraphItem {
 		Locator labelLocator = null;
 
 		if (getSource() == getDestination()) {
-			// If this is a self loop, create a looped arc and put the locator at the top
-			// of the connection
+			// If this is a self loop, create a looped arc and put the locator
+			// at the top of the connection
 			connectionFigure = new PolylineArcConnection();
 			sourceAnchor = new LoopAnchor(getSource().getNodeFigure());
 			targetAnchor = new LoopAnchor(getDestination().getNodeFigure());
@@ -606,19 +647,23 @@ public class GraphConnection extends GraphItem {
 				protected Point getReferencePoint() {
 					Point p = Point.SINGLETON;
 					p.x = getConnection().getPoints().getPoint(getIndex()).x;
-					p.y = (int) (getConnection().getPoints().getPoint(getIndex()).y - (curveDepth * 1.5));
+					p.y = (int) (getConnection().getPoints().getPoint(
+							getIndex()).y - (curveDepth * 1.5));
 					return p;
 				}
 			};
 		} else {
 			if (curveDepth != 0) {
 				connectionFigure = new PolylineArcConnection();
-				((PolylineArcConnection) connectionFigure).setDepth(this.curveDepth);
+				((PolylineArcConnection) connectionFigure)
+						.setDepth(this.curveDepth);
 			} else {
 				connectionFigure = new PolylineConnection();
 			}
-			sourceAnchor = new RoundedChopboxAnchor(getSource().getNodeFigure(), 8);
-			targetAnchor = new RoundedChopboxAnchor(getDestination().getNodeFigure(), 8);
+			sourceAnchor = new RoundedChopboxAnchor(
+					getSource().getNodeFigure(), 8);
+			targetAnchor = new RoundedChopboxAnchor(getDestination()
+					.getNodeFigure(), 8);
 			labelLocator = new MidpointLocator(connectionFigure, 0);
 		}
 
@@ -659,7 +704,8 @@ public class GraphConnection extends GraphItem {
 		}
 
 		public boolean isDirected() {
-			return !ZestStyles.checkStyle(getConnectionStyle(), ZestStyles.CONNECTIONS_DIRECTED);
+			return !ZestStyles.checkStyle(getConnectionStyle(),
+					ZestStyles.CONNECTIONS_DIRECTED);
 		}
 
 		public boolean isVisible() {
@@ -672,8 +718,9 @@ public class GraphConnection extends GraphItem {
 		}
 
 		void applyLayout() {
-			if (GraphConnection.this.isVisible() != this.visible)
+			if (GraphConnection.this.isVisible() != this.visible) {
 				GraphConnection.this.setVisible(this.visible);
+			}
 		}
 	}
 

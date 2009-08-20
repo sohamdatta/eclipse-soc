@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2005, CHISEL Group, University of Victoria, Victoria, BC, Canada.
+ * Copyright 2005-2009, CHISEL Group, University of Victoria, Victoria, BC, Canada.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -15,7 +15,7 @@ import org.eclipse.jface.viewers.IStructuredContentProvider;
 /**
  * 
  * @author Ian Bull
- *
+ * 
  */
 public interface IGraphEntityContentProvider extends IStructuredContentProvider {
 
@@ -23,6 +23,7 @@ public interface IGraphEntityContentProvider extends IStructuredContentProvider 
 
 	/**
 	 * Gets the elements this object is connected to
+	 * 
 	 * @param entity
 	 * @return
 	 */

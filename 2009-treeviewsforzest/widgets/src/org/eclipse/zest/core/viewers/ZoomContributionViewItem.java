@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2005-2006, CHISEL Group, University of Victoria, Victoria, BC,
+ * Copyright 2005-2009, CHISEL Group, University of Victoria, Victoria, BC,
  * Canada. All rights reserved. This program and the accompanying materials are
  * made available under the terms of the Eclipse Public License v1.0 which
  * accompanies this distribution, and is available at
@@ -10,8 +10,6 @@
 package org.eclipse.zest.core.viewers;
 
 import org.eclipse.jface.action.ContributionItem;
-import org.eclipse.zest.core.viewers.internal.ZoomListener;
-import org.eclipse.zest.core.viewers.internal.ZoomManager;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.MenuAdapter;
 import org.eclipse.swt.events.MenuEvent;
@@ -37,8 +35,10 @@ import org.eclipse.swt.widgets.ToolItem;
  * @author Del Myers
  * 
  */
-//@tag zest.bug.156286-Zooming.fix : create a contribution item that can set zooming on Zest views.
-public class ZoomContributionViewItem extends ContributionItem implements ZoomListener {
+// @tag zest.bug.156286-Zooming.fix : create a contribution item that can set
+// zooming on Zest views.
+public class ZoomContributionViewItem extends ContributionItem implements
+		ZoomListener {
 	/**
 	 * Zooms to fit the width.
 	 */
@@ -78,8 +78,9 @@ public class ZoomContributionViewItem extends ContributionItem implements ZoomLi
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see org.eclipse.jface.action.ContributionItem#fill(org.eclipse.swt.widgets.Menu,
-	 *      int)
+	 * @see
+	 * org.eclipse.jface.action.ContributionItem#fill(org.eclipse.swt.widgets
+	 * .Menu, int)
 	 */
 	public void fill(Menu menu, int index) {
 		if (this.fMenu == null || this.fMenu != menu) {
@@ -95,8 +96,9 @@ public class ZoomContributionViewItem extends ContributionItem implements ZoomLi
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see org.eclipse.jface.action.ContributionItem#fill(org.eclipse.swt.widgets.CoolBar,
-	 *      int)
+	 * @see
+	 * org.eclipse.jface.action.ContributionItem#fill(org.eclipse.swt.widgets
+	 * .CoolBar, int)
 	 */
 	public void fill(CoolBar parent, int index) {
 		CoolItem item = new CoolItem(parent, SWT.DROP_DOWN);
@@ -107,8 +109,9 @@ public class ZoomContributionViewItem extends ContributionItem implements ZoomLi
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see org.eclipse.jface.action.ContributionItem#fill(org.eclipse.swt.widgets.ToolBar,
-	 *      int)
+	 * @see
+	 * org.eclipse.jface.action.ContributionItem#fill(org.eclipse.swt.widgets
+	 * .ToolBar, int)
 	 */
 	public void fill(ToolBar parent, int index) {
 		ToolItem item = new ToolItem(parent, SWT.DROP_DOWN);
@@ -123,7 +126,9 @@ public class ZoomContributionViewItem extends ContributionItem implements ZoomLi
 			/*
 			 * (non-Javadoc)
 			 * 
-			 * @see org.eclipse.swt.events.SelectionAdapter#widgetSelected(org.eclipse.swt.events.SelectionEvent)
+			 * @see
+			 * org.eclipse.swt.events.SelectionAdapter#widgetSelected(org.eclipse
+			 * .swt.events.SelectionEvent)
 			 */
 			public void widgetSelected(SelectionEvent e) {
 				int selection = combo.getSelectionIndex();
@@ -235,7 +240,8 @@ public class ZoomContributionViewItem extends ContributionItem implements ZoomLi
 		if (fMenu != null) {
 			fMenu = null;
 		}
-		//		@tag zest.bug.159667-ZoomDispose : make sure that we no longer listen to the part service.
+		// @tag zest.bug.159667-ZoomDispose : make sure that we no longer listen
+		// to the part service.
 		super.dispose();
 	}
 }

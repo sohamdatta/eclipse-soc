@@ -11,12 +11,13 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.zest.core.widgets.DefaultSubgraph;
 import org.eclipse.zest.core.widgets.Graph;
 import org.eclipse.zest.core.widgets.GraphConnection;
 import org.eclipse.zest.core.widgets.GraphNode;
-import org.eclipse.zest.core.widgets.TriangleSubgraph;
 import org.eclipse.zest.core.widgets.ZestStyles;
-import org.eclipse.zest.layout.algorithms.SpaceTreeLayoutAlgorithm;
+import org.eclipse.zest.core.widgets.DefaultSubgraph.TriangleSubgraphFactory;
+import org.eclipse.zest.layouts.algorithms.SpaceTreeLayoutAlgorithm;
 
 public class SpaceTreeExample {
 
@@ -31,7 +32,7 @@ public class SpaceTreeExample {
 	public static void main(String[] args) {
 		Display d = new Display();
 		Shell shell = new Shell(d);
-		shell.setText("GraphSnippet1");
+		shell.setText("Space Tree Layout Example");
 		shell.setLayout(new FillLayout());
 		shell.setSize(400, 400);
 
@@ -39,17 +40,18 @@ public class SpaceTreeExample {
 		g.setConnectionStyle(ZestStyles.CONNECTIONS_DIRECTED);
 		g.setNodeStyle(ZestStyles.NODES_FISHEYE);
 		
-		TriangleSubgraph.Factory factory = new TriangleSubgraph.Factory();
+		TriangleSubgraphFactory factory = new DefaultSubgraph.TriangleSubgraphFactory();
 		factory.setColor(ColorConstants.green);
+
 		g.setSubgraphFactory(factory);
 		SpaceTreeLayoutAlgorithm spaceTreeLayoutAlgorithm = new SpaceTreeLayoutAlgorithm();
-		g.setLayoutAlgorithm(spaceTreeLayoutAlgorithm, false);
 		g.setExpandCollapseManager(spaceTreeLayoutAlgorithm
 				.getExpandCollapseManager());
-		// g.setExpandCollapseManager(new DAGExpandCollapseManager());
-		// g.setLayoutAlgorithm(new TreeLayoutAlgorithm(), true);
-		
+
+		g.setLayoutAlgorithm(spaceTreeLayoutAlgorithm, false);
+
 		createTree(g, "!", 5, 5);
+
 
 		hookMenu(g);
 

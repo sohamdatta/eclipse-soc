@@ -21,13 +21,14 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.zest.core.widgets.Graph;
 import org.eclipse.zest.core.widgets.GraphConnection;
 import org.eclipse.zest.core.widgets.GraphNode;
-import org.eclipse.zest.layout.algorithms.SpringLayoutAlgorithm;
+import org.eclipse.zest.layouts.algorithms.SpringLayoutAlgorithm;
 
 /**
  * 
  */
 public class SpringLayoutProgress {
-
+	static Runnable r = null;
+			
 	/**
 	 * @param args
 	 */
@@ -69,9 +70,22 @@ public class SpringLayoutProgress {
 		b.addSelectionListener(new SelectionAdapter() {
 			int steps = 0;
 			public void widgetSelected(SelectionEvent e) {
-				springLayoutAlgorithm.performOneIteration();
-				g.redraw();
-				label.setText("steps: " + ++steps);
+				
+				r = new Runnable() {
+					public void run() {
+						springLayoutAlgorithm.performOneIteration();
+						g.redraw();
+						label.setText("steps: " + ++steps);
+						try {
+							Thread.sleep(50);
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+						}
+						Display.getCurrent().asyncExec(r);
+					}
+				};
+				Display.getCurrent().asyncExec(r);
+
 			}
 		});
 

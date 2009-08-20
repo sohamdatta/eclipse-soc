@@ -7,9 +7,9 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.zest.core.widgets.Graph;
 import org.eclipse.zest.core.widgets.GraphConnection;
 import org.eclipse.zest.core.widgets.GraphNode;
-import org.eclipse.zest.layout.interfaces.EntityLayout;
-import org.eclipse.zest.layout.interfaces.LayoutAlgorithm;
-import org.eclipse.zest.layout.interfaces.LayoutContext;
+import org.eclipse.zest.layouts.LayoutAlgorithm;
+import org.eclipse.zest.layouts.interfaces.EntityLayout;
+import org.eclipse.zest.layouts.interfaces.LayoutContext;
 
 /**
  * This snippet shows how to create a custom layout. This layout simply lays the nodes out vertically

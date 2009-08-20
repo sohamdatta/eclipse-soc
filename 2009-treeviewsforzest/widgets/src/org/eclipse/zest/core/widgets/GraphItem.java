@@ -1,3 +1,13 @@
+/*******************************************************************************
+ * Copyright 2005-2009, CHISEL Group, University of Victoria, Victoria, BC,
+ * Canada. All rights reserved. This program and the accompanying materials are
+ * made available under the terms of the Eclipse Public License v1.0 which
+ * accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ * 
+ * Contributors: The Chisel Group, University of Victoria 
+ *               Mateusz Matela
+ ******************************************************************************/
 package org.eclipse.zest.core.widgets;
 
 import org.eclipse.draw2d.IFigure;
@@ -80,15 +90,15 @@ public abstract class GraphItem extends Item {
 	public abstract Graph getGraphModel();
 
 	/**
-	 * Highlights the current GraphItem.  A graph item is either a graph node or 
-	 * graph connection, and highlighting them will set the appropriate highlight
-	 * color.
+	 * Highlights the current GraphItem. A graph item is either a graph node or
+	 * graph connection, and highlighting them will set the appropriate
+	 * highlight color.
 	 */
 	public abstract void highlight();
 
 	/**
-	 * Unhighlight sets the graphItem (either a graphNode or graphConnection) back
-	 * to the unhighlight figure or color.
+	 * Unhighlight sets the graphItem (either a graphNode or graphConnection)
+	 * back to the unhighlight figure or color.
 	 */
 	public abstract void unhighlight();
 
@@ -96,7 +106,9 @@ public abstract class GraphItem extends Item {
 
 	/**
 	 * Checks a style to see if it is set on the given graph item
-	 * @param styleToCheck The style to check
+	 * 
+	 * @param styleToCheck
+	 *            The style to check
 	 * @return
 	 */
 	protected boolean checkStyle(int styleToCheck) {

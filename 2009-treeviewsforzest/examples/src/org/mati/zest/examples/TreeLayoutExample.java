@@ -12,12 +12,13 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.zest.core.widgets.DAGExpandCollapseManager;
+import org.eclipse.zest.core.widgets.DefaultSubgraph;
 import org.eclipse.zest.core.widgets.Graph;
 import org.eclipse.zest.core.widgets.GraphConnection;
 import org.eclipse.zest.core.widgets.GraphItem;
 import org.eclipse.zest.core.widgets.GraphNode;
-import org.eclipse.zest.core.widgets.LabelSubgraph;
-import org.eclipse.zest.layout.algorithms.TreeLayoutAlgorithm;
+import org.eclipse.zest.layouts.algorithms.TreeLayoutAlgorithm;
 
 public class TreeLayoutExample {
 	/**
@@ -27,28 +28,42 @@ public class TreeLayoutExample {
 		// Create the shell
 		Display d = new Display();
 		Shell shell = new Shell(d);
-		shell.setText("GraphSnippet1");
+		shell.setText("Tree Layout Example");
 		GridLayout gridLayout = new GridLayout();
 		gridLayout.numColumns = 10;
 		shell.setLayout(gridLayout);
 		shell.setSize(500, 500);
 
 		final Graph g = new Graph(shell, SWT.NONE);
+		final TreeLayoutAlgorithm algorithm = new TreeLayoutAlgorithm();
+		g
+				.setSubgraphFactory(new DefaultSubgraph.PrunedSuccessorsSubgraphFactory());
+		g.setLayoutAlgorithm(algorithm, false);
+		g.setExpandCollapseManager(new DAGExpandCollapseManager());
+
+
 		g.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 10, 10));
 		g.setSize(500, 500);
+
 		GraphNode root = new GraphNode(g, SWT.NONE, "Root");
+
+		GraphNode lastNode = null;
 		for (int i = 0; i < 3; i++) {
 			GraphNode n = new GraphNode(g, SWT.NONE, "1 - " + i);
-			for (int j = 0; j < 3; j++) {
+			if (lastNode != null)
+				new GraphConnection(g, SWT.NONE, n, lastNode).setDirected(true);
+			for (int j = 0; j < 1; j++) {
 				GraphNode n2 = new GraphNode(g, SWT.NONE, "2 - " + j);
-				new GraphConnection(g, SWT.NONE, n, n2).setWeight(-1);
+				GraphConnection c = new GraphConnection(g, SWT.NONE, n, n2);
+				c.setWeight(-1);
+				c.setDirected(true);
+				lastNode = n2;
 			}
-			new GraphConnection(g, SWT.NONE, root, n);
+
+			new GraphConnection(g, SWT.NONE, root, n).setDirected(true);
 		}
 
-		final TreeLayoutAlgorithm algorithm = new TreeLayoutAlgorithm();
-		g.setSubgraphFactory(new LabelSubgraph.Factory());
-		g.setLayoutAlgorithm(algorithm, false);
+
 		hookMenu(g);
 
 		final Button buttonTopDown = new Button(shell, SWT.FLAT);
