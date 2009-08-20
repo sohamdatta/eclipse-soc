@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2005, CHISEL Group, University of Victoria, Victoria, BC, Canada.
+ * Copyright 2009, CHISEL Group, University of Victoria, Victoria, BC, Canada.
  * All rights reserved. This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License v1.0 which
  * accompanies this distribution, and is available at
@@ -127,11 +127,14 @@ public class GraphLabel extends CachedLabel {
 			if (font != null) {
 				Dimension minSize = FigureUtilities.getTextExtents(text, font);
 				if (getIcon() != null) {
-					org.eclipse.swt.graphics.Rectangle imageRect = getIcon().getBounds();
-					int expandHeight = Math.max(imageRect.height - minSize.height, 0);
+					org.eclipse.swt.graphics.Rectangle imageRect = getIcon()
+							.getBounds();
+					int expandHeight = Math.max(imageRect.height
+							- minSize.height, 0);
 					minSize.expand(imageRect.width + 4, expandHeight);
 				}
-				minSize.expand(10 + (2 * safeBorderWidth), 4 + (2 * safeBorderWidth));
+				minSize.expand(10 + (2 * safeBorderWidth),
+						4 + (2 * safeBorderWidth));
 				setBounds(new Rectangle(getLocation(), minSize));
 			}
 		}
@@ -155,7 +158,8 @@ public class GraphLabel extends CachedLabel {
 		green = (int) (green - (green * 0.20));
 		green = green > 0 ? green : 0;
 
-		Color lightenColor = new Color(Display.getCurrent(), new RGB(red, green, blue));
+		Color lightenColor = new Color(Display.getCurrent(), new RGB(red,
+				green, blue));
 		graphics.setForegroundColor(lightenColor);
 		graphics.setBackgroundColor(getBackgroundColor());
 
@@ -166,19 +170,22 @@ public class GraphLabel extends CachedLabel {
 		if (graphics instanceof ScaledGraphics) {
 			scale = ((ScaledGraphics) graphics).getAbsoluteScale();
 		}
-		// Top part inside the border (as fillGradient does not allow to fill a rectangle with round corners).
+		// Top part inside the border (as fillGradient does not allow to fill a
+		// rectangle with round corners).
 		Rectangle rect = getBounds().getCopy();
 		rect.height /= 2;
 		graphics.setForegroundColor(getBackgroundColor());
 		graphics.setBackgroundColor(getBackgroundColor());
-		graphics.fillRoundRectangle(rect, arcWidth * safeBorderWidth, arcWidth * 2 * safeBorderWidth);
+		graphics.fillRoundRectangle(rect, arcWidth * safeBorderWidth, arcWidth
+				* 2 * safeBorderWidth);
 
 		// Bottom part inside the border.
 		rect.y = rect.y + rect.height;
 		rect.height += 1; // Not sure why it is needed, but it is needed ;-)
 		graphics.setForegroundColor(lightenColor);
 		graphics.setBackgroundColor(lightenColor);
-		graphics.fillRoundRectangle(rect, arcWidth * safeBorderWidth, arcWidth * 2 * safeBorderWidth);
+		graphics.fillRoundRectangle(rect, arcWidth * safeBorderWidth, arcWidth
+				* 2 * safeBorderWidth);
 
 		// Now fill the middle part of top and bottom part with a gradient.
 		rect = bounds.getCopy();

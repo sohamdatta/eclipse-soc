@@ -19,7 +19,7 @@ import org.eclipse.zest.core.widgets.Graph;
 import org.eclipse.zest.core.widgets.GraphConnection;
 import org.eclipse.zest.core.widgets.GraphNode;
 import org.eclipse.zest.core.widgets.ZestStyles;
-import org.eclipse.zest.layout.algorithms.GridLayoutAlgorithm;
+import org.eclipse.zest.layouts.algorithms.GridLayoutAlgorithm;
 
 /**
  * This snippet creates a graph with 80*3 nodes (240 nodes).  Only the icons are shown for the nodes, but if
@@ -46,9 +46,15 @@ public class FisheyeGraphSnippet {
 		Graph g = new Graph(shell, SWT.NONE);
 		g.setConnectionStyle(ZestStyles.CONNECTIONS_DIRECTED);
 		for (int i = 0; i < 80; i++) {
-			GraphNode n1 = new GraphNode(g, ZestStyles.NODES_HIDE_TEXT | ZestStyles.NODES_FISHEYE, "Information", image1);
-			GraphNode n2 = new GraphNode(g, ZestStyles.NODES_HIDE_TEXT | ZestStyles.NODES_FISHEYE, "Warning", image2);
-			GraphNode n3 = new GraphNode(g, ZestStyles.NODES_HIDE_TEXT | ZestStyles.NODES_FISHEYE, "Error", image3);
+			GraphNode n1 = new GraphNode(g, ZestStyles.NODES_HIDE_TEXT
+					| ZestStyles.NODES_FISHEYE, "Information");
+			n1.setImage(image1);
+			GraphNode n2 = new GraphNode(g, ZestStyles.NODES_HIDE_TEXT
+					| ZestStyles.NODES_FISHEYE, "Warning");
+			n2.setImage(image2);
+			GraphNode n3 = new GraphNode(g, ZestStyles.NODES_HIDE_TEXT
+					| ZestStyles.NODES_FISHEYE, "Error");
+			n3.setImage(image3);
 			new GraphConnection(g, SWT.NONE, n1, n2);
 			new GraphConnection(g, SWT.NONE, n2, n3);
 			new GraphConnection(g, SWT.NONE, n3, n3);

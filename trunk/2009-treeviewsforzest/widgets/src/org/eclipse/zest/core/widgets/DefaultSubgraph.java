@@ -1,3 +1,12 @@
+/*******************************************************************************
+ * Copyright (c) 2009 Mateusz Matela and others. All rights reserved. This
+ * program and the accompanying materials are made available under the terms of
+ * the Eclipse Public License v1.0 which accompanies this distribution, and is
+ * available at http://www.eclipse.org/legal/epl-v10.html
+ * 
+ * Contributors: Mateusz Matela - initial API and implementation
+ *               Ian Bull
+ ******************************************************************************/
 package org.eclipse.zest.core.widgets;
 
 import java.util.HashMap;
@@ -5,14 +14,19 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-import org.eclipse.zest.layout.dataStructures.DisplayIndependentDimension;
-import org.eclipse.zest.layout.dataStructures.DisplayIndependentPoint;
-import org.eclipse.zest.layout.dataStructures.DisplayIndependentRectangle;
-import org.eclipse.zest.layout.interfaces.ConnectionLayout;
-import org.eclipse.zest.layout.interfaces.EntityLayout;
-import org.eclipse.zest.layout.interfaces.LayoutContext;
-import org.eclipse.zest.layout.interfaces.NodeLayout;
-import org.eclipse.zest.layout.interfaces.SubgraphLayout;
+import org.eclipse.draw2d.ColorConstants;
+import org.eclipse.swt.graphics.Color;
+import org.eclipse.zest.core.widgets.custom.LabelSubgraph;
+import org.eclipse.zest.core.widgets.custom.TriangleSubgraph;
+import org.eclipse.zest.core.widgets.custom.TriangleSubgraph.TriangleParameters;
+import org.eclipse.zest.layouts.dataStructures.DisplayIndependentDimension;
+import org.eclipse.zest.layouts.dataStructures.DisplayIndependentPoint;
+import org.eclipse.zest.layouts.dataStructures.DisplayIndependentRectangle;
+import org.eclipse.zest.layouts.interfaces.ConnectionLayout;
+import org.eclipse.zest.layouts.interfaces.EntityLayout;
+import org.eclipse.zest.layouts.interfaces.LayoutContext;
+import org.eclipse.zest.layouts.interfaces.NodeLayout;
+import org.eclipse.zest.layouts.interfaces.SubgraphLayout;
 
 /**
  * Default implementation of {@link SubgraphLayout}. Every subgraph added to
@@ -21,6 +35,7 @@ import org.eclipse.zest.layout.interfaces.SubgraphLayout;
  * is minimized and all connections adjacent to it are made invisible. No
  * additional graphic elements are added to the graph, but subclasses may add
  * them.
+ * @since 2.0
  */
 public class DefaultSubgraph implements SubgraphLayout {
 
@@ -28,7 +43,7 @@ public class DefaultSubgraph implements SubgraphLayout {
 	 * Default factory for {@link DefaultSubgraph}. It creates one subgraph for a
 	 * whole graph and throws every node into it.
 	 */
-	public static class Factory implements SubgraphFactory {
+	public static class DefaultSubgraphFactory implements SubgraphFactory {
 		private HashMap contextToSubgraph = new HashMap();
 
 		public SubgraphLayout createSubgraph(NodeLayout[] nodes, LayoutContext context) {
@@ -40,6 +55,154 @@ public class DefaultSubgraph implements SubgraphLayout {
 			subgraph.addNodes(nodes);
 			return subgraph;
 		}
+	};
+
+	public static class LabelSubgraphFactory implements SubgraphFactory {
+		private Color defaultForegroundColor = ColorConstants.black;
+		private Color defaultBackgroundColor = ColorConstants.yellow;
+
+		/**
+		 * Changes the default foreground color for newly created subgraphs.
+		 * 
+		 * @param c
+		 *            color to use
+		 */
+		public void setDefualtForegroundColor(Color c) {
+			defaultForegroundColor = c;
+		}
+
+		/**
+		 * Changes the default background color for newly created subgraphs.
+		 * 
+		 * @param c
+		 *            color to use
+		 */
+		public void setDefaultBackgroundColor(Color c) {
+			defaultBackgroundColor = c;
+		}
+
+		public SubgraphLayout createSubgraph(NodeLayout[] nodes, LayoutContext context) {
+			return new LabelSubgraph(nodes, context, defaultForegroundColor, defaultBackgroundColor);
+		}
+	};
+
+	public static class TriangleSubgraphFactory implements SubgraphFactory {
+		private TriangleParameters parameters = new TriangleParameters();
+
+		public SubgraphLayout createSubgraph(NodeLayout[] nodes, LayoutContext context) {
+			return new TriangleSubgraph(nodes, context, (TriangleParameters) parameters.clone());
+		}
+
+		/**
+		 * 
+		 * @return initial color of triangles created with this factory
+		 */
+		public Color getColor() {
+			return parameters.color;
+		}
+
+		/**
+		 * Changes the default color for newly created subgraphs.
+		 * 
+		 * @param color
+		 *            color to use
+		 */
+		public void setColor(Color color) {
+			parameters.color = color;
+		}
+
+		/**
+		 * 
+		 * @return initial direction of triangles created with this factory
+		 */
+		public int getDirection() {
+			return parameters.direction;
+		}
+
+		/**
+		 * Changes the default direction for newly cretaed subgraphs.
+		 * 
+		 * @param direction
+		 *            direction to use, can be {@link SubgraphLayout#TOP_DOWN},
+		 *            {@link SubgraphLayout#BOTTOM_UP},
+		 *            {@link SubgraphLayout#LEFT_RIGHT}, or
+		 *            {@link SubgraphLayout#RIGHT_LEFT}
+		 */
+		public void setDirection(int direction) {
+			parameters.direction = direction;
+		}
+
+		/**
+		 * 
+		 * @return maximum height of triangles created with this factory
+		 */
+		public double getReferenceHeight() {
+			return parameters.referenceHeight;
+		}
+
+		/**
+		 * Sets the maximum height for the triangle visualizing this subgraph.
+		 * 
+		 * @param referenceHeight
+		 *            height to use
+		 */
+		public void setReferenceHeight(double referenceHeight) {
+			parameters.referenceHeight = referenceHeight;
+		}
+
+		/**
+		 * 
+		 * @return maximum base length of triangles created with this factory
+		 */
+		public double getReferenceBase() {
+			return parameters.referenceBase;
+		}
+
+		/**
+		 * Sets the maximum base length for the triangle visualizing this
+		 * subgraph.
+		 * 
+		 * @param referenceBase
+		 *            base length to use
+		 */
+
+		public void setReferenceBase(double referenceBase) {
+			parameters.referenceBase = referenceBase;
+		}
+	};
+
+	/**
+	 * Factory for {@link PrunedSuccessorsSubgraph}. It creates one subgraph for
+	 * a whole graph and throws every node into it.
+	 */
+	public static class PrunedSuccessorsSubgraphFactory implements SubgraphFactory {
+		private HashMap contextToSubgraph = new HashMap();
+
+		public SubgraphLayout createSubgraph(NodeLayout[] nodes, LayoutContext context) {
+			PrunedSuccessorsSubgraph subgraph = (PrunedSuccessorsSubgraph) contextToSubgraph.get(context);
+			if (subgraph == null) {
+				subgraph = new PrunedSuccessorsSubgraph(context);
+				contextToSubgraph.put(context, subgraph);
+			}
+			subgraph.addNodes(nodes);
+			return subgraph;
+		}
+
+		/**
+		 * Updates a label for given node (creates the label if necessary).
+		 * 
+		 * @param node
+		 *            node to update
+		 */
+		public void updateLabelForNode(InternalNodeLayout node) {
+			InternalLayoutContext context = node.getOwnerLayoutContext();
+			PrunedSuccessorsSubgraph subgraph = (PrunedSuccessorsSubgraph) contextToSubgraph.get(context);
+			if (subgraph == null) {
+				subgraph = new PrunedSuccessorsSubgraph(context);
+				contextToSubgraph.put(context, subgraph);
+			}
+			subgraph.updateNodeLabel(node);
+		}
 
 	};
 
@@ -50,10 +213,11 @@ public class DefaultSubgraph implements SubgraphLayout {
 	protected boolean disposed = false;
 
 	protected DefaultSubgraph(LayoutContext context2) {
-		if (context2 instanceof InternalLayoutContext)
+		if (context2 instanceof InternalLayoutContext) {
 			this.context = (InternalLayoutContext) context2;
-		else
+		} else {
 			throw new RuntimeException("This subgraph can be only created with LayoutContext provided by Zest Graph");
+		}
 	}
 
 	public boolean isGraphEntity() {
@@ -127,8 +291,9 @@ public class DefaultSubgraph implements SubgraphLayout {
 	public void removeDisposedNodes() {
 		for (Iterator iterator = nodes.iterator(); iterator.hasNext();) {
 			InternalNodeLayout node = (InternalNodeLayout) iterator.next();
-			if (node.isDisposed())
+			if (node.isDisposed()) {
 				iterator.remove();
+			}
 		}
 	}
 
@@ -137,11 +302,13 @@ public class DefaultSubgraph implements SubgraphLayout {
 		int i = 0;
 		for (Iterator iterator = nodes.iterator(); iterator.hasNext();) {
 			result[i] = (InternalNodeLayout) iterator.next();
-			if (!context.isLayoutItemFiltered(result[i].getNode()))
+			if (!context.isLayoutItemFiltered(result[i].getNode())) {
 				i++;
+			}
 		}
-		if (i == nodes.size())
+		if (i == nodes.size()) {
 			return result;
+		}
 
 		NodeLayout[] result2 = new NodeLayout[i];
 		System.arraycopy(result, 0, result2, 0, i);
@@ -165,8 +332,9 @@ public class DefaultSubgraph implements SubgraphLayout {
 	}
 
 	protected void refreshConnectionsVisibility(ConnectionLayout[] connections) {
-		for (int i = 0; i < connections.length; i++)
+		for (int i = 0; i < connections.length; i++) {
 			connections[i].setVisible(!connections[i].getSource().isPruned() && !connections[i].getTarget().isPruned());
+		}
 	}
 
 	/**

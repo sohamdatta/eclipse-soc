@@ -8,12 +8,12 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.zest.core.widgets.DefaultSubgraph;
 import org.eclipse.zest.core.widgets.Graph;
 import org.eclipse.zest.core.widgets.GraphConnection;
 import org.eclipse.zest.core.widgets.GraphItem;
 import org.eclipse.zest.core.widgets.GraphNode;
-import org.eclipse.zest.core.widgets.PrunedSuccessorsSubgraph;
-import org.eclipse.zest.layout.algorithms.SpaceTreeLayoutAlgorithm;
+import org.eclipse.zest.layouts.algorithms.SpaceTreeLayoutAlgorithm;
 
 /**
  * This example shows how SpringLayoutAlgorithm reacts to graph structure
@@ -40,7 +40,7 @@ public class SpaceTreeBuilding {
 		g.setExpandCollapseManager(spaceTreeLayoutAlgorithm
 				.getExpandCollapseManager());
 		
-		g.setSubgraphFactory(new PrunedSuccessorsSubgraph.Factory());
+		g.setSubgraphFactory(new DefaultSubgraph.LabelSubgraphFactory());
 
 		for (int i = 0; i < 20; i++) {
 			GraphNode graphNode = new GraphNode(g, SWT.NONE);

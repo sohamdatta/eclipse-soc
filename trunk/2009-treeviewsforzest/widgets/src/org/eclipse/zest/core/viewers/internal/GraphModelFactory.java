@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2005, CHISEL Group, University of Victoria, Victoria, BC, Canada.
+ * Copyright 2005-2009, CHISEL Group, University of Victoria, Victoria, BC, Canada.
  * All rights reserved. This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License v1.0 which
  * accompanies this distribution, and is available at
@@ -12,6 +12,7 @@ package org.eclipse.zest.core.viewers.internal;
 import java.util.Iterator;
 import java.util.List;
 
+import org.eclipse.zest.core.viewers.AbstractStructuredGraphViewer;
 import org.eclipse.zest.core.viewers.IFigureProvider;
 import org.eclipse.zest.core.viewers.IGraphContentProvider;
 import org.eclipse.zest.core.widgets.Graph;
@@ -46,12 +47,15 @@ public class GraphModelFactory extends AbstractStylingModelFactory {
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see org.eclipse.zest.core.internal.graphmodel.AbstractStylingModelFactory#doBuildGraph(org.eclipse.zest.core.internal.graphmodel.GraphModel)
+	 * @see
+	 * org.eclipse.zest.core.internal.graphmodel.AbstractStylingModelFactory
+	 * #doBuildGraph(org.eclipse.zest.core.internal.graphmodel.GraphModel)
 	 */
 	protected void doBuildGraph(Graph model) {
 		super.doBuildGraph(model);
 		// make the model have the same styles as the viewer
-		Object rels[] = getContentProvider().getElements(getViewer().getInput());
+		Object rels[] = getContentProvider()
+				.getElements(getViewer().getInput());
 		if (rels != null) {
 			IFigureProvider figureProvider = null;
 			if (getLabelProvider() instanceof IFigureProvider) {
@@ -63,17 +67,20 @@ public class GraphModelFactory extends AbstractStylingModelFactory {
 			for (int i = 0; i < rels.length; i++) {
 				// Check the filter on the source
 				Object source = getCastedContent().getSource(rels[i]);
-				source = filterElement(getViewer().getInput(), source) ? null : source;
+				source = filterElement(getViewer().getInput(), source) ? null
+						: source;
 
 				// Check hte filter on the dest
 				Object dest = getCastedContent().getDestination(rels[i]);
-				dest = filterElement(getViewer().getInput(), dest) ? null : dest;
+				dest = filterElement(getViewer().getInput(), dest) ? null
+						: dest;
 
 				if (source == null) {
 					// just create the node for the destination
 					if (dest != null) {
 						if (figureProvider != null) {
-							createNode(model, dest, figureProvider.getFigure(dest));
+							createNode(model, dest, figureProvider
+									.getFigure(dest));
 						} else {
 							createNode(model, dest);
 						}
@@ -83,7 +90,8 @@ public class GraphModelFactory extends AbstractStylingModelFactory {
 					// just create the node for the source
 					if (source != null) {
 						if (figureProvider != null) {
-							createNode(model, source, figureProvider.getFigure(dest));
+							createNode(model, source, figureProvider
+									.getFigure(dest));
 						} else {
 							createNode(model, source);
 						}
@@ -92,8 +100,11 @@ public class GraphModelFactory extends AbstractStylingModelFactory {
 				}
 				// If any of the source, dest is null or the edge is filtered,
 				// don't create the graph.
-				if (source != null && dest != null && !filterElement(getViewer().getInput(), rels[i])) {
-					createConnection(model, rels[i], getCastedContent().getSource(rels[i]), getCastedContent().getDestination(rels[i]));
+				if (source != null && dest != null
+						&& !filterElement(getViewer().getInput(), rels[i])) {
+					createConnection(model, rels[i], getCastedContent()
+							.getSource(rels[i]), getCastedContent()
+							.getDestination(rels[i]));
 				}
 			}
 		}
@@ -107,8 +118,9 @@ public class GraphModelFactory extends AbstractStylingModelFactory {
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see org.eclipse.zest.core.internal.graphmodel.IStylingGraphModelFactory#refresh(org.eclipse.zest.core.internal.graphmodel.GraphModel,
-	 *      java.lang.Object)
+	 * @see
+	 * org.eclipse.zest.core.internal.graphmodel.IStylingGraphModelFactory#refresh
+	 * (org.eclipse.zest.core.internal.graphmodel.GraphModel, java.lang.Object)
 	 */
 	public void refresh(Graph graph, Object element) {
 		refresh(graph, element, false);
@@ -117,8 +129,10 @@ public class GraphModelFactory extends AbstractStylingModelFactory {
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see org.eclipse.zest.core.internal.graphmodel.IStylingGraphModelFactory#refresh(org.eclipse.zest.core.internal.graphmodel.GraphModel,
-	 *      java.lang.Object, boolean)
+	 * @see
+	 * org.eclipse.zest.core.internal.graphmodel.IStylingGraphModelFactory#refresh
+	 * (org.eclipse.zest.core.internal.graphmodel.GraphModel, java.lang.Object,
+	 * boolean)
 	 */
 	public void refresh(Graph graph, Object element, boolean updateLabels) {
 		GraphConnection conn = viewer.getGraphModelConnection(element);

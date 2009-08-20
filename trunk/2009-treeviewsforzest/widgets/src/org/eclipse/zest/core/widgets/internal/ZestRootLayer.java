@@ -1,11 +1,13 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2005 IBM Corporation and others. All rights reserved.
+ * Copyright (c) 2005-2009 IBM Corporation and others. All rights reserved.
  * This program and the accompanying materials are made available under the
  * terms of the Eclipse Public License v1.0 which accompanies this distribution,
  * and is available at http://www.eclipse.org/legal/epl-v10.html
  * 
- * Contributors: IBM Corporation - initial API and implementation Chisel Group,
- * University of Victoria - Adapted for XY Scaled Graphics
+ * Contributors:
+ *     IBM Corporation - initial API and implementation Chisel Group,
+ *     University of Victoria - Adapted for XY Scaled Graphics
+ *     Mateusz Matela - refactored and added features needed in Zest 2.0
  ******************************************************************************/
 package org.eclipse.zest.core.widgets.internal;
 

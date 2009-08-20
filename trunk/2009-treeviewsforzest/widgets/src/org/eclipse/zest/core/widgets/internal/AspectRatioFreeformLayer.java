@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2005-2006, CHISEL Group, University of Victoria, Victoria, BC,
+ * Copyright 2005-2009, CHISEL Group, University of Victoria, Victoria, BC,
  * Canada. All rights reserved. This program and the accompanying materials are
  * made available under the terms of the Eclipse Public License v1.0 which
  * accompanies this distribution, and is available at
@@ -8,8 +8,7 @@
  * Contributors: The Chisel Group, University of Victoria
  ******************************************************************************/
 package org.eclipse.zest.core.widgets.internal;
-
-import org.eclipse.draw2d.FreeformFigure;
+import org.eclipse.draw2d.FreeformFigure;
 import org.eclipse.draw2d.FreeformLayer;
 import org.eclipse.draw2d.FreeformLayout;
 import org.eclipse.draw2d.Graphics;
@@ -25,8 +24,10 @@ import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.draw2d.geometry.Translatable;
 import org.eclipse.draw2d.text.CaretInfo;
 
+
 //@tag zest.bug.156286-Scaling.fix : make this implement scalable figure so that a zoom manager can be used on GraphEditParts.
-public class AspectRatioFreeformLayer extends FreeformLayer implements ScalableFigure, FreeformFigure {
+public class AspectRatioFreeformLayer extends FreeformLayer implements
+		ScalableFigure, FreeformFigure {
 
 	private double widthScale = 1.0;
 	private double heigthScale = 1.0;
@@ -37,7 +38,7 @@ public class AspectRatioFreeformLayer extends FreeformLayer implements ScalableF
 		setLayoutManager(new FreeformLayout());
 		setBorder(new MarginBorder(5));
 
-		//setOpaque(false);
+		// setOpaque(false);
 	}
 
 	protected boolean isValidationRoot() {
@@ -58,28 +59,26 @@ public class AspectRatioFreeformLayer extends FreeformLayer implements ScalableF
 	}
 
 	/*
-	public boolean isCoordinateSystem() {
-		// TODO Auto-generated method stub
-		return true;
-	}
-	*/
+	 * public boolean isCoordinateSystem() { // TODO Auto-generated method stub
+	 * return true; }
+	 */
 
 	public double getScale() {
 		// TODO Auto-generated method stub
 		throw new RuntimeException("Operation not supported");
 		// return this.widthScale;
 
-		//throw new RuntimeException("Operation Not supported");
+		// throw new RuntimeException("Operation Not supported");
 	}
 
 	public void setScale(double scale) {
-		//super.setScale( scale );
+		// super.setScale( scale );
 		this.widthScale = scale;
 		this.heigthScale = scale;
 		revalidate();
 		repaint();
-		//System.out.println("Operation not supported");
-		//throw new RuntimeException("Operation not supported");
+		// System.out.println("Operation not supported");
+		// throw new RuntimeException("Operation not supported");
 	}
 
 	/**
@@ -87,7 +86,7 @@ public class AspectRatioFreeformLayer extends FreeformLayer implements ScalableF
 	 */
 
 	public Rectangle getClientArea(Rectangle rect) {
-		//return super.getClientArea(rect);
+		// return super.getClientArea(rect);
 
 		rect.width /= widthScale;
 		rect.height /= heigthScale;
@@ -100,12 +99,13 @@ public class AspectRatioFreeformLayer extends FreeformLayer implements ScalableF
 		Dimension d = super.getPreferredSize(wHint, hHint);
 		int w = getInsets().getWidth();
 		int h = getInsets().getHeight();
-		return d.getExpanded(-w, -h).scale(widthScale, heigthScale).expand(w, h);
+		return d.getExpanded(-w, -h).scale(widthScale, heigthScale)
+				.expand(w, h);
 	}
 
 	public void translateFromParent(Translatable t) {
 		super.translateFromParent(t);
-		//t.performScale(1/widthScale);
+		// t.performScale(1/widthScale);
 
 		if (t instanceof PrecisionRectangle) {
 			PrecisionRectangle r = (PrecisionRectangle) t;
@@ -137,16 +137,18 @@ public class AspectRatioFreeformLayer extends FreeformLayer implements ScalableF
 			Point p = (Point) t;
 			p.scale(1 / widthScale, 1 / heigthScale);
 		} else if (t instanceof PointList) {
-			throw new RuntimeException("PointList not supported in AspectRatioScale");
+			throw new RuntimeException(
+					"PointList not supported in AspectRatioScale");
 		} else {
-			throw new RuntimeException(t.toString() + " not supported in AspectRatioScale");
+			throw new RuntimeException(t.toString()
+					+ " not supported in AspectRatioScale");
 		}
 
-		//t.performScale(1/widthScale);		
+		// t.performScale(1/widthScale);
 	}
 
 	public void translateToParent(Translatable t) {
-		//t.performScale(widthScale);
+		// t.performScale(widthScale);
 
 		if (t instanceof PrecisionRectangle) {
 			PrecisionRectangle r = (PrecisionRectangle) t;
@@ -157,7 +159,7 @@ public class AspectRatioFreeformLayer extends FreeformLayer implements ScalableF
 			r.updateInts();
 		} else if (t instanceof Rectangle) {
 			Rectangle r = (Rectangle) t;
-			//r.performScale(widthScale);
+			// r.performScale(widthScale);
 			r.scale(widthScale, heigthScale);
 		} else if (t instanceof CaretInfo) {
 			CaretInfo c = (CaretInfo) t;
@@ -179,17 +181,19 @@ public class AspectRatioFreeformLayer extends FreeformLayer implements ScalableF
 			Point p = (Point) t;
 			p.scale(widthScale, heigthScale);
 		} else if (t instanceof PointList) {
-			throw new RuntimeException("PointList not supported in AspectRatioScale");
+			throw new RuntimeException(
+					"PointList not supported in AspectRatioScale");
 		} else {
-			throw new RuntimeException(t.toString() + " not supported in AspectRatioScale");
+			throw new RuntimeException(t.toString()
+					+ " not supported in AspectRatioScale");
 		}
 
 		super.translateToParent(t);
 	}
 
-	//protected boolean useLocalCoordinates() {
-	//	return true;
-	//}
+	// protected boolean useLocalCoordinates() {
+	// return true;
+	// }
 
 	protected void paintClientArea(Graphics graphics) {
 
@@ -211,13 +215,13 @@ public class AspectRatioFreeformLayer extends FreeformLayer implements ScalableF
 			g.clipRect(getBounds().getCropped(getInsets()));
 		}
 
-		//g.translate((int)(getBounds().x + getInsets().left) , 
-		//		(int)(getBounds().y  +  getInsets().top) );
+		// g.translate((int)(getBounds().x + getInsets().left) ,
+		// (int)(getBounds().y + getInsets().top) );
 
 		g.scale(widthScale, heigthScale);
-		//g.scale(widthScale);
+		// g.scale(widthScale);
 
-		//g.scale(widthScale);
+		// g.scale(widthScale);
 		g.pushState();
 		paintChildren(g);
 		g.popState();

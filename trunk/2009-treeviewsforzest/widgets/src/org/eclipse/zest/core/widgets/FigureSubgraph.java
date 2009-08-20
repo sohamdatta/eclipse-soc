@@ -1,3 +1,12 @@
+/*******************************************************************************
+ * Copyright (c) 2009 Mateusz Matela and others. All rights reserved. This
+ * program and the accompanying materials are made available under the terms of
+ * the Eclipse Public License v1.0 which accompanies this distribution, and is
+ * available at http://www.eclipse.org/legal/epl-v10.html
+ * 
+ * Contributors: Mateusz Matela - initial API and implementation
+ *               Ian Bull
+ ******************************************************************************/
 package org.eclipse.zest.core.widgets;
 
 import java.util.Iterator;
@@ -8,16 +17,18 @@ import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.draw2d.geometry.Rectangle;
-import org.eclipse.zest.layout.dataStructures.DisplayIndependentDimension;
-import org.eclipse.zest.layout.dataStructures.DisplayIndependentPoint;
-import org.eclipse.zest.layout.interfaces.EntityLayout;
-import org.eclipse.zest.layout.interfaces.LayoutContext;
-import org.eclipse.zest.layout.interfaces.NodeLayout;
+import org.eclipse.zest.layouts.dataStructures.DisplayIndependentDimension;
+import org.eclipse.zest.layouts.dataStructures.DisplayIndependentPoint;
+import org.eclipse.zest.layouts.interfaces.EntityLayout;
+import org.eclipse.zest.layouts.interfaces.LayoutContext;
+import org.eclipse.zest.layouts.interfaces.NodeLayout;
 
 /**
  * A subgraph layout that represents a subgraph as a single figure. An entity
  * representing subgraph is not resizable by layout algorithm unless proper
  * methods are redefined in a subclass.
+ * 
+ * @since 2.0
  */
 public abstract class FigureSubgraph extends DefaultSubgraph {
 
@@ -33,13 +44,14 @@ public abstract class FigureSubgraph extends DefaultSubgraph {
 		private Rectangle previousBounds = figure.getBounds().getCopy();
 
 		public void figureMoved(IFigure source) {
-			if (Animation.isAnimating() || isLayoutBeingApplied)
+			if (Animation.isAnimating() || isLayoutBeingApplied) {
 				return;
+			}
 			Rectangle newBounds = figure.getBounds();
 			if (!newBounds.getSize().equals(previousBounds.getSize())) {
-				((InternalLayoutContext) context).fireSubgraphResizedEvent(FigureSubgraph.this);
+				context.fireSubgraphResizedEvent(FigureSubgraph.this);
 			} else if (!newBounds.getLocation().equals(previousBounds.getLocation())) {
-				((InternalLayoutContext) context).fireSubgraphMovedEvent(FigureSubgraph.this);
+				context.fireSubgraphMovedEvent(FigureSubgraph.this);
 			}
 			previousBounds = newBounds.getCopy();
 		}
@@ -66,7 +78,7 @@ public abstract class FigureSubgraph extends DefaultSubgraph {
 			createFigure();
 			updateFigure();
 			figure.addFigureListener(new SubgraphFigrueListener());
-			((InternalLayoutContext) context).container.addSubgraphFigure(figure);
+			context.container.addSubgraphFigure(figure);
 		}
 		return figure;
 	}
@@ -87,18 +99,20 @@ public abstract class FigureSubgraph extends DefaultSubgraph {
 		super.addNodes(nodes);
 		if (this.nodes.size() > initialCount && figure != null) {
 			updateFigure();
-			if (location != null)
+			if (location != null) {
 				for (int i = 0; i < nodes.length; i++) {
 					nodes[i].setLocation(location.x, location.y);
 				}
+			}
 		}
 	}
 
 	public void removeNodes(NodeLayout[] nodes) {
 		int initialCount = this.nodes.size();
 		super.removeNodes(nodes);
-		if (this.nodes.size() < initialCount && figure != null && !disposed)
+		if (this.nodes.size() < initialCount && figure != null && !disposed) {
 			updateFigure();
+		}
 	}
 
 	public EntityLayout[] getSuccessingEntities() {
@@ -144,8 +158,9 @@ public abstract class FigureSubgraph extends DefaultSubgraph {
 
 	protected void refreshLocation() {
 		Rectangle bounds = figure.getBounds();
-		if (location == null)
+		if (location == null) {
 			location = new DisplayIndependentPoint(0, 0);
+		}
 		location.x = bounds.x + bounds.width / 2;
 		location.y = bounds.y + bounds.height / 2;
 	}

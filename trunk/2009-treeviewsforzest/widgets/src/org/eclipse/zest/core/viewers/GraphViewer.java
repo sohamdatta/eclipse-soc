@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2005, CHISEL Group, University of Victoria, Victoria, BC, Canada.
+ * Copyright 2005-2009, CHISEL Group, University of Victoria, Victoria, BC, Canada.
  * All rights reserved. This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License v1.0 which
  * accompanies this distribution, and is available at
@@ -27,26 +27,27 @@ import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Widget;
-import org.eclipse.zest.core.viewers.internal.AbstractStructuredGraphViewer;
 import org.eclipse.zest.core.viewers.internal.GraphModelEntityFactory;
 import org.eclipse.zest.core.viewers.internal.GraphModelEntityRelationshipFactory;
 import org.eclipse.zest.core.viewers.internal.GraphModelFactory;
 import org.eclipse.zest.core.viewers.internal.IStylingGraphModelFactory;
-import org.eclipse.zest.core.viewers.internal.ZoomManager;
 import org.eclipse.zest.core.widgets.Graph;
 import org.eclipse.zest.core.widgets.GraphItem;
 import org.eclipse.zest.core.widgets.ZestStyles;
-import org.eclipse.zest.layout.interfaces.LayoutAlgorithm;
+import org.eclipse.zest.layouts.LayoutAlgorithm;
 
-/*
+/**
  * This view is used to represent a static graph. Static graphs can be layed
  * out, but do not continually update their layout locations.
  * 
  * @author Ian Bull
  * 
  * @author Chris Callendar
+ * 
+ * @noextend This class is not intended to be subclassed by clients.
  */
-public class GraphViewer extends AbstractStructuredGraphViewer implements ISelectionProvider {
+public class GraphViewer extends AbstractStructuredGraphViewer implements
+		ISelectionProvider {
 
 	protected Graph graph = null;
 	private IStylingGraphModelFactory modelFactory = null;
@@ -89,10 +90,12 @@ public class GraphViewer extends AbstractStructuredGraphViewer implements ISelec
 				Iterator iterator = selectionChangedListeners.iterator();
 
 				ISelection structuredSelection = getSelection();
-				SelectionChangedEvent event = new SelectionChangedEvent(GraphViewer.this, structuredSelection);
+				SelectionChangedEvent event = new SelectionChangedEvent(
+						GraphViewer.this, structuredSelection);
 
 				while (iterator.hasNext()) {
-					ISelectionChangedListener listener = (ISelectionChangedListener) iterator.next();
+					ISelectionChangedListener listener = (ISelectionChangedListener) iterator
+							.next();
 					listener.selectionChanged(event);
 				}
 
@@ -103,7 +106,8 @@ public class GraphViewer extends AbstractStructuredGraphViewer implements ISelec
 		control.addMouseListener(new MouseListener() {
 
 			public void mouseDoubleClick(MouseEvent e) {
-				DoubleClickEvent doubleClickEvent = new DoubleClickEvent(GraphViewer.this, getSelection());
+				DoubleClickEvent doubleClickEvent = new DoubleClickEvent(
+						GraphViewer.this, getSelection());
 				fireDoubleClick(doubleClickEvent);
 			}
 
@@ -117,7 +121,7 @@ public class GraphViewer extends AbstractStructuredGraphViewer implements ISelec
 
 		});
 	}
-	
+
 	protected void inputChanged(Object input, Object oldInput) {
 		graph.setDynamicLayout(false);
 		super.inputChanged(input, oldInput);
@@ -137,7 +141,8 @@ public class GraphViewer extends AbstractStructuredGraphViewer implements ISelec
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see org.eclipse.zest.core.viewer.internal.AbstractStructuredGraphViewer#getGraphControl()
+	 * @seeorg.eclipse.zest.core.viewer.internal.AbstractStructuredGraphViewer#
+	 * getGraphControl()
 	 */
 	public Graph getGraphControl() {
 		return super.getGraphControl();
@@ -158,7 +163,8 @@ public class GraphViewer extends AbstractStructuredGraphViewer implements ISelec
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see org.eclipse.zest.core.viewer.internal.AbstractStructuredGraphViewer#setLayoutAlgorithm(org.eclipse.zest.layouts.LayoutAlgorithm)
+	 * @seeorg.eclipse.zest.core.viewer.internal.AbstractStructuredGraphViewer#
+	 * setLayoutAlgorithm(org.eclipse.zest.layouts.LayoutAlgorithm)
 	 */
 	public void setLayoutAlgorithm(LayoutAlgorithm algorithm) {
 		super.setLayoutAlgorithm(algorithm);
@@ -167,7 +173,9 @@ public class GraphViewer extends AbstractStructuredGraphViewer implements ISelec
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see org.eclipse.zest.core.viewers.AbstractStructuredGraphViewer#setNodeStyle(int)
+	 * @see
+	 * org.eclipse.zest.core.viewers.AbstractStructuredGraphViewer#setNodeStyle
+	 * (int)
 	 */
 	public void setNodeStyle(int nodeStyle) {
 		super.setNodeStyle(nodeStyle);
@@ -182,7 +190,8 @@ public class GraphViewer extends AbstractStructuredGraphViewer implements ISelec
 		} else if (contentProvider instanceof IGraphEntityRelationshipContentProvider) {
 			super.setContentProvider(contentProvider);
 		} else {
-			throw new IllegalArgumentException("Invalid content provider, only IGraphContentProvider, IGraphEntityContentProvider, or IGraphEntityRelationshipContentProvider are supported.");
+			throw new IllegalArgumentException(
+					"Invalid content provider, only IGraphContentProvider, IGraphEntityContentProvider, or IGraphEntityRelationshipContentProvider are supported.");
 		}
 	}
 
@@ -202,7 +211,8 @@ public class GraphViewer extends AbstractStructuredGraphViewer implements ISelec
 	 */
 	public GraphItem findGraphItem(Object element) {
 		Widget[] result = findItems(element);
-		return (result.length == 0 || !(result[0] instanceof GraphItem)) ? null : (GraphItem) result[0];
+		return (result.length == 0 || !(result[0] instanceof GraphItem)) ? null
+				: (GraphItem) result[0];
 	}
 
 	/**
@@ -232,7 +242,9 @@ public class GraphViewer extends AbstractStructuredGraphViewer implements ISelec
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see org.eclipse.zest.core.viewer.internal.AbstractStructuredGraphViewer#reveal(java.lang.Object)
+	 * @see
+	 * org.eclipse.zest.core.viewer.internal.AbstractStructuredGraphViewer#reveal
+	 * (java.lang.Object)
 	 */
 	public void reveal(Object element) {
 		super.reveal(element);
@@ -241,7 +253,8 @@ public class GraphViewer extends AbstractStructuredGraphViewer implements ISelec
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see org.eclipse.zest.core.viewer.internal.AbstractStructuredGraphViewer#setConnectionStyle(int)
+	 * @seeorg.eclipse.zest.core.viewer.internal.AbstractStructuredGraphViewer#
+	 * setConnectionStyle(int)
 	 */
 	public void setConnectionStyle(int connectionStyle) {
 		super.setConnectionStyle(connectionStyle);
@@ -250,7 +263,9 @@ public class GraphViewer extends AbstractStructuredGraphViewer implements ISelec
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see org.eclipse.zest.core.viewer.internal.AbstractStructuredGraphViewer#unReveal(java.lang.Object)
+	 * @see
+	 * org.eclipse.zest.core.viewer.internal.AbstractStructuredGraphViewer#unReveal
+	 * (java.lang.Object)
 	 */
 	public void unReveal(Object element) {
 		super.unReveal(element);
@@ -262,17 +277,18 @@ public class GraphViewer extends AbstractStructuredGraphViewer implements ISelec
 		}
 	}
 
-	public void removeSelectionChangedListener(ISelectionChangedListener listener) {
+	public void removeSelectionChangedListener(
+			ISelectionChangedListener listener) {
 		if (selectionChangedListeners.contains(listener)) {
 			selectionChangedListeners.remove(listener);
 		}
 	}
-	
+
 	/**
 	 * {@inheritDoc}
 	 * 
-	 * NOTE: If a layout algorithm is set in the receiver, layout is performed after
-	 * the refresh.
+	 * NOTE: If a layout algorithm is set in the receiver, layout is performed
+	 * after the refresh.
 	 */
 	public void refresh(Object element) {
 		boolean dynamicLayoutEnabled = graph.isDynamicLayoutEnabled();
@@ -280,12 +296,12 @@ public class GraphViewer extends AbstractStructuredGraphViewer implements ISelec
 		super.refresh(element);
 		graph.setDynamicLayout(dynamicLayoutEnabled);
 	}
-	
+
 	/**
 	 * {@inheritDoc}
 	 * 
-	 * NOTE: If a layout algorithm is set in the receiver, layout is performed after
-	 * the refresh.
+	 * NOTE: If a layout algorithm is set in the receiver, layout is performed
+	 * after the refresh.
 	 */
 	public void refresh(Object element, boolean updateLabels) {
 		boolean dynamicLayoutEnabled = graph.isDynamicLayoutEnabled();
@@ -293,12 +309,12 @@ public class GraphViewer extends AbstractStructuredGraphViewer implements ISelec
 		super.refresh(element, updateLabels);
 		graph.setDynamicLayout(dynamicLayoutEnabled);
 	}
-	
+
 	/**
 	 * {@inheritDoc}
 	 * 
-	 * NOTE: If a layout algorithm is set in the receiver, layout is performed after
-	 * the update.
+	 * NOTE: If a layout algorithm is set in the receiver, layout is performed
+	 * after the update.
 	 */
 	public void update(Object element, String[] properties) {
 		boolean dynamicLayoutEnabled = graph.isDynamicLayoutEnabled();
@@ -306,12 +322,12 @@ public class GraphViewer extends AbstractStructuredGraphViewer implements ISelec
 		super.update(element, properties);
 		graph.setDynamicLayout(dynamicLayoutEnabled);
 	}
-	
+
 	/**
 	 * {@inheritDoc}
 	 * 
-	 * NOTE: If a layout algorithm is set in the receiver, layout is performed after
-	 * the update.
+	 * NOTE: If a layout algorithm is set in the receiver, layout is performed
+	 * after the update.
 	 */
 	public void update(Object[] elements, String[] properties) {
 		boolean dynamicLayoutEnabled = graph.isDynamicLayoutEnabled();
@@ -324,15 +340,19 @@ public class GraphViewer extends AbstractStructuredGraphViewer implements ISelec
 	// for new actions.
 	protected ZoomManager getZoomManager() {
 		if (zoomManager == null) {
-			zoomManager = new ZoomManager(getGraphControl().getRootLayer(), getGraphControl().getViewport());
+			zoomManager = new ZoomManager(getGraphControl().getRootLayer(),
+					getGraphControl().getViewport());
 		}
 		return zoomManager;
 	}
 
-	/*
+	/**
 	 * (non-Javadoc)
 	 * 
 	 * @see org.eclipse.zest.core.viewers.AbstractStructuredGraphViewer#getFactory()
+	 * @noreference This method is not intended to be referenced by clients.
+	 * @nooverride This method is not intended to be re-implemented or extended
+	 *             by clients.
 	 */
 	protected IStylingGraphModelFactory getFactory() {
 		if (modelFactory == null) {
@@ -350,7 +370,8 @@ public class GraphViewer extends AbstractStructuredGraphViewer implements ISelec
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see org.eclipse.zest.core.viewers.AbstractStructuredGraphViewer#getLayoutAlgorithm()
+	 * @seeorg.eclipse.zest.core.viewers.AbstractStructuredGraphViewer#
+	 * getLayoutAlgorithm()
 	 */
 	protected LayoutAlgorithm getLayoutAlgorithm() {
 		return graph.getLayoutAlgorithm();

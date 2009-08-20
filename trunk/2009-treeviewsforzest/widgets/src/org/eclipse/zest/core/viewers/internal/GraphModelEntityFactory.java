@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2005, CHISEL Group, University of Victoria, Victoria, BC, Canada.
+ * Copyright 2005-2009, CHISEL Group, University of Victoria, Victoria, BC, Canada.
  * All rights reserved. This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License v1.0 which
  * accompanies this distribution, and is available at
@@ -15,6 +15,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
+import org.eclipse.zest.core.viewers.AbstractStructuredGraphViewer;
 import org.eclipse.zest.core.viewers.EntityConnectionData;
 import org.eclipse.zest.core.viewers.IFigureProvider;
 import org.eclipse.zest.core.viewers.IGraphEntityContentProvider;
@@ -39,7 +40,8 @@ public class GraphModelEntityFactory extends AbstractStylingModelFactory {
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see org.eclipse.zest.core.internal.graphmodel.IStylingGraphModelFactory#createGraphModel()
+	 * @seeorg.eclipse.zest.core.internal.graphmodel.IStylingGraphModelFactory#
+	 * createGraphModel()
 	 */
 	public Graph createGraphModel(Graph model) {
 		doBuildGraph(model);
@@ -49,7 +51,9 @@ public class GraphModelEntityFactory extends AbstractStylingModelFactory {
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see org.eclipse.zest.core.internal.graphmodel.AbstractStylingModelFactory#doBuildGraph(org.eclipse.zest.core.internal.graphmodel.GraphModel)
+	 * @see
+	 * org.eclipse.zest.core.internal.graphmodel.AbstractStylingModelFactory
+	 * #doBuildGraph(org.eclipse.zest.core.internal.graphmodel.GraphModel)
 	 */
 	protected void doBuildGraph(Graph model) {
 		super.doBuildGraph(model);
@@ -73,8 +77,9 @@ public class GraphModelEntityFactory extends AbstractStylingModelFactory {
 			}
 		}
 
-		// We may have other entities (such as children of containers) 
-		Set keySet = ((AbstractStructuredGraphViewer) getViewer()).getNodesMap().keySet();
+		// We may have other entities (such as children of containers)
+		Set keySet = ((AbstractStructuredGraphViewer) getViewer())
+				.getNodesMap().keySet();
 		entities = keySet.toArray();
 
 		for (int i = 0; i < entities.length; i++) {
@@ -84,7 +89,8 @@ public class GraphModelEntityFactory extends AbstractStylingModelFactory {
 			if (filterElement(inputElement, data)) {
 				continue;
 			}
-			Object[] related = ((IGraphEntityContentProvider) getContentProvider()).getConnectedTo(data);
+			Object[] related = ((IGraphEntityContentProvider) getContentProvider())
+					.getConnectedTo(data);
 
 			if (related != null) {
 				for (int j = 0; j < related.length; j++) {
@@ -93,7 +99,8 @@ public class GraphModelEntityFactory extends AbstractStylingModelFactory {
 					if (filterElement(inputElement, related[j])) {
 						continue;
 					}
-					EntityConnectionData connectionData = new EntityConnectionData(data, related[j]);
+					EntityConnectionData connectionData = new EntityConnectionData(
+							data, related[j]);
 					if (filterElement(inputElement, connectionData)) {
 						continue;
 					}
@@ -106,8 +113,9 @@ public class GraphModelEntityFactory extends AbstractStylingModelFactory {
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see org.eclipse.zest.core.internal.graphmodel.IStylingGraphModelFactory#refresh(org.eclipse.zest.core.internal.graphmodel.GraphModel,
-	 *      java.lang.Object)
+	 * @see
+	 * org.eclipse.zest.core.internal.graphmodel.IStylingGraphModelFactory#refresh
+	 * (org.eclipse.zest.core.internal.graphmodel.GraphModel, java.lang.Object)
 	 */
 	public void refresh(Graph graph, Object element, boolean refreshLabels) {
 		if (element == null) {
@@ -133,10 +141,12 @@ public class GraphModelEntityFactory extends AbstractStylingModelFactory {
 
 		if (refreshLabels) {
 			update(node);
-			for (Iterator it = node.getSourceConnections().iterator(); it.hasNext();) {
+			for (Iterator it = node.getSourceConnections().iterator(); it
+					.hasNext();) {
 				update((GraphItem) it.next());
 			}
-			for (Iterator it = node.getTargetConnections().iterator(); it.hasNext();) {
+			for (Iterator it = node.getTargetConnections().iterator(); it
+					.hasNext();) {
 				update((GraphItem) it.next());
 			}
 		}
@@ -149,7 +159,8 @@ public class GraphModelEntityFactory extends AbstractStylingModelFactory {
 	 */
 	private void reconnect(Graph graph, Object element, boolean refreshLabels) {
 		GraphNode node = viewer.getGraphModelNode(element);
-		Object[] related = ((IGraphEntityContentProvider) getContentProvider()).getConnectedTo(element);
+		Object[] related = ((IGraphEntityContentProvider) getContentProvider())
+				.getConnectedTo(element);
 		List connections = node.getSourceConnections();
 		LinkedList toAdd = new LinkedList();
 		LinkedList toDelete = new LinkedList();
@@ -157,10 +168,12 @@ public class GraphModelEntityFactory extends AbstractStylingModelFactory {
 		HashSet oldExternalConnections = new HashSet();
 		HashSet newExternalConnections = new HashSet();
 		for (Iterator it = connections.iterator(); it.hasNext();) {
-			oldExternalConnections.add(((GraphConnection) it.next()).getExternalConnection());
+			oldExternalConnections.add(((GraphConnection) it.next())
+					.getExternalConnection());
 		}
 		for (int i = 0; i < related.length; i++) {
-			newExternalConnections.add(new EntityConnectionData(element, related[i]));
+			newExternalConnections.add(new EntityConnectionData(element,
+					related[i]));
 		}
 		for (Iterator it = oldExternalConnections.iterator(); it.hasNext();) {
 			Object next = it.next();
@@ -204,8 +217,10 @@ public class GraphModelEntityFactory extends AbstractStylingModelFactory {
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see org.eclipse.zest.core.internal.graphmodel.IStylingGraphModelFactory#refresh(org.eclipse.zest.core.internal.graphmodel.GraphModel,
-	 *      java.lang.Object, boolean)
+	 * @see
+	 * org.eclipse.zest.core.internal.graphmodel.IStylingGraphModelFactory#refresh
+	 * (org.eclipse.zest.core.internal.graphmodel.GraphModel, java.lang.Object,
+	 * boolean)
 	 */
 	public void refresh(Graph graph, Object element) {
 		refresh(graph, element, false);

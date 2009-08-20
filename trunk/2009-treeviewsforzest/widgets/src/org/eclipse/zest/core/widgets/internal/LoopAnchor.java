@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2005-2006, CHISEL Group, University of Victoria, Victoria, BC, Canada.
+ * Copyright 2005-2009, CHISEL Group, University of Victoria, Victoria, BC, Canada.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -18,17 +18,19 @@ public class LoopAnchor extends ChopboxAnchor {
 	public LoopAnchor(IFigure owner) {
 		super(owner);
 	}
-	
-	/* (non-Javadoc)
+
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see org.eclipse.draw2d.ChopboxAnchor#getReferencePoint()
 	 */
 	public Point getReferencePoint() {
-		//modification to getReferencePoint. Returns
-		//a point on the outside of the owners box, rather than the
-		//center. Only usefull for self-loops.
-		if (getOwner() == null)
+		// modification to getReferencePoint. Returns
+		// a point on the outside of the owners box, rather than the
+		// center. Only usefull for self-loops.
+		if (getOwner() == null) {
 			return null;
-		else {
+		} else {
 			Point ref = getOwner().getBounds().getCenter();
 			ref.y = getOwner().getBounds().y;
 			getOwner().translateToAbsolute(ref);

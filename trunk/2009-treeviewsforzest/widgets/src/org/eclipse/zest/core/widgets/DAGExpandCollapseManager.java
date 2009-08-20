@@ -1,14 +1,23 @@
+/*******************************************************************************
+ * Copyright (c) 2009 Mateusz Matela and others. All rights reserved. This
+ * program and the accompanying materials are made available under the terms of
+ * the Eclipse Public License v1.0 which accompanies this distribution, and is
+ * available at http://www.eclipse.org/legal/epl-v10.html
+ * 
+ * Contributors: Mateusz Matela - initial API and implementation
+ *               Ian Bull
+ ******************************************************************************/
 package org.eclipse.zest.core.widgets;
 
 import java.util.HashSet;
 import java.util.Iterator;
 
-import org.eclipse.zest.layout.interfaces.ConnectionLayout;
-import org.eclipse.zest.layout.interfaces.ContextListener;
-import org.eclipse.zest.layout.interfaces.ExpandCollapseManager;
-import org.eclipse.zest.layout.interfaces.GraphStructureListener;
-import org.eclipse.zest.layout.interfaces.LayoutContext;
-import org.eclipse.zest.layout.interfaces.NodeLayout;
+import org.eclipse.zest.layouts.interfaces.ConnectionLayout;
+import org.eclipse.zest.layouts.interfaces.ContextListener;
+import org.eclipse.zest.layouts.interfaces.ExpandCollapseManager;
+import org.eclipse.zest.layouts.interfaces.GraphStructureListener;
+import org.eclipse.zest.layouts.interfaces.LayoutContext;
+import org.eclipse.zest.layouts.interfaces.NodeLayout;
 
 /**
  * <p>
@@ -32,6 +41,8 @@ import org.eclipse.zest.layout.interfaces.NodeLayout;
  * manager adds a label to each collapsed node showing number of its successors.
  * </p>
  * One instance of this class can serve only one instance of <code>Graph</code>.
+ * 
+ * @since 2.0
  */
 public class DAGExpandCollapseManager implements ExpandCollapseManager {
 
@@ -48,8 +59,9 @@ public class DAGExpandCollapseManager implements ExpandCollapseManager {
 	private boolean cleanLayoutScheduled = false;
 
 	public void initExpansion(final LayoutContext context2) {
-		if (!(context2 instanceof InternalLayoutContext))
+		if (!(context2 instanceof InternalLayoutContext)) {
 			throw new RuntimeException("This manager works only with org.eclipse.zest.core.widgets.InternalLayoutContext");
+		}
 		context = (InternalLayoutContext) context2;
 
 		context.addGraphStructureListener(new GraphStructureListener() {
@@ -100,17 +112,36 @@ public class DAGExpandCollapseManager implements ExpandCollapseManager {
 		return !isExpanded(node) && !node.isPruned() && node.getOutgoingConnections().length > 0;
 	}
 
+	private void collapseAllConnections(NodeLayout node) {
+		ConnectionLayout[] outgoingConnections = node.getOutgoingConnections();
+		for (int i = 0; i < outgoingConnections.length; i++) {
+			outgoingConnections[i].setVisible(false);
+		}
+		flushChanges(true, true);
+	}
+
+	private void expandAllConnections(NodeLayout node) {
+		ConnectionLayout[] outgoingConnections = node.getOutgoingConnections();
+		for (int i = 0; i < outgoingConnections.length; i++) {
+			outgoingConnections[i].setVisible(true);
+		}
+		flushChanges(true, true);
+	}
+
 	public void setExpanded(LayoutContext context, NodeLayout node, boolean expanded) {
-		if (isExpanded(node) == expanded)
-			return;
+
+		// if (isExpanded(node) == expanded)
+		// return;
 		if (expanded) {
 			if (canExpand(context, node)) {
 				expand(node);
 			}
+			expandAllConnections(node);
 		} else {
 			if (canCollapse(context, node)) {
 				collapse(node);
 			}
+			collapseAllConnections(node);
 		}
 		flushChanges(true, true);
 	}
@@ -125,15 +156,17 @@ public class DAGExpandCollapseManager implements ExpandCollapseManager {
 	}
 
 	private void collapse(NodeLayout node) {
-		if (isExpanded(node))
+		if (isExpanded(node)) {
 			setExpanded(node, false);
-		else
+		} else {
 			return;
+		}
 		NodeLayout[] successors = node.getSuccessingNodes();
 		for (int i = 0; i < successors.length; i++) {
 			checkPruning(successors[i]);
-			if (isPruned(successors[i]))
+			if (isPruned(successors[i])) {
 				collapse(successors[i]);
+			}
 		}
 		updateNodeLabel(node);
 	}
@@ -147,10 +180,11 @@ public class DAGExpandCollapseManager implements ExpandCollapseManager {
 				break;
 			}
 		}
-		if (prune)
+		if (prune) {
 			pruneNode(node);
-		else
+		} else {
 			unpruneNode(node);
+		}
 	}
 
 	/**
@@ -162,9 +196,9 @@ public class DAGExpandCollapseManager implements ExpandCollapseManager {
 	 */
 	private void resetState(NodeLayout node) {
 		NodeLayout[] predecessors = node.getPredecessingNodes();
-		if (predecessors.length == 0)
+		if (predecessors.length == 0) {
 			expand(node);
-		else {
+		} else {
 			collapse(node);
 			checkPruning(node);
 		}
@@ -183,30 +217,34 @@ public class DAGExpandCollapseManager implements ExpandCollapseManager {
 
 	private void updateNodeLabel2(InternalNodeLayout node) {
 		SubgraphFactory subgraphFactory = node.getOwnerLayoutContext().getSubgraphFactory();
-		if (subgraphFactory instanceof PrunedSuccessorsSubgraph.Factory) {
-			((PrunedSuccessorsSubgraph.Factory) subgraphFactory).updateLabelForNode(node);
+		if (subgraphFactory instanceof DefaultSubgraph.PrunedSuccessorsSubgraphFactory) {
+			((DefaultSubgraph.PrunedSuccessorsSubgraphFactory) subgraphFactory).updateLabelForNode(node);
 		}
 	}
 
 	private void pruneNode(NodeLayout node) {
-		if (isPruned(node))
+		if (isPruned(node)) {
 			return;
+		}
 		nodesToUnprune.remove(node);
 		nodesToPrune.add(node);
 	}
 
 	private void unpruneNode(NodeLayout node) {
-		if (!isPruned(node))
+		if (!isPruned(node)) {
 			return;
+		}
 		nodesToPrune.remove(node);
 		nodesToUnprune.add(node);
 	}
 
 	private boolean isPruned(NodeLayout node) {
-		if (nodesToUnprune.contains(node))
+		if (nodesToUnprune.contains(node)) {
 			return false;
-		if (nodesToPrune.contains(node))
+		}
+		if (nodesToPrune.contains(node)) {
 			return true;
+		}
 		return node.isPruned();
 	}
 
@@ -233,7 +271,7 @@ public class DAGExpandCollapseManager implements ExpandCollapseManager {
 		}
 		nodesToUpdate.clear();
 
-		((InternalLayoutContext) context).applyLayout(cleanLayoutScheduled);
+		(context).applyLayout(cleanLayoutScheduled);
 		cleanLayoutScheduled = false;
 		context.flushChanges(true);
 	}
