@@ -11,6 +11,10 @@ package org.eclipse.zest.layouts.interfaces;
 
 import org.eclipse.zest.layouts.LayoutAlgorithm;
 
+/**
+ * A listener added to {@link LayoutContext} that is notified about general
+ * changes in this context.
+ */
 public interface ContextListener {
 	public class Stub implements ContextListener {
 

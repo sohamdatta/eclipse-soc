@@ -11,6 +11,10 @@ package org.eclipse.zest.layouts.interfaces;
 
 import org.eclipse.zest.layouts.LayoutAlgorithm;
 
+/**
+ * A listener added to {@link LayoutContext} that is notified about pruning and
+ * unpruning of nodes in this context.
+ */
 public interface PruningListener {
 
 	/**

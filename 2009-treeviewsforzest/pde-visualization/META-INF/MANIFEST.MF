@@ -9,9 +9,8 @@ Require-Bundle: org.eclipse.ui;bundle-version="[3.4.0,4.0.0)",
  org.eclipse.pde.ui;bundle-version="3.4.0",
  org.eclipse.ui.forms;bundle-version="[3.3.100,4.0.0)",
  org.eclipse.draw2d;bundle-version="[3.4.0,4.0.0)",
- viewers;bundle-version="1.1.0",
  org.eclipse.zest.layout;bundle-version="1.0.0",
- widgets;bundle-version="1.0.0"
+ org.eclipse.zest.core;bundle-version="1.0.0"
 Bundle-ActivationPolicy: lazy
 Bundle-RequiredExecutionEnvironment: J2SE-1.4
 Bundle-Localization: plugin

@@ -11,8 +11,16 @@ package org.eclipse.zest.layouts.interfaces;
 
 import org.eclipse.zest.layouts.LayoutAlgorithm;
 
+/**
+ * A listener added to {@link LayoutContext} that is notified about changes in
+ * this context's graph structure.
+ */
 public interface GraphStructureListener {
 
+	/**
+	 * A stub implementation of <code>GraphStructureListener</code>. Convenient
+	 * for creating listeners that don't implements all required methods.
+	 */
 	public class Stub implements GraphStructureListener {
 
 		public boolean nodeAdded(LayoutContext context, NodeLayout node) {
@@ -28,6 +36,14 @@ public interface GraphStructureListener {
 		}
 
 		public boolean connectionRemoved(LayoutContext context, ConnectionLayout connection) {
+			return false;
+		}
+
+		public boolean connectionWeightChanged(LayoutContext context, ConnectionLayout connection) {
+			return false;
+		}
+
+		public boolean connectionDirectedChanged(LayoutContext context, ConnectionLayout connection) {
 			return false;
 		}
 	}
@@ -95,8 +111,8 @@ public interface GraphStructureListener {
 	/**
 	 * This method is called whenever a connection is removed from a context. It
 	 * can be assumed that both source and target nodes of the removed
-	 * connection still exist in the context and will not be removed along with
-	 * it.
+	 * connection still exist in the context and will not necessarily be removed
+	 * along with it.
 	 * 
 	 * This method will be called only if both nodes connected by removed
 	 * connection lay directly in the node container owned by the notifying
@@ -116,4 +132,37 @@ public interface GraphStructureListener {
 	 */
 	public boolean connectionRemoved(LayoutContext context, ConnectionLayout connection);
 
+	/**
+	 * This method is called whenever a connection changes its weight.
+	 * 
+	 * If true is returned, it means that the receiving listener has intercepted
+	 * this event. Intercepted events will not be passed to the rest of the
+	 * listeners. If the event is not intercepted by any listener,
+	 * {@link LayoutAlgorithm#applyLayout() applyLayout()} will be called on the
+	 * context's main algorithm.
+	 * 
+	 * @param context
+	 *            the context that fired the event
+	 * @param connection
+	 *            the affected connection
+	 * @return true if no further operations after this event are required
+	 */
+	public boolean connectionWeightChanged(LayoutContext context, ConnectionLayout connection);
+
+	/**
+	 * This method is called whenever a connection changes its directed state.
+	 * 
+	 * If true is returned, it means that the receiving listener has intercepted
+	 * this event. Intercepted events will not be passed to the rest of the
+	 * listeners. If the event is not intercepted by any listener,
+	 * {@link LayoutAlgorithm#applyLayout() applyLayout()} will be called on the
+	 * context's main algorithm.
+	 * 
+	 * @param context
+	 *            the context that fired the event
+	 * @param connection
+	 *            the affected connection
+	 * @return true if no further operations after this event are required
+	 */
+	public boolean connectionDirectedChanged(LayoutContext context, ConnectionLayout connection);
 }
