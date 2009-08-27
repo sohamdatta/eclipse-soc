@@ -31,6 +31,8 @@ import org.eclipse.zest.layouts.interfaces.SubgraphLayout;
 
 class InternalLayoutContext implements LayoutContext {
 
+	private final static int INSETS = 15;
+
 	final IContainer container;
 	private final List filters = new ArrayList();
 	private final List contextListeners = new ArrayList();
@@ -122,8 +124,11 @@ class InternalLayoutContext implements LayoutContext {
 	public DisplayIndependentRectangle getBounds() {
 		DisplayIndependentRectangle result = new DisplayIndependentRectangle(
 				container.getLayoutBounds());
-		result.width -= 20;
-		result.height -= 20;
+
+		result.x += INSETS;
+		result.y += INSETS;
+		result.width = Math.max(result.width - 2 * INSETS, 0);
+		result.height = Math.max(result.height - 2 * INSETS, 0);
 		return result;
 	}
 
@@ -412,7 +417,8 @@ class InternalLayoutContext implements LayoutContext {
 		InternalLayoutContext targetContext = ((InternalNodeLayout) connection
 				.getTarget()).getOwnerLayoutContext();
 		if (sourceContext != targetContext) {
-			return;
+			throw new RuntimeException(
+					"Connection between nodes in two different contexts is not allowed.");
 		}
 		if (sourceContext == this) {
 			boolean intercepted = !eventsOn;
@@ -436,7 +442,8 @@ class InternalLayoutContext implements LayoutContext {
 		InternalLayoutContext targetContext = ((InternalNodeLayout) connection
 				.getTarget()).getOwnerLayoutContext();
 		if (sourceContext != targetContext) {
-			return;
+			throw new RuntimeException(
+					"Connection between nodes in two different contexts is not allowed.");
 		}
 		if (sourceContext == this) {
 			boolean intercepted = !eventsOn;
@@ -451,6 +458,34 @@ class InternalLayoutContext implements LayoutContext {
 			}
 		} else {
 			sourceContext.fireConnectionAddedEvent(connection);
+		}
+	}
+
+	void fireConnectionWeightChanged(ConnectionLayout connection) {
+		boolean intercepted = !eventsOn;
+		GraphStructureListener[] listeners = (GraphStructureListener[]) graphStructureListeners
+				.toArray(new GraphStructureListener[graphStructureListeners
+						.size()]);
+		for (int i = 0; i < listeners.length && !intercepted; i++) {
+			intercepted = listeners[i]
+					.connectionWeightChanged(this, connection);
+		}
+		if (!intercepted) {
+			applyMainAlgorithm();
+		}
+	}
+
+	void fireConnectionDirectedChanged(ConnectionLayout connection) {
+		boolean intercepted = !eventsOn;
+		GraphStructureListener[] listeners = (GraphStructureListener[]) graphStructureListeners
+				.toArray(new GraphStructureListener[graphStructureListeners
+						.size()]);
+		for (int i = 0; i < listeners.length && !intercepted; i++) {
+			intercepted = listeners[i].connectionDirectedChanged(this,
+					connection);
+		}
+		if (!intercepted) {
+			applyMainAlgorithm();
 		}
 	}
 

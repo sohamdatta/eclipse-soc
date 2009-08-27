@@ -43,11 +43,6 @@ public class RadialLayoutAlgorithm implements LayoutAlgorithm {
 		computeRadialPositions(entities, bounds);
 		if (resize)
 			AlgorithmHelper.maximizeSizes(entities);
-		int insets = 4;
-		bounds.x += insets;
-		bounds.y += insets;
-		bounds.width -= 2 * insets;
-		bounds.height -= 2 * insets;
 		AlgorithmHelper.fitWithinBounds(entities, bounds, resize);
 	}
 

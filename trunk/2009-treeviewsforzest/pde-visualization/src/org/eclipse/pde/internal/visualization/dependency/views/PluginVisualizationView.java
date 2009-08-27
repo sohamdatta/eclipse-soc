@@ -64,14 +64,15 @@ import org.eclipse.zest.core.viewers.GraphViewer;
 import org.eclipse.zest.core.viewers.IZoomableWorkbenchPart;
 import org.eclipse.zest.core.viewers.ZoomContributionViewItem;
 import org.eclipse.zest.core.widgets.DAGExpandCollapseManager;
+import org.eclipse.zest.core.widgets.DefaultSubgraph;
 import org.eclipse.zest.core.widgets.Graph;
 import org.eclipse.zest.core.widgets.GraphItem;
 import org.eclipse.zest.core.widgets.GraphNode;
 import org.eclipse.zest.core.widgets.ZestStyles;
-import org.eclipse.zest.layout.algorithms.CompositeLayoutAlgorithm;
-import org.eclipse.zest.layout.algorithms.DirectedGraphLayoutAlgorithm;
-import org.eclipse.zest.layout.algorithms.HorizontalShiftAlgorithm;
-import org.eclipse.zest.layout.interfaces.LayoutAlgorithm;
+import org.eclipse.zest.layouts.algorithms.CompositeLayoutAlgorithm;
+import org.eclipse.zest.layouts.algorithms.DirectedGraphLayoutAlgorithm;
+import org.eclipse.zest.layouts.algorithms.HorizontalShiftAlgorithm;
+import org.eclipse.zest.layouts.LayoutAlgorithm;
 
 /**
  * This sample class demonstrates how to plug-in a new workbench view. The view
@@ -190,6 +191,7 @@ public class PluginVisualizationView extends ViewPart implements IZoomableWorkbe
 		viewer.setInput(null);
 		viewer.setConnectionStyle(ZestStyles.CONNECTIONS_DIRECTED);
 		((Graph) viewer.getControl()).setExpandCollapseManager(new DAGExpandCollapseManager());
+		((Graph) viewer.getControl()).setSubgraphFactory(new DefaultSubgraph.PrunedSuccessorsSubgraphFactory());
 		viewer.setLayoutAlgorithm(new CompositeLayoutAlgorithm(new LayoutAlgorithm[] { new DirectedGraphLayoutAlgorithm(), new HorizontalShiftAlgorithm() }));
 		//viewer.setLayoutAlgorithm(new SpaceTreeLayoutAlgorithm());
 		//viewer.setLayoutAlgorithm(new TreeLayoutAlgorithm());

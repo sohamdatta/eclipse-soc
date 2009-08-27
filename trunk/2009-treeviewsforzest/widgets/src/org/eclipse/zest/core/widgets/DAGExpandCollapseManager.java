@@ -60,11 +60,12 @@ public class DAGExpandCollapseManager implements ExpandCollapseManager {
 
 	public void initExpansion(final LayoutContext context2) {
 		if (!(context2 instanceof InternalLayoutContext)) {
-			throw new RuntimeException("This manager works only with org.eclipse.zest.core.widgets.InternalLayoutContext");
+			throw new RuntimeException(
+					"This manager works only with org.eclipse.zest.core.widgets.InternalLayoutContext");
 		}
 		context = (InternalLayoutContext) context2;
 
-		context.addGraphStructureListener(new GraphStructureListener() {
+		context.addGraphStructureListener(new GraphStructureListener.Stub() {
 			public boolean nodeRemoved(LayoutContext context, NodeLayout node) {
 				if (isExpanded(node)) {
 					collapse(node);
@@ -79,16 +80,23 @@ public class DAGExpandCollapseManager implements ExpandCollapseManager {
 				return false;
 			}
 
-			public boolean connectionRemoved(LayoutContext context, ConnectionLayout connection) {
+			public boolean connectionRemoved(LayoutContext context,
+					ConnectionLayout connection) {
 				NodeLayout target = connection.getTarget();
-				if (!isExpanded(target) && target.getIncomingConnections().length == 0) {
+				if (!isExpanded(target)
+						&& target.getIncomingConnections().length == 0) {
 					expand(target);
 				}
 				flushChanges(false, true);
 				return false;
 			}
 
-			public boolean connectionAdded(LayoutContext context, ConnectionLayout connection) {
+			public boolean connectionAdded(LayoutContext context,
+					ConnectionLayout connection) {
+				if (!connection.isDirected()) {
+					throw new RuntimeException(
+							"Only directed connections can be used with DAGExpandCollapseManager");
+				}
 				resetState(connection.getTarget());
 				updateNodeLabel(connection.getSource());
 				flushChanges(false, true);
@@ -105,11 +113,13 @@ public class DAGExpandCollapseManager implements ExpandCollapseManager {
 	}
 
 	public boolean canCollapse(LayoutContext context, NodeLayout node) {
-		return isExpanded(node) && !node.isPruned() && node.getOutgoingConnections().length > 0;
+		return isExpanded(node) && !node.isPruned()
+				&& node.getOutgoingConnections().length > 0;
 	}
 
 	public boolean canExpand(LayoutContext context, NodeLayout node) {
-		return !isExpanded(node) && !node.isPruned() && node.getOutgoingConnections().length > 0;
+		return !isExpanded(node) && !node.isPruned()
+				&& node.getOutgoingConnections().length > 0;
 	}
 
 	private void collapseAllConnections(NodeLayout node) {
@@ -128,7 +138,8 @@ public class DAGExpandCollapseManager implements ExpandCollapseManager {
 		flushChanges(true, true);
 	}
 
-	public void setExpanded(LayoutContext context, NodeLayout node, boolean expanded) {
+	public void setExpanded(LayoutContext context, NodeLayout node,
+			boolean expanded) {
 
 		// if (isExpanded(node) == expanded)
 		// return;
@@ -216,9 +227,11 @@ public class DAGExpandCollapseManager implements ExpandCollapseManager {
 	}
 
 	private void updateNodeLabel2(InternalNodeLayout node) {
-		SubgraphFactory subgraphFactory = node.getOwnerLayoutContext().getSubgraphFactory();
+		SubgraphFactory subgraphFactory = node.getOwnerLayoutContext()
+				.getSubgraphFactory();
 		if (subgraphFactory instanceof DefaultSubgraph.PrunedSuccessorsSubgraphFactory) {
-			((DefaultSubgraph.PrunedSuccessorsSubgraphFactory) subgraphFactory).updateLabelForNode(node);
+			((DefaultSubgraph.PrunedSuccessorsSubgraphFactory) subgraphFactory)
+					.updateLabelForNode(node);
 		}
 	}
 
@@ -261,7 +274,8 @@ public class DAGExpandCollapseManager implements ExpandCollapseManager {
 		nodesToUnprune.clear();
 
 		if (!nodesToPrune.isEmpty()) {
-			context.createSubgraph((NodeLayout[]) nodesToPrune.toArray(new NodeLayout[nodesToPrune.size()]));
+			context.createSubgraph((NodeLayout[]) nodesToPrune
+					.toArray(new NodeLayout[nodesToPrune.size()]));
 			nodesToPrune.clear();
 		}
 

@@ -11,15 +11,17 @@ package org.eclipse.zest.layouts.interfaces;
 
 import org.eclipse.zest.layouts.LayoutAlgorithm;
 
-
+/**
+ * A listener added to {@link LayoutContext} that is notified about changes in
+ * this layout.
+ */
 public interface LayoutListener {
 
 	/**
 	 * This method is called whenever location of a particular node is changed
-	 * within observed context. This usually implicates change of position (the
-	 * center of the node) and the receiver should be aware of it (no additional
-	 * {@link #nodeMoved(LayoutContext, NodeLayout)} event will be fired). If
-	 * true is returned, it means that the receiving listener has intercepted
+	 * within observed context.
+	 * 
+	 * If true is returned, it means that the receiving listener has intercepted
 	 * this event. Intercepted events will not be passed to the rest of the
 	 * listeners. If the event is not intercepted by any listener,
 	 * {@link LayoutAlgorithm#applyLayout() applyLayout()} will be called on the
@@ -55,11 +57,13 @@ public interface LayoutListener {
 
 	/**
 	 * This method is called whenever location of a particular subgraph is
-	 * changed within observed context. If true is returned, it means that the
-	 * receiving listener has intercepted this event. Intercepted events will
-	 * not be passed to the rest of the listeners. If the event is not
-	 * intercepted by any listener, {@link LayoutAlgorithm#applyLayout()
-	 * applyLayout()} will be called on the context's main algorithm.
+	 * changed within observed context.
+	 * 
+	 * If true is returned, it means that the receiving listener has intercepted
+	 * this event. Intercepted events will not be passed to the rest of the
+	 * listeners. If the event is not intercepted by any listener,
+	 * {@link LayoutAlgorithm#applyLayout() applyLayout()} will be called on the
+	 * context's main algorithm.
 	 * 
 	 * @param context
 	 *            the layout context that fired the event

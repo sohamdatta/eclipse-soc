@@ -389,6 +389,17 @@ public class TreeLayoutObserver {
 			return false;
 		}
 
+		public boolean connectionWeightChanged(LayoutContext context, ConnectionLayout connection) {
+			// do nothing
+			return false;
+		}
+
+		public boolean connectionDirectedChanged(LayoutContext context, ConnectionLayout connection) {
+			connectionRemoved(context, connection);
+			connectionAdded(context, connection);
+			return false;
+		}
+
 		private void fireParentChanged(TreeNode node, TreeNode previousParent) {
 			for (Iterator iterator = treeListeners.iterator(); iterator.hasNext();) {
 				TreeListener listener = (TreeListener) iterator.next();

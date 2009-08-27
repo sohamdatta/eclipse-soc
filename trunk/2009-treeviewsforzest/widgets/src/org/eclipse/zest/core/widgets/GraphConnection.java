@@ -43,8 +43,8 @@ import org.eclipse.zest.layouts.interfaces.NodeLayout;
 public class GraphConnection extends GraphItem {
 
 	private Font font;
-	private GraphNode sourceNode;
-	private GraphNode destinationNode;
+	private final GraphNode sourceNode;
+	private final GraphNode destinationNode;
 
 	private double weight;
 	private Color color;
@@ -223,8 +223,12 @@ public class GraphConnection extends GraphItem {
 	 * @see #ZestStyles
 	 */
 	public void setConnectionStyle(int style) {
+		boolean directed = isDirected();
 		this.connectionStyle = style;
 		updateFigure(this.connectionFigure);
+		if (directed != isDirected()) {
+			graph.getLayoutContext().fireConnectionDirectedChanged(getLayout());
+		}
 	}
 
 	/**
@@ -267,12 +271,16 @@ public class GraphConnection extends GraphItem {
 	 * 
 	 */
 	public void setWeight(double weight) {
+		double previousWeight = this.weight;
 		if (weight < 0) {
 			this.weight = -1;
 		} else if (weight > 1) {
 			this.weight = 1;
 		} else {
 			this.weight = weight;
+		}
+		if (previousWeight != this.weight) {
+			graph.getLayoutContext().fireConnectionWeightChanged(getLayout());
 		}
 	}
 
@@ -704,7 +712,7 @@ public class GraphConnection extends GraphItem {
 		}
 
 		public boolean isDirected() {
-			return !ZestStyles.checkStyle(getConnectionStyle(),
+			return ZestStyles.checkStyle(getConnectionStyle(),
 					ZestStyles.CONNECTIONS_DIRECTED);
 		}
 

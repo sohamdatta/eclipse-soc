@@ -898,9 +898,9 @@ public class SpaceTreeLayoutAlgorithm implements LayoutAlgorithm {
 
 	private ContextListener contextListener = new ContextListener.Stub() {
 		public boolean boundsChanged(LayoutContext context) {
-			boolean previousBoundsWrong = (bounds == null || bounds.width * bounds.height <= 0);
+			boolean previousBoundsWrong = (bounds == null || bounds.width <= 0 || bounds.height <= 0);
 			bounds = context.getBounds();
-			if (bounds.width * bounds.height > 0 && previousBoundsWrong) {
+			if (bounds.width > 0 && bounds.height > 0 && previousBoundsWrong) {
 				expandCollapseManager.maximizeExpansion((SpaceTreeNode) treeObserver.getSuperRoot());
 				refreshLayout(false);
 			}
@@ -954,7 +954,7 @@ public class SpaceTreeLayoutAlgorithm implements LayoutAlgorithm {
 		}
 
 		private boolean defaultNodeHandle(LayoutContext context, NodeLayout node) {
-			if (bounds.width * bounds.height <= 0)
+			if (bounds.width <= 0 || bounds.height <= 0)
 				return false;
 			SpaceTreeNode spaceTreeNode = (SpaceTreeNode) treeObserver.getTreeNode(node);
 			spaceTreeNode.adjustPosition(node.getLocation());
@@ -1042,7 +1042,7 @@ public class SpaceTreeLayoutAlgorithm implements LayoutAlgorithm {
 	public void applyLayout(boolean clean) {
 		bounds = context.getBounds();
 
-		if (bounds.width * bounds.height == 0)
+		if (bounds.width <= 0 || bounds.height <= 0)
 			return;
 
 		if (clean) {

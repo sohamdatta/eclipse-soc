@@ -152,31 +152,42 @@ public class SpringLayoutAlgorithm implements LayoutAlgorithm {
 	private LayoutListener springLayoutListener = new LayoutListener() {
 
 		public boolean nodeMoved(LayoutContext context, NodeLayout node) {
-			for (int i = 0; i < entities.length; i++) {
-				if (entities[i] == node) {
-					locationsX[i] = entities[i].getLocation().x;
-					locationsY[i] = entities[i].getLocation().y;
-				}
-			}
+			updateLocation(node);
 			return false;
 		}
 
 		public boolean nodeResized(LayoutContext context, NodeLayout node) {
+			updateLocation(node);
 			return false;
 		}
 
 		public boolean subgraphMoved(LayoutContext context, SubgraphLayout subgraph) {
+			updateLocation(subgraph);
 			return false;
 		}
 
 		public boolean subgraphResized(LayoutContext context, SubgraphLayout subgraph) {
+			updateLocation(subgraph);
 			return false;
+		}
+
+		private void updateLocation(EntityLayout entity) {
+			if (entities != null) {
+				for (int i = 0; i < entities.length; i++) {
+					if (entities[i] == entity) {
+						locationsX[i] = entities[i].getLocation().x;
+						locationsY[i] = entities[i].getLocation().y;
+					}
+				}
+			}
 		}
 	};
 
 	public void applyLayout(boolean clean) {
 		if (!clean)
 			return;
+
+		initLayout();
 		while (performAnotherNonContinuousIteration()) {
 			computeOneIteration();
 		}
@@ -185,11 +196,6 @@ public class SpringLayoutAlgorithm implements LayoutAlgorithm {
 			AlgorithmHelper.maximizeSizes(entities);
 
 		DisplayIndependentRectangle bounds2 = new DisplayIndependentRectangle(bounds);
-		int insets = 4;
-		bounds2.x += insets;
-		bounds2.y += insets;
-		bounds2.width -= 2 * insets;
-		bounds2.height -= 2 * insets;
 		AlgorithmHelper.fitWithinBounds(entities, bounds2, resize);
 	}
     
@@ -199,13 +205,10 @@ public class SpringLayoutAlgorithm implements LayoutAlgorithm {
 		}
 		this.context = context;
 		this.context.addLayoutListener(springLayoutListener);
-		initLayout();
 	}
 
 	public void performOneIteration() {
-		if (iteration == 0) {
-			entities = context.getEntities();
-			loadLocations();
+		if (entities == null) {
 			initLayout();
 		}
 		bounds = context.getBounds();

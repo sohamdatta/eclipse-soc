@@ -260,7 +260,7 @@ public class GraphContainer extends GraphNode implements IContainer {
 
 	}
 
-	static final double SCALED_WIDTH = 300;
+	static final double SCALED_WIDTH = 250;
 	static final double SCALED_HEIGHT = 200;
 	private static final int CONTAINER_HEIGHT = 200;
 	private static final int MIN_WIDTH = 250;
@@ -279,6 +279,7 @@ public class GraphContainer extends GraphNode implements IContainer {
 	private ScrollPane scrollPane;
 	private LayoutAlgorithm layoutAlgorithm;
 	private boolean isExpanded = false;
+	private boolean isLayoutScheduled = false;
 	private AspectRatioFreeformLayer scalledLayer;
 	private InternalLayoutContext layoutContext;
 
@@ -493,6 +494,10 @@ public class GraphContainer extends GraphNode implements IContainer {
 	 * within and update the twistie
 	 */
 	public void open(boolean animate) {
+		if (isLayoutScheduled) {
+			internalApplyLayout();
+		}
+
 		if (animate) {
 			Animation.markBegin();
 		}
@@ -664,12 +669,21 @@ public class GraphContainer extends GraphNode implements IContainer {
 	 * @since 2.0
 	 */
 	public DisplayIndependentRectangle getLayoutBounds() {
-		double width = GraphContainer.SCALED_WIDTH - 10;
-		double height = GraphContainer.SCALED_HEIGHT - 10;
-		return new DisplayIndependentRectangle(25, 25, width - 50, height - 50);
+		double width = GraphContainer.SCALED_WIDTH;
+		double height = GraphContainer.SCALED_HEIGHT;
+		return new DisplayIndependentRectangle(0, 0, width, height);
 	}
 
 	public void applyLayout() {
+		if (isExpanded) {
+			internalApplyLayout();
+		} else {
+			isLayoutScheduled = true;
+		}
+	}
+
+	private void internalApplyLayout() {
+		isLayoutScheduled = false;
 		if (layoutAlgorithm == null) {
 			setLayoutAlgorithm(new TreeLayoutAlgorithm(), false);
 		}
@@ -828,7 +842,7 @@ public class GraphContainer extends GraphNode implements IContainer {
 				public void widgetSelected(SelectionEvent e) {
 					if (e.item instanceof GraphContainer) {
 						// set focus to expand label so that pressing space
-						//opens/closes the last selected container
+						// opens/closes the last selected container
 						((GraphContainer) e.item).expandGraphLabel.setFocus();
 					}
 				}

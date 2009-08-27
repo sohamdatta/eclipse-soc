@@ -121,11 +121,6 @@ public class TreeLayoutAlgorithm implements LayoutAlgorithm {
 			AlgorithmHelper.maximizeSizes(entities);
 
 		DisplayIndependentRectangle bounds2 = new DisplayIndependentRectangle(bounds);
-		int insets = 4;
-		bounds2.x += insets;
-		bounds2.y += insets;
-		bounds2.width -= 2 * insets;
-		bounds2.height -= 2 * insets;
 		AlgorithmHelper.fitWithinBounds(entities, bounds2, resize);
 	}
 
