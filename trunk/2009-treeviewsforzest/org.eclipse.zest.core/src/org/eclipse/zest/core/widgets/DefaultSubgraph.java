@@ -9,6 +9,7 @@
  ******************************************************************************/
 package org.eclipse.zest.core.widgets;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -30,24 +31,26 @@ import org.eclipse.zest.layouts.interfaces.SubgraphLayout;
 
 /**
  * Default implementation of {@link SubgraphLayout}. Every subgraph added to
- * Zest {@link Graph} should inherit from this class.
- * The default implementation is very simple. A node pruned to this subgraph
- * is minimized and all connections adjacent to it are made invisible. No
- * additional graphic elements are added to the graph, but subclasses may add
- * them.
+ * Zest {@link Graph} should inherit from this class. The default implementation
+ * is very simple. A node pruned to this subgraph is minimized and all
+ * connections adjacent to it are made invisible. No additional graphic elements
+ * are added to the graph, but subclasses may add them.
+ * 
  * @since 2.0
  */
 public class DefaultSubgraph implements SubgraphLayout {
 
 	/**
-	 * Default factory for {@link DefaultSubgraph}. It creates one subgraph for a
-	 * whole graph and throws every node into it.
+	 * Default factory for {@link DefaultSubgraph}. It creates one subgraph for
+	 * a whole graph and throws every node into it.
 	 */
 	public static class DefaultSubgraphFactory implements SubgraphFactory {
 		private HashMap contextToSubgraph = new HashMap();
 
-		public SubgraphLayout createSubgraph(NodeLayout[] nodes, LayoutContext context) {
-			DefaultSubgraph subgraph = (DefaultSubgraph) contextToSubgraph.get(context);
+		public SubgraphLayout createSubgraph(NodeLayout[] nodes,
+				LayoutContext context) {
+			DefaultSubgraph subgraph = (DefaultSubgraph) contextToSubgraph
+					.get(context);
 			if (subgraph == null) {
 				subgraph = new DefaultSubgraph(context);
 				contextToSubgraph.put(context, subgraph);
@@ -81,16 +84,20 @@ public class DefaultSubgraph implements SubgraphLayout {
 			defaultBackgroundColor = c;
 		}
 
-		public SubgraphLayout createSubgraph(NodeLayout[] nodes, LayoutContext context) {
-			return new LabelSubgraph(nodes, context, defaultForegroundColor, defaultBackgroundColor);
+		public SubgraphLayout createSubgraph(NodeLayout[] nodes,
+				LayoutContext context) {
+			return new LabelSubgraph(nodes, context, defaultForegroundColor,
+					defaultBackgroundColor);
 		}
 	};
 
 	public static class TriangleSubgraphFactory implements SubgraphFactory {
 		private TriangleParameters parameters = new TriangleParameters();
 
-		public SubgraphLayout createSubgraph(NodeLayout[] nodes, LayoutContext context) {
-			return new TriangleSubgraph(nodes, context, (TriangleParameters) parameters.clone());
+		public SubgraphLayout createSubgraph(NodeLayout[] nodes,
+				LayoutContext context) {
+			return new TriangleSubgraph(nodes, context,
+					(TriangleParameters) parameters.clone());
 		}
 
 		/**
@@ -175,11 +182,14 @@ public class DefaultSubgraph implements SubgraphLayout {
 	 * Factory for {@link PrunedSuccessorsSubgraph}. It creates one subgraph for
 	 * a whole graph and throws every node into it.
 	 */
-	public static class PrunedSuccessorsSubgraphFactory implements SubgraphFactory {
+	public static class PrunedSuccessorsSubgraphFactory implements
+			SubgraphFactory {
 		private HashMap contextToSubgraph = new HashMap();
 
-		public SubgraphLayout createSubgraph(NodeLayout[] nodes, LayoutContext context) {
-			PrunedSuccessorsSubgraph subgraph = (PrunedSuccessorsSubgraph) contextToSubgraph.get(context);
+		public SubgraphLayout createSubgraph(NodeLayout[] nodes,
+				LayoutContext context) {
+			PrunedSuccessorsSubgraph subgraph = (PrunedSuccessorsSubgraph) contextToSubgraph
+					.get(context);
 			if (subgraph == null) {
 				subgraph = new PrunedSuccessorsSubgraph(context);
 				contextToSubgraph.put(context, subgraph);
@@ -196,7 +206,8 @@ public class DefaultSubgraph implements SubgraphLayout {
 		 */
 		public void updateLabelForNode(InternalNodeLayout node) {
 			InternalLayoutContext context = node.getOwnerLayoutContext();
-			PrunedSuccessorsSubgraph subgraph = (PrunedSuccessorsSubgraph) contextToSubgraph.get(context);
+			PrunedSuccessorsSubgraph subgraph = (PrunedSuccessorsSubgraph) contextToSubgraph
+					.get(context);
 			if (subgraph == null) {
 				subgraph = new PrunedSuccessorsSubgraph(context);
 				contextToSubgraph.put(context, subgraph);
@@ -216,7 +227,8 @@ public class DefaultSubgraph implements SubgraphLayout {
 		if (context2 instanceof InternalLayoutContext) {
 			this.context = (InternalLayoutContext) context2;
 		} else {
-			throw new RuntimeException("This subgraph can be only created with LayoutContext provided by Zest Graph");
+			throw new RuntimeException(
+					"This subgraph can be only created with LayoutContext provided by Zest Graph");
 		}
 	}
 
@@ -261,7 +273,8 @@ public class DefaultSubgraph implements SubgraphLayout {
 
 	public DisplayIndependentPoint getLocation() {
 		DisplayIndependentRectangle bounds = context.getBounds();
-		return new DisplayIndependentPoint(bounds.x + bounds.width / 2, bounds.y + bounds.height / 2);
+		return new DisplayIndependentPoint(bounds.x + bounds.width / 2,
+				bounds.y + bounds.height / 2);
 	}
 
 	public boolean isDirectionDependant() {
@@ -275,13 +288,19 @@ public class DefaultSubgraph implements SubgraphLayout {
 
 	public void removeNodes(NodeLayout[] nodes) {
 		context.checkChangesAllowed();
+		ArrayList removedNodes = new ArrayList();
 		for (int i = 0; i < nodes.length; i++) {
 			if (this.nodes.remove(nodes[i])) {
 				nodes[i].prune(null);
 				nodes[i].setMinimized(false);
 				refreshConnectionsVisibility(nodes[i].getIncomingConnections());
 				refreshConnectionsVisibility(nodes[i].getOutgoingConnections());
+				removedNodes.add(nodes[i]);
 			}
+		}
+		if (!removedNodes.isEmpty()) {
+			context.fireNodesPrunedEvent((NodeLayout[]) removedNodes
+					.toArray(new NodeLayout[removedNodes.size()]));
 		}
 		if (this.nodes.isEmpty()) {
 			dispose();
@@ -321,19 +340,26 @@ public class DefaultSubgraph implements SubgraphLayout {
 
 	public void addNodes(NodeLayout[] nodes) {
 		context.checkChangesAllowed();
+		ArrayList addedNodes = new ArrayList();
 		for (int i = 0; i < nodes.length; i++) {
 			if (this.nodes.add(nodes[i])) {
 				nodes[i].prune(this);
 				nodes[i].setMinimized(true);
 				refreshConnectionsVisibility(nodes[i].getIncomingConnections());
 				refreshConnectionsVisibility(nodes[i].getOutgoingConnections());
+				addedNodes.add(nodes[i]);
 			}
+		}
+		if (!addedNodes.isEmpty()) {
+			context.fireNodesPrunedEvent((NodeLayout[]) addedNodes
+					.toArray(new NodeLayout[addedNodes.size()]));
 		}
 	}
 
 	protected void refreshConnectionsVisibility(ConnectionLayout[] connections) {
 		for (int i = 0; i < connections.length; i++) {
-			connections[i].setVisible(!connections[i].getSource().isPruned() && !connections[i].getTarget().isPruned());
+			connections[i].setVisible(!connections[i].getSource().isPruned()
+					&& !connections[i].getTarget().isPruned());
 		}
 	}
 

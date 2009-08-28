@@ -28,11 +28,12 @@ public interface PruningListener {
 	 * 
 	 * @param context
 	 *            the layout context that fired the event
-	 * @param subgraph
-	 *            subgraphs that have been created or had nodes added
+	 * @param nodes
+	 *            nodes that have been pruned. It can be assumed that all these
+	 *            nodes have been pruned into the same subgraph.
 	 * @return true if no further operations after this event are required
 	 */
-	public boolean nodesPruned(LayoutContext context, SubgraphLayout[] subgraph);
+	public boolean nodesPruned(LayoutContext context, NodeLayout[] nodes);
 
 	/**
 	 * This method is called when some nodes are unpruned in a layout context,
@@ -48,8 +49,10 @@ public interface PruningListener {
 	 *            the layout context that fired the event
 	 * @param nodes
 	 *            nodes that have been unpruned
+	 * @param subgraph
+	 *            subgraph that had contained the nodes while they were pruned
 	 * @return true if no further operations after this event are required
 	 */
-	public boolean nodesUnpruned(LayoutContext context, NodeLayout[] nodes);
+	public boolean nodesUnpruned(LayoutContext context, NodeLayout[] nodes, SubgraphLayout subgraph);
 
 }

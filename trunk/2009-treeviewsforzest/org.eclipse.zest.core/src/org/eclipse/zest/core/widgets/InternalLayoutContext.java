@@ -511,62 +511,48 @@ class InternalLayoutContext implements LayoutContext {
 		}
 	}
 
-	void fireNodeMovedEvent(InternalNodeLayout node) {
-		if (eventsOn) {
-			node.refreshLocation();
-		}
+	void fireEntityMovedEvent(EntityLayout entity) {
 		boolean intercepted = !eventsOn;
 		LayoutListener[] listeners = (LayoutListener[]) layoutListeners
 				.toArray(new LayoutListener[layoutListeners.size()]);
 		for (int i = 0; i < listeners.length && !intercepted; i++) {
-			intercepted = listeners[i].nodeMoved(this, node);
+			intercepted = listeners[i].entityMoved(this, entity);
 		}
 		if (!intercepted) {
 			applyMainAlgorithm();
 		}
 	}
 
-	void fireNodeResizedEvent(InternalNodeLayout node) {
-		if (eventsOn) {
-			node.refreshSize();
-			node.refreshLocation();
-		}
+	void fireEntityResizedEvent(EntityLayout entity) {
 		boolean intercepted = !eventsOn;
 		LayoutListener[] listeners = (LayoutListener[]) layoutListeners
 				.toArray(new LayoutListener[layoutListeners.size()]);
 		for (int i = 0; i < listeners.length && !intercepted; i++) {
-			intercepted = listeners[i].nodeResized(this, node);
+			intercepted = listeners[i].entityResized(this, entity);
 		}
 		if (!intercepted) {
 			applyMainAlgorithm();
 		}
 	}
 
-	void fireSubgraphMovedEvent(DefaultSubgraph subgraph) {
-		if (eventsOn) {
-			subgraph.refreshLocation();
-		}
+	void fireNodesPrunedEvent(NodeLayout[] nodes) {
 		boolean intercepted = !eventsOn;
-		LayoutListener[] listeners = (LayoutListener[]) layoutListeners
-				.toArray(new LayoutListener[layoutListeners.size()]);
+		PruningListener[] listeners = (PruningListener[]) pruningListeners
+				.toArray(new PruningListener[pruningListeners.size()]);
 		for (int i = 0; i < listeners.length && !intercepted; i++) {
-			intercepted = listeners[i].subgraphMoved(this, subgraph);
+			intercepted = listeners[i].nodesPruned(this, nodes);
 		}
 		if (!intercepted) {
 			applyMainAlgorithm();
 		}
 	}
 
-	void fireSubgraphResizedEvent(DefaultSubgraph subgraph) {
-		if (eventsOn) {
-			subgraph.refreshSize();
-			subgraph.refreshLocation();
-		}
+	void fireNodesUnprunedEvent(NodeLayout[] nodes, SubgraphLayout subgraph) {
 		boolean intercepted = !eventsOn;
-		LayoutListener[] listeners = (LayoutListener[]) layoutListeners
-				.toArray(new LayoutListener[layoutListeners.size()]);
+		PruningListener[] listeners = (PruningListener[]) pruningListeners
+				.toArray(new PruningListener[pruningListeners.size()]);
 		for (int i = 0; i < listeners.length && !intercepted; i++) {
-			intercepted = listeners[i].subgraphResized(this, subgraph);
+			intercepted = listeners[i].nodesUnpruned(this, nodes, subgraph);
 		}
 		if (!intercepted) {
 			applyMainAlgorithm();

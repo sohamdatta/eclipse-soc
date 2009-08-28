@@ -151,23 +151,13 @@ public class SpringLayoutAlgorithm implements LayoutAlgorithm {
 
 	private LayoutListener springLayoutListener = new LayoutListener() {
 
-		public boolean nodeMoved(LayoutContext context, NodeLayout node) {
-			updateLocation(node);
+		public boolean entityMoved(LayoutContext context, EntityLayout entity) {
+			updateLocation(entity);
 			return false;
 		}
 
-		public boolean nodeResized(LayoutContext context, NodeLayout node) {
-			updateLocation(node);
-			return false;
-		}
-
-		public boolean subgraphMoved(LayoutContext context, SubgraphLayout subgraph) {
-			updateLocation(subgraph);
-			return false;
-		}
-
-		public boolean subgraphResized(LayoutContext context, SubgraphLayout subgraph) {
-			updateLocation(subgraph);
+		public boolean entityResized(LayoutContext context, EntityLayout entity) {
+			updateLocation(entity);
 			return false;
 		}
 
