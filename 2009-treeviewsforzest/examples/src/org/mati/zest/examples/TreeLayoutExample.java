@@ -18,6 +18,7 @@ import org.eclipse.zest.core.widgets.Graph;
 import org.eclipse.zest.core.widgets.GraphConnection;
 import org.eclipse.zest.core.widgets.GraphItem;
 import org.eclipse.zest.core.widgets.GraphNode;
+import org.eclipse.zest.core.widgets.ZestStyles;
 import org.eclipse.zest.layouts.algorithms.TreeLayoutAlgorithm;
 
 public class TreeLayoutExample {
@@ -51,16 +52,18 @@ public class TreeLayoutExample {
 		for (int i = 0; i < 3; i++) {
 			GraphNode n = new GraphNode(g, SWT.NONE, "1 - " + i);
 			if (lastNode != null)
-				new GraphConnection(g, SWT.NONE, n, lastNode).setDirected(true);
+				new GraphConnection(g, ZestStyles.CONNECTIONS_DIRECTED, n,
+						lastNode);
 			for (int j = 0; j < 1; j++) {
 				GraphNode n2 = new GraphNode(g, SWT.NONE, "2 - " + j);
-				GraphConnection c = new GraphConnection(g, SWT.NONE, n, n2);
+				GraphConnection c = new GraphConnection(g,
+						ZestStyles.CONNECTIONS_DIRECTED, n, n2);
 				c.setWeight(-1);
 				c.setDirected(true);
 				lastNode = n2;
 			}
 
-			new GraphConnection(g, SWT.NONE, root, n).setDirected(true);
+			new GraphConnection(g, ZestStyles.CONNECTIONS_DIRECTED, root, n);
 		}
 
 

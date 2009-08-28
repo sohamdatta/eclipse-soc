@@ -48,7 +48,8 @@ public class DAGExample {
 		g
 				.setSubgraphFactory(new DefaultSubgraph.PrunedSuccessorsSubgraphFactory());
 		g.setLayoutAlgorithm(algorithm, false);
-		g.setExpandCollapseManager(new DAGExpandCollapseManager());
+		final DAGExpandCollapseManager dagExpandCollapseManager = new DAGExpandCollapseManager();
+		g.setExpandCollapseManager(dagExpandCollapseManager);
 
 		GraphNode root = new GraphNode(g, SWT.NONE, "Root");
 		GraphNode a = new GraphNode(g, SWT.NONE, "A");
@@ -69,33 +70,28 @@ public class DAGExample {
 		new GraphConnection(g, ZestStyles.CONNECTIONS_DIRECTED, e, h);
 		new GraphConnection(g, ZestStyles.CONNECTIONS_DIRECTED, root, h);
 
-
-		
 		hookMenu(g);
 
-		final Button buttonTopDown = new Button(shell, SWT.FLAT);
-		buttonTopDown.setText("TOP_DOWN");
-
-		final Button buttonBottomUp = new Button(shell, SWT.FLAT);
-		buttonBottomUp.setText("BOTTOM_UP");
-		buttonBottomUp.setLayoutData(new GridData());
-
-		final Button buttonLeftRight = new Button(shell, SWT.FLAT);
-		buttonLeftRight.setText("LEFT_RIGHT");
-
-		final Button buttonRightLeft = new Button(shell, SWT.FLAT);
-		buttonRightLeft.setText("RIGHT_LEFT");
+		final Button buttonApply = new Button(shell, SWT.FLAT);
+		buttonApply.setText("Apply");
 
 		SelectionAdapter buttonListener = new SelectionAdapter() {
 			public void widgetSelected(SelectionEvent e) {
-
 				g.applyLayout();
 			}
 		};
-		buttonTopDown.addSelectionListener(buttonListener);
-		buttonBottomUp.addSelectionListener(buttonListener);
-		buttonLeftRight.addSelectionListener(buttonListener);
-		buttonRightLeft.addSelectionListener(buttonListener);
+		buttonApply.addSelectionListener(buttonListener);
+
+		final Button buttonHideAll = new Button(shell, SWT.CHECK);
+		buttonHideAll.setText("Hide all connections of collapsed nodes");
+
+		buttonListener = new SelectionAdapter() {
+			public void widgetSelected(SelectionEvent e) {
+				dagExpandCollapseManager.setHidingConnections(buttonHideAll
+						.getSelection());
+			}
+		};
+		buttonHideAll.addSelectionListener(buttonListener);
 		
 
 

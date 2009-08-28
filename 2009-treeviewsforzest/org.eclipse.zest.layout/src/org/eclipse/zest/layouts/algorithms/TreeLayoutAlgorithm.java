@@ -117,8 +117,9 @@ public class TreeLayoutAlgorithm implements LayoutAlgorithm {
 
 		EntityLayout[] entities = context.getEntities();
 
-		if (resize)
+		if (resize) {
 			AlgorithmHelper.maximizeSizes(entities);
+		}
 
 		DisplayIndependentRectangle bounds2 = new DisplayIndependentRectangle(bounds);
 		AlgorithmHelper.fitWithinBounds(entities, bounds2, resize);

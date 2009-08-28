@@ -9,8 +9,10 @@
  ******************************************************************************/
 package org.eclipse.zest.core.widgets;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Map;
 
 import org.eclipse.zest.layouts.interfaces.ConnectionLayout;
 import org.eclipse.zest.layouts.interfaces.ContextListener;
@@ -56,7 +58,11 @@ public class DAGExpandCollapseManager implements ExpandCollapseManager {
 
 	private HashSet nodesToUpdate = new HashSet();
 
+	private HashMap connectionsToChangeVisibility = new HashMap();
+
 	private boolean cleanLayoutScheduled = false;
+
+	private boolean hidingConnections = false;
 
 	public void initExpansion(final LayoutContext context2) {
 		if (!(context2 instanceof InternalLayoutContext)) {
@@ -99,6 +105,7 @@ public class DAGExpandCollapseManager implements ExpandCollapseManager {
 				}
 				resetState(connection.getTarget());
 				updateNodeLabel(connection.getSource());
+				refreshConnectionsVisibility(connection.getSource());
 				flushChanges(false, true);
 				return false;
 			}
@@ -122,39 +129,68 @@ public class DAGExpandCollapseManager implements ExpandCollapseManager {
 				&& node.getOutgoingConnections().length > 0;
 	}
 
-	private void collapseAllConnections(NodeLayout node) {
-		ConnectionLayout[] outgoingConnections = node.getOutgoingConnections();
-		for (int i = 0; i < outgoingConnections.length; i++) {
-			outgoingConnections[i].setVisible(false);
-		}
-		flushChanges(true, true);
-	}
-
-	private void expandAllConnections(NodeLayout node) {
-		ConnectionLayout[] outgoingConnections = node.getOutgoingConnections();
-		for (int i = 0; i < outgoingConnections.length; i++) {
-			outgoingConnections[i].setVisible(true);
-		}
-		flushChanges(true, true);
-	}
-
 	public void setExpanded(LayoutContext context, NodeLayout node,
 			boolean expanded) {
 
-		// if (isExpanded(node) == expanded)
-		// return;
+		if (isExpanded(node) == expanded) {
+			return;
+		}
 		if (expanded) {
 			if (canExpand(context, node)) {
 				expand(node);
 			}
-			expandAllConnections(node);
 		} else {
 			if (canCollapse(context, node)) {
 				collapse(node);
 			}
-			collapseAllConnections(node);
 		}
+		refreshConnectionsVisibility(node);
 		flushChanges(true, true);
+	}
+
+	/**
+	 * Returns true if this collapse manager hides all outgoing connections of
+	 * collapsed nodes. Returns false if connections pointing to a node that is
+	 * not pruned (because it as predecessing node which is expanded) stay
+	 * visible.
+	 * 
+	 * @return whether or not all connections going out of collapsed nodes are
+	 *         hidden.
+	 */
+	public boolean isHidingConnections() {
+		return hidingConnections;
+	}
+
+	/**
+	 * Changes the way connections outgoing from collapsed nodes are hidden. If
+	 * set to true, all such connections are always hidden. If set to false, a
+	 * connection is visible if a node it points to is not pruned (which means
+	 * that node has another predecessing node which is expanded).
+	 * 
+	 * Default is false.
+	 * 
+	 * @param hidingConnections
+	 *            true if all outgoing connections of collapsed nodes should be
+	 *            hidden.
+	 */
+	public void setHidingConnections(boolean hidingConnections) {
+		this.hidingConnections = hidingConnections;
+		NodeLayout[] nodes = context.getNodes();
+		for (int i = 0; i < nodes.length; i++) {
+			refreshConnectionsVisibility(nodes[i]);
+		}
+		flushChanges(false, false);
+	}
+
+	private void refreshConnectionsVisibility(NodeLayout node) {
+		ConnectionLayout[] outgoingConnections = node.getOutgoingConnections();
+		for (int i = 0; i < outgoingConnections.length; i++) {
+			setConnectionVisible(
+					outgoingConnections[i],
+					isExpanded(node)
+							|| (!hidingConnections && !isPruned(node) && !isPruned(outgoingConnections[i]
+									.getTarget())));
+		}
 	}
 
 	private void expand(NodeLayout node) {
@@ -251,6 +287,14 @@ public class DAGExpandCollapseManager implements ExpandCollapseManager {
 		nodesToUnprune.add(node);
 	}
 
+	private void setConnectionVisible(ConnectionLayout connection,
+			boolean visible) {
+		if (connection.isVisible() == visible) {
+			return;
+		}
+		connectionsToChangeVisibility.put(connection, new Boolean(visible));
+	}
+
 	private boolean isPruned(NodeLayout node) {
 		if (nodesToUnprune.contains(node)) {
 			return false;
@@ -285,7 +329,15 @@ public class DAGExpandCollapseManager implements ExpandCollapseManager {
 		}
 		nodesToUpdate.clear();
 
-		(context).applyLayout(cleanLayoutScheduled);
+		for (Iterator iterator = connectionsToChangeVisibility.entrySet()
+				.iterator(); iterator.hasNext();) {
+			Map.Entry entry = (Map.Entry) iterator.next();
+			ConnectionLayout connection = (ConnectionLayout) entry.getKey();
+			Boolean visible = (Boolean) entry.getValue();
+			connection.setVisible(visible.booleanValue());
+		}
+
+		context.applyLayout(cleanLayoutScheduled);
 		cleanLayoutScheduled = false;
 		context.flushChanges(true);
 	}

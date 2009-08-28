@@ -19,6 +19,10 @@ import org.eclipse.zest.core.widgets.ZestStyles;
 import org.eclipse.zest.core.widgets.DefaultSubgraph.TriangleSubgraphFactory;
 import org.eclipse.zest.layouts.algorithms.SpaceTreeLayoutAlgorithm;
 
+/**
+ * This example lets you play with TreeLayoutAlgorithm in many ways - expanding
+ * and collapsing nodes, moving them around, changing structure of the graph.
+ */
 public class SpaceTreeExample {
 
 	static Graph g;
