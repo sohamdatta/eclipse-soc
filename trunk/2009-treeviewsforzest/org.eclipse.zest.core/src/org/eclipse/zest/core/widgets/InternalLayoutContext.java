@@ -417,8 +417,9 @@ class InternalLayoutContext implements LayoutContext {
 		InternalLayoutContext targetContext = ((InternalNodeLayout) connection
 				.getTarget()).getOwnerLayoutContext();
 		if (sourceContext != targetContext) {
-			throw new RuntimeException(
-					"Connection between nodes in two different contexts is not allowed.");
+			// connection between nodes in different containers is not
+			// interesting for layout algorithms
+			return;
 		}
 		if (sourceContext == this) {
 			boolean intercepted = !eventsOn;
@@ -442,8 +443,9 @@ class InternalLayoutContext implements LayoutContext {
 		InternalLayoutContext targetContext = ((InternalNodeLayout) connection
 				.getTarget()).getOwnerLayoutContext();
 		if (sourceContext != targetContext) {
-			throw new RuntimeException(
-					"Connection between nodes in two different contexts is not allowed.");
+			// connection between nodes in different containers is not
+			// interesting for layout algorithms
+			return;
 		}
 		if (sourceContext == this) {
 			boolean intercepted = !eventsOn;

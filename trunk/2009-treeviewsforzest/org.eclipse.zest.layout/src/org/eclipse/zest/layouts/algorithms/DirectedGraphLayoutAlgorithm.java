@@ -13,6 +13,7 @@ package org.eclipse.zest.layouts.algorithms;
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 
 import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.draw2d.graph.DirectedGraph;
@@ -27,7 +28,7 @@ import org.eclipse.zest.layouts.interfaces.NodeLayout;
 import org.eclipse.zest.layouts.interfaces.SubgraphLayout;
 
 public class DirectedGraphLayoutAlgorithm implements LayoutAlgorithm {
-	
+
 	class ExtendedDirectedGraphLayout extends DirectedGraphLayout {
 
 		public void visit(DirectedGraph graph) {
@@ -35,12 +36,12 @@ public class DirectedGraphLayoutAlgorithm implements LayoutAlgorithm {
 			try {
 				field = DirectedGraphLayout.class.getDeclaredField("steps");
 				field.setAccessible(true);
-				// Object object = field.get(this);
-				// List steps = (List) object;
-				// steps.remove(10);
-				// steps.remove(9);
-				// steps.remove(8);
-				// steps.remove(2);
+				Object object = field.get(this);
+				List steps = (List) object;
+				steps.remove(10);
+				steps.remove(9);
+				steps.remove(8);
+				steps.remove(2);
 				field.setAccessible(false);
 				super.visit(graph);
 			} catch (SecurityException e) {
@@ -49,9 +50,9 @@ public class DirectedGraphLayoutAlgorithm implements LayoutAlgorithm {
 				e.printStackTrace();
 			} catch (IllegalArgumentException e) {
 				e.printStackTrace();
-			} // catch (IllegalAccessException e) {
-			// e.printStackTrace();
-			// }
+			} catch (IllegalAccessException e) {
+				e.printStackTrace();
+			}
 		}
 	}
 
@@ -62,6 +63,8 @@ public class DirectedGraphLayoutAlgorithm implements LayoutAlgorithm {
 	private int orientation = VERTICAL;
 
 	private LayoutContext context;
+
+	private HorizontalShiftAlgorithm hsAlgorithm = new HorizontalShiftAlgorithm();
 
 	public DirectedGraphLayoutAlgorithm() {
 	}
@@ -113,6 +116,8 @@ public class DirectedGraphLayoutAlgorithm implements LayoutAlgorithm {
 				entity.setLocation(node.y, node.x);
 			}
 		}
+
+		hsAlgorithm.applyLayout(clean);
 	}
 
 	private EntityLayout getEntity(NodeLayout node) {
@@ -126,6 +131,7 @@ public class DirectedGraphLayoutAlgorithm implements LayoutAlgorithm {
 
 	public void setLayoutContext(LayoutContext context) {
 		this.context = context;
+		hsAlgorithm.setLayoutContext(context);
 	}
 
 }

@@ -87,7 +87,7 @@ public class GraphConnection extends GraphItem {
 		this.highlightColor = graphModel.DARK_BLUE;
 		this.lineWidth = 1;
 		this.lineStyle = Graphics.LINE_SOLID;
-		setWeight(1.0);
+		this.weight = 1.0;
 		this.graph = graphModel;
 		this.curveDepth = 0;
 		this.font = Display.getDefault().getSystemFont();

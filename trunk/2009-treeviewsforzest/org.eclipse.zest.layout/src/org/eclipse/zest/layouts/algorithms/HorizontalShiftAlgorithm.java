@@ -33,6 +33,8 @@ public class HorizontalShiftAlgorithm implements LayoutAlgorithm {
 
 	private static final double VSPACING = 16;
 
+	private static final double HSPACING = 10;
+
 	private LayoutContext context;
 
 	public void applyLayout(boolean clean) {
@@ -67,17 +69,26 @@ public class HorizontalShiftAlgorithm implements LayoutAlgorithm {
 			List currentRow = (List) iterator.next();
 			Collections.sort(currentRow, entityComparator);
 
-			int i = 0;
-			int width = (int) (bounds.width / 2 - currentRow.size() * 75);
+			int width = (int) (bounds.width - calculateRowWidth(currentRow)) / 2;
 
 			heightSoFar += ((EntityLayout) currentRow.get(0)).getSize().height + VSPACING;
 			for (Iterator iterator2 = currentRow.iterator(); iterator2.hasNext();) {
 				EntityLayout entity = (EntityLayout) iterator2.next();
 				DisplayIndependentDimension size = entity.getSize();
-				entity.setLocation(width + 10 * ++i + size.width / 2, heightSoFar + size.height / 2);
-				width += size.width;
+				entity.setLocation(width + size.width / 2, heightSoFar + size.height / 2);
+				width += size.width + HSPACING;
 			}
 		}
+	}
+
+	private double calculateRowWidth(List row) {
+		double result = 0;
+		for (Iterator iterator = row.iterator(); iterator.hasNext();) {
+			EntityLayout entity = (EntityLayout) iterator.next();
+			result += entity.getSize().width;
+		}
+		result += HSPACING * (row.size() - 1);
+		return result;
 	}
 
 	public void setLayoutContext(LayoutContext context) {
