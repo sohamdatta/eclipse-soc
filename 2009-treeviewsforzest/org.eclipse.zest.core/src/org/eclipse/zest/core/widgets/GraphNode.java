@@ -249,7 +249,6 @@ public class GraphNode extends GraphItem {
 			currentLocation.preciseY = y;
 			currentLocation.updateInts();
 			refreshBounds();
-			parent.getLayoutContext().fireNodeMovedEvent(this.getLayout());
 		}
 	}
 
@@ -649,11 +648,16 @@ public class GraphNode extends GraphItem {
 		updateFigureForModel(label);
 		label.addFigureListener(new FigureListener() {
 			private Dimension previousSize = label.getBounds().getSize();
+			private PrecisionPoint previousLocation = new PrecisionPoint(
+					currentLocation);
 
 			public void figureMoved(IFigure source) {
 				if (Animation.isAnimating() || getLayout().isMinimized()) {
 					return;
 				}
+				getLayout().refreshSize();
+				getLayout().refreshLocation();
+
 				Rectangle newBounds = nodeFigure.getBounds();
 				if (!newBounds.getSize().equals(previousSize)) {
 					previousSize = newBounds.getSize();
@@ -662,12 +666,14 @@ public class GraphNode extends GraphItem {
 					}
 					currentLocation = new PrecisionPoint(nodeFigure.getBounds()
 							.getTopLeft());
-					parent.getLayoutContext().fireNodeResizedEvent(getLayout());
-				} else if (currentLocation.x != newBounds.x
-						|| currentLocation.y != newBounds.y) {
+					parent.getLayoutContext().fireEntityResizedEvent(
+							getLayout());
+				} else if (previousLocation.x != newBounds.x
+						|| previousLocation.y != newBounds.y) {
 					currentLocation = new PrecisionPoint(nodeFigure.getBounds()
 							.getTopLeft());
-					parent.getLayoutContext().fireNodeMovedEvent(getLayout());
+					previousLocation = new PrecisionPoint(currentLocation);
+					parent.getLayoutContext().fireEntityMovedEvent(getLayout());
 				}
 			}
 		});

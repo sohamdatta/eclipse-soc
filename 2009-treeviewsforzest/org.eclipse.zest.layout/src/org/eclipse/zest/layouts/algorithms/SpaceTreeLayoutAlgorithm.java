@@ -24,6 +24,7 @@ import org.eclipse.zest.layouts.dataStructures.DisplayIndependentDimension;
 import org.eclipse.zest.layouts.dataStructures.DisplayIndependentPoint;
 import org.eclipse.zest.layouts.dataStructures.DisplayIndependentRectangle;
 import org.eclipse.zest.layouts.interfaces.ContextListener;
+import org.eclipse.zest.layouts.interfaces.EntityLayout;
 import org.eclipse.zest.layouts.interfaces.ExpandCollapseManager;
 import org.eclipse.zest.layouts.interfaces.LayoutContext;
 import org.eclipse.zest.layouts.interfaces.LayoutListener;
@@ -169,7 +170,8 @@ public class SpaceTreeLayoutAlgorithm implements LayoutAlgorithm {
 		public void adjustPosition(DisplayIndependentPoint preferredLocation) { // !
 			protectedNode = (SpaceTreeNode) owner.getSuperRoot();
 
-			double newPositionInLayer = (direction == BOTTOM_UP || direction == TOP_DOWN) ? preferredLocation.x : preferredLocation.y;
+			double newPositionInLayer = (direction == BOTTOM_UP || direction == TOP_DOWN) ? preferredLocation.x - bounds.x : preferredLocation.y
+					- bounds.y;
 			if (((SpaceTreeNode) parent).expanded) {
 				((SpaceTreeLayer) spaceTreeLayers.get(depth)).moveNode(this, newPositionInLayer);
 				centerParentsTopDown();
@@ -910,23 +912,26 @@ public class SpaceTreeLayoutAlgorithm implements LayoutAlgorithm {
 
 	private LayoutListener layoutListener = new LayoutListener() {
 
-		public boolean subgraphResized(LayoutContext context, SubgraphLayout subgraph) {
-			return defaultSubgraphHandle(context, subgraph);
+		public boolean entityMoved(LayoutContext context, EntityLayout entity) {
+			if (entity instanceof NodeLayout) {
+				defaultNodeHandle(context, (NodeLayout) entity);
+			}
+			if (entity instanceof SubgraphLayout) {
+				defaultSubgraphHandle(context, (SubgraphLayout) entity);
+			}
+			return false;
 		}
 
-		public boolean subgraphMoved(LayoutContext context, SubgraphLayout subgraph) {
-			return defaultSubgraphHandle(context, subgraph);
-		}
-
-		public boolean nodeResized(LayoutContext context, NodeLayout node) {
-			setAvailableSpace(getAvailableSpace() + ((SpaceTreeNode) treeObserver.getTreeNode(node)).spaceRequiredForNode());
-			boolean result = defaultNodeHandle(context, node);
-			setAvailableSpace(0);
-			return result;
-		}
-
-		public boolean nodeMoved(LayoutContext context, NodeLayout node) {
-			return defaultNodeHandle(context, node);
+		public boolean entityResized(LayoutContext context, EntityLayout entity) {
+			if (entity instanceof NodeLayout) {
+				setAvailableSpace(getAvailableSpace() + ((SpaceTreeNode) treeObserver.getTreeNode((NodeLayout) entity)).spaceRequiredForNode());
+				defaultNodeHandle(context, (NodeLayout) entity);
+				setAvailableSpace(0);
+			}
+			if (entity instanceof SubgraphLayout) {
+				defaultSubgraphHandle(context, (SubgraphLayout) entity);
+			}
+			return false;
 		}
 
 		/**
@@ -935,9 +940,8 @@ public class SpaceTreeLayoutAlgorithm implements LayoutAlgorithm {
 		 * 
 		 * @param context
 		 * @param subgraph
-		 * @return
 		 */
-		private boolean defaultSubgraphHandle(LayoutContext context, SubgraphLayout subgraph) {
+		private void defaultSubgraphHandle(LayoutContext context, SubgraphLayout subgraph) {
 			SpaceTreeNode node = (SpaceTreeNode) treeObserver.getTreeNode(subgraph.getNodes()[0]);
 			while (node != null && node.node != null && node.node.getSubgraph() == subgraph) {
 				node = (SpaceTreeNode) node.parent;
@@ -950,12 +954,11 @@ public class SpaceTreeLayoutAlgorithm implements LayoutAlgorithm {
 					context.flushChanges(false);
 				}
 			}
-			return false;
 		}
 
-		private boolean defaultNodeHandle(LayoutContext context, NodeLayout node) {
+		private void defaultNodeHandle(LayoutContext context, NodeLayout node) {
 			if (bounds.width <= 0 || bounds.height <= 0)
-				return false;
+				return;
 			SpaceTreeNode spaceTreeNode = (SpaceTreeNode) treeObserver.getTreeNode(node);
 			spaceTreeNode.adjustPosition(node.getLocation());
 			if (context.isBackgroundLayoutEnabled()) {
@@ -963,7 +966,6 @@ public class SpaceTreeLayoutAlgorithm implements LayoutAlgorithm {
 				spaceTreeNode.refreshSubgraphLocation();
 				context.flushChanges(false);
 			}
-			return false;
 		}
 	};
 
