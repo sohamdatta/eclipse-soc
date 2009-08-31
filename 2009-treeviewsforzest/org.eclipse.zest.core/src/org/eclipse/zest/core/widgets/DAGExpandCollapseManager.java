@@ -144,7 +144,6 @@ public class DAGExpandCollapseManager implements ExpandCollapseManager {
 				collapse(node);
 			}
 		}
-		refreshConnectionsVisibility(node);
 		flushChanges(true, true);
 	}
 
@@ -200,6 +199,7 @@ public class DAGExpandCollapseManager implements ExpandCollapseManager {
 			unpruneNode(successingNodes[i]);
 		}
 		updateNodeLabel(node);
+		refreshConnectionsVisibility(node);
 	}
 
 	private void collapse(NodeLayout node) {
@@ -216,6 +216,7 @@ public class DAGExpandCollapseManager implements ExpandCollapseManager {
 			}
 		}
 		updateNodeLabel(node);
+		refreshConnectionsVisibility(node);
 	}
 
 	private void checkPruning(NodeLayout node) {
