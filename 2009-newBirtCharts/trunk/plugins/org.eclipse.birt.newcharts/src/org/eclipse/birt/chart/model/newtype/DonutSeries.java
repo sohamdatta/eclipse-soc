@@ -12,6 +12,7 @@ import org.eclipse.birt.chart.model.attribute.Position;
 
 import org.eclipse.birt.chart.model.component.Label;
 import org.eclipse.birt.chart.model.component.Series;
+import org.eclipse.birt.chart.model.type.PieSeries;
 
 /**
  * <!-- begin-user-doc -->
@@ -113,6 +114,8 @@ public interface DonutSeries extends Series {
 	 */
 	boolean isSetExplosion();
 
+	
+	
 	/**
 	 * Returns the value of the '<em><b>Thickness</b></em>' attribute.
 	 * The default value is <code>"0"</code>.

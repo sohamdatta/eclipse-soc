@@ -87,7 +87,7 @@ public class Venn extends BaseRenderer {
 			throws ChartException {
 
 		debugCompute++;
-
+System.out.println("debugginCompute" +debugCompute);
 		vennseries = (VennSeries) getSeries();
 		this.leaderLineAttributes = vennseries.getLeaderLineAttributes();
 		this.leaderLineStyle = vennseries.getLeaderLineStyle();
@@ -843,12 +843,9 @@ public class Venn extends BaseRenderer {
 					: Math.abs(fill1.getBlue() + fill2.getBlue());
 			return ColorDefinitionImpl.create(r, g, b);
 		} else if (this.intersectionColorType == IntersectionColorType.SUBTRACTIVE_COLOR) {
-			int r = (Math.abs(fill1.getRed() - fill2.getRed()) < 0) ? 0 : Math
-					.abs(fill1.getRed() - fill2.getRed());
-			int g = (Math.abs(fill1.getGreen() - fill2.getGreen()) < 0) ? 0
-					: Math.abs(fill1.getGreen() - fill2.getGreen());
-			int b = (Math.abs(fill1.getBlue() - fill2.getBlue()) < 0) ? 0
-					: Math.abs(fill1.getBlue() - fill2.getBlue());
+			int r =(fill1.getRed()>fill2.getRed())?fill1.getRed()-fill2.getRed():fill2.getRed()-fill1.getRed();
+			int g = (fill1.getGreen()>fill2.getGreen())?fill1.getGreen()-fill2.getGreen():fill2.getGreen()-fill1.getGreen();
+			int b = (fill1.getBlue()>fill2.getBlue())?fill1.getBlue()-fill2.getBlue():fill2.getBlue()-fill1.getBlue();
 			return ColorDefinitionImpl.create(r, g, b);
 		} else {
 			throw new ChartException(
