@@ -282,8 +282,11 @@ public class DonutRenderer {
 
 			Location[] allLocsLow = null;
 			Location[] allLocs = null;
+			Location[] borderFrameOne = new Location[4];
+			Location[] borderFrameTwo = new Location[4];
+
 			try {
-				allLocs = new Location[(int)slice.getAngleExtent() * 2+4];
+				allLocs = new Location[(int) slice.getAngleExtent() * 2 + 4];
 				allLocsLow = new Location[allLocs.length];
 			} catch (NegativeArraySizeException naze) {
 				// If explosion is bigger than
@@ -291,7 +294,7 @@ public class DonutRenderer {
 				allLocsLow = new Location[4];
 			}
 
-			for (int i = 0; i <= (int)slice.getAngleExtent()+1; i++) {
+			for (int i = 0; i <= (int) slice.getAngleExtent() + 1; i++) {
 				double x = Math.cos(Math.toRadians(slice.getStartAngle() + i))
 						* slice.getWidth() / 2;
 				double y = Math.sin(Math.toRadians(slice.getStartAngle() + i))
@@ -300,27 +303,50 @@ public class DonutRenderer {
 						+ slice.getWidth() / 2 + x, slice.getYc()
 						+ slice.getHeight() / 2 - y);
 				if (slice.getDepth() != 0) {
+
 					allLocsLow[i] = goFactory.createLocation(slice.getXc()
 							+ slice.getWidth() / 2 + x, slice.getYc()
 							+ sliceDepth + slice.getHeight() / 2 - y);
+
+					if (i == 0) {
+						borderFrameOne[0] = allLocs[i];
+						borderFrameOne[1] = allLocsLow[i];
+					}
+					if (i == (int) slice.getAngleExtent()) {
+						borderFrameTwo[0] = allLocs[i];
+						borderFrameTwo[1] = allLocsLow[i];
+					}
 				}
 			}
 
-			for (int i = 0; i <= (int)slice.getAngleExtent()+1; i++) {
+			for (int i = 0; i <= (int) slice.getAngleExtent() + 1; i++) {
 				double x = Math.cos(Math.toRadians(slice.getStartAngle()
 						+ slice.getAngleExtent() - i))
 						* (slice.getWidth() / 2 - frameThickness);
 				double y = Math.sin(Math.toRadians(slice.getStartAngle()
 						+ slice.getAngleExtent() - i))
 						* (slice.getHeight() / 2 - frameThickness);
-				allLocs[(int) (slice.getAngleExtent()+i+2)] = goFactory.createLocation(
-						slice.getXc() + slice.getWidth() / 2 + x, slice.getYc()
-								+ slice.getHeight() / 2 - y);
+				allLocs[(int) (slice.getAngleExtent() + i + 2)] = goFactory
+						.createLocation(slice.getXc() + slice.getWidth() / 2
+								+ x, slice.getYc() + slice.getHeight() / 2 - y);
 				if (slice.getDepth() != 0) {
-					allLocsLow[(int) (slice.getAngleExtent() + i+2)] = goFactory
+					allLocsLow[(int) (slice.getAngleExtent() + i + 2)] = goFactory
 							.createLocation(slice.getXc() + slice.getWidth()
 									/ 2 + x, slice.getYc() + sliceDepth
 									+ slice.getHeight() / 2 - y);
+
+					if (i == 0) {
+						borderFrameTwo[3] = allLocs[(int) (slice
+								.getAngleExtent()
+								+ i + 2)] ;
+						borderFrameTwo[2] = allLocsLow[(int) (slice.getAngleExtent() + i + 2)] ;
+					}
+					if (i == (int) slice.getAngleExtent()) {
+						borderFrameOne[3] = allLocs[(int) (slice
+								.getAngleExtent()
+								+ i + 2)] ;
+						borderFrameOne[2] =allLocsLow[(int) (slice.getAngleExtent() + i + 2)] ;
+					}
 				}
 			}
 
@@ -343,7 +369,18 @@ public class DonutRenderer {
 			// idr.setClip(cre);
 			// idr.fillArc(coloredarc);
 			if (slice.getDepth() != 0) {
+
+				PolygonRenderEvent polyBordersOne = (PolygonRenderEvent) polyLow
+						.copy();
+				polyBordersOne.setPoints(borderFrameOne);
+
+				PolygonRenderEvent polyBordersTwo = (PolygonRenderEvent) polyLow
+						.copy();
+				polyBordersTwo.setPoints(borderFrameTwo);
+
 				idr.fillPolygon(polyLow);
+				idr.fillPolygon(polyBordersOne);
+				idr.fillPolygon(polyBordersTwo);
 			}
 			idr.fillPolygon(poly);
 			// cre.reset();
