@@ -1,5 +1,6 @@
 package org.eclipse.birt.chart.donut.render;
 
+import org.eclipse.birt.chart.factory.RunTimeContext.StateKey;
 import org.eclipse.birt.chart.computation.BoundingBox;
 import org.eclipse.birt.chart.computation.DataPointHints;
 import org.eclipse.birt.chart.computation.GObjectFactory;
@@ -17,7 +18,6 @@ import org.eclipse.birt.chart.event.PolygonRenderEvent;
 import org.eclipse.birt.chart.event.TextRenderEvent;
 import org.eclipse.birt.chart.event.WrappedStructureSource;
 import org.eclipse.birt.chart.exception.ChartException;
-import org.eclipse.birt.chart.factory.RunTimeContext.StateKey;
 import org.eclipse.birt.chart.model.ChartWithoutAxes;
 import org.eclipse.birt.chart.model.attribute.Bounds;
 import org.eclipse.birt.chart.model.attribute.ChartDimension;
@@ -190,8 +190,7 @@ public class DonutRenderer {
 		this.donut = donut;
 		// CHECK THIS FUNCTIONCALL . SETS ECLIPSE IN CONFLICT MODE_NO CONTENT
 		// ASSIST
-//		 this.cComp = donut.getRunTimeContext().getState(
-//		 StateKey.CHART_COMPUTATION_KEY);
+		 this.cComp = donut.getRunTimeContext().getState(StateKey.CHART_COMPUTATION_KEY);
 		this.donutseries = (DonutSeries) donut.getSeries();
 		this.deviceScale = donut.getDeviceScale();
 		this.seriesPalette = seriesPalette;
@@ -263,36 +262,226 @@ public class DonutRenderer {
 
 		for (DonutSlice slice : sliceList) {
 			try {
-				donut.getRunTimeContext().getScriptHandler().registerVariable(
-						ScriptHandler.BASE_VALUE,
-						slice.getDataPoint().getBaseValue());
-				donut.getRunTimeContext().getScriptHandler().registerVariable(
-						ScriptHandler.ORTHOGONAL_VALUE,
-						slice.getDataPoint().getOrthogonalValue());
-				donut.getRunTimeContext().getScriptHandler().registerVariable(
-						ScriptHandler.SERIES_VALUE,
-						slice.getDataPoint().getSeriesValue());
-
-				Object obj = donut.getRunTimeContext().getScriptHandler()
-						.evaluate("" + (explosion != 0));
-
-				if (obj instanceof Boolean) {
-					slice.setExplosion(explosion);
-				}
-
-				donut.getRunTimeContext().getScriptHandler()
-						.unregisterVariable(ScriptHandler.BASE_VALUE);
-				donut.getRunTimeContext().getScriptHandler()
-						.unregisterVariable(ScriptHandler.ORTHOGONAL_VALUE);
-				donut.getRunTimeContext().getScriptHandler()
-						.unregisterVariable(ScriptHandler.SERIES_VALUE);
-
+				setupScriptHandler(slice);
 			} catch (ChartException e) {
 				// logger.log( e );
 			}
 		}
 	}
 
+	private void setupScriptHandler(DonutSlice slice) throws ChartException {
+		donut.getRunTimeContext().getScriptHandler().registerVariable(
+				ScriptHandler.BASE_VALUE,
+				slice.getDataPoint().getBaseValue());
+		donut.getRunTimeContext().getScriptHandler().registerVariable(
+				ScriptHandler.ORTHOGONAL_VALUE,
+				slice.getDataPoint().getOrthogonalValue());
+		donut.getRunTimeContext().getScriptHandler().registerVariable(
+				ScriptHandler.SERIES_VALUE,
+				slice.getDataPoint().getSeriesValue());
+
+		Object obj = donut.getRunTimeContext().getScriptHandler()
+				.evaluate("" + (explosion != 0));
+
+		if (obj instanceof Boolean) {
+			slice.setExplosion(explosion);
+		}
+
+		donut.getRunTimeContext().getScriptHandler()
+				.unregisterVariable(ScriptHandler.BASE_VALUE);
+		donut.getRunTimeContext().getScriptHandler()
+				.unregisterVariable(ScriptHandler.ORTHOGONAL_VALUE);
+		donut.getRunTimeContext().getScriptHandler()
+				.unregisterVariable(ScriptHandler.SERIES_VALUE);
+	}
+
+	/**
+	 * Compute Bounds
+	 * @param cellBounds
+	 * @throws ChartException
+	 */
+	public void computeBounds(Bounds cellBounds) throws ChartException {
+
+		boundsBeforeComputation = goFactory.copyOf(cellBounds);
+		idserver = donut.getXServer();
+ 
+		computeTitleArea(cellBounds);
+
+		cellBounds = computeLabelBounds(cellBounds);
+		
+		// CREATE CHARTCONTAINER WITH ALL COMPUTATIONS
+		chartContainer = goFactory.createInsets(cellBounds.getTop()
+				- boundsBeforeComputation.getTop(), // TOP
+				cellBounds.getLeft() - boundsBeforeComputation.getLeft(), // LEFT
+				boundsBeforeComputation.getTop()
+				+ boundsBeforeComputation.getHeight()
+				- (cellBounds.getTop() + cellBounds.getHeight()), // BOTTOM
+				boundsBeforeComputation.getLeft()
+				+ boundsBeforeComputation.getWidth()
+				- (cellBounds.getLeft() + cellBounds.getWidth())); // RIGHT
+	}
+
+	private void computeTitleArea(Bounds cellBounds) throws ChartException {
+		titleContainerBounds = null;
+		if (titleLabelText.isSetVisible()) {
+			if (titleLabelPos == null) {
+				throw new ChartException(ChartEngineExtensionPlugin.ID,
+						ChartException.UNDEFINED_VALUE,
+						"exception.unspecified.visible.series.title");
+			}
+
+			// Compute the bounding box ( location and size ) of a label.
+			final BoundingBox bb = cComp.computeBox(idserver, IConstants.BELOW,
+					titleLabelText, 0, 0);
+
+			titleContainerBounds = goFactory.createBounds(0, 0, 0, 0);
+
+			setContainerPosition(cellBounds, bb);
+		}
+	}
+
+	private void setContainerPosition(Bounds cellBounds, final BoundingBox bb) {
+		int labelOffset = 50;
+		switch (titleLabelPos.getValue()) {
+		case Position.BELOW:
+			cellBounds.setHeight(cellBounds.getHeight() - bb.getHeight()
+					+ labelOffset);
+			titleContainerBounds.set(cellBounds.getLeft(), cellBounds
+					.getTop()
+					+ cellBounds.getHeight(), cellBounds.getWidth(),
+					cellBounds.getHeight());
+			break;
+		case Position.ABOVE:
+			titleContainerBounds.set(cellBounds.getLeft(), cellBounds
+					.getTop(), cellBounds.getWidth(), bb.getHeight());
+			cellBounds.setTop(cellBounds.getTop() + bb.getHeight()
+					- labelOffset);
+			cellBounds.setHeight(cellBounds.getHeight() - bb.getHeight());
+			break;
+		case Position.LEFT:
+			cellBounds.setWidth(cellBounds.getWidth() - bb.getWidth());
+			titleContainerBounds.set(cellBounds.getLeft(), cellBounds
+					.getTop(), bb.getWidth(), cellBounds.getHeight());
+			cellBounds.setLeft(cellBounds.getLeft() + bb.getWidth());
+			break;
+		case Position.RIGHT:
+			cellBounds.setWidth(cellBounds.getWidth() - bb.getWidth());
+			titleContainerBounds.set(cellBounds.getLeft()
+					+ cellBounds.getWidth(), cellBounds.getTop(), bb
+					.getWidth(), cellBounds.getHeight());
+			break;
+		default:
+			throw new IllegalArgumentException(
+					"exception.illegal.pie.series.title.position");
+		}
+	}
+	
+	private Bounds computeLabelBounds(Bounds cellBounds) throws ChartException {
+		if (labelPos == Position.OUTSIDE_LITERAL) {
+			Bounds cellBoundsWithoutLabelArea = goFactory.copyOf(cellBounds);
+			if (donutseries.getLabel().isVisible())
+			// FILTERED FOR PERFORMANCE GAIN
+			{
+				computeSliceLabelBounds(cellBoundsWithoutLabelArea, true);
+			} else {
+				computeSliceBounds(cellBounds);
+			}
+		}
+		// IF Value-LABELS SHALL BE SHOWN IN DONUT SLICES
+		else if (labelPos == Position.INSIDE_LITERAL) {
+			if (donutseries.getLabel().isVisible())
+			// FILTERED FOR PERFORMANCE GAIN
+			{
+				computeSliceLabelBounds(cellBounds, false);
+			}
+		} else {
+			throw new IllegalArgumentException(
+					"exception.invalid.datapoint.position.donut");
+		}
+		return cellBounds;
+	}
+
+	private void computeSliceBounds(Bounds cellBounds) {
+
+//		cellBounds.setHeight(cellBounds.getHeight());
+		for (DonutSlice slice : sliceList) {
+			slice.setBounds(cellBounds, explosion);
+		}
+	}
+
+/*
+	// private Insets adjust(Bounds cellBounds, Bounds boAdjusted,
+	// Insets trimContainer) throws ChartException {
+	// // boAdjusted = initial 0 Values
+	// // Set slice.width, slice.height, slice.x, slice.y
+	// computeSliceLabelBounds(boAdjusted, true);
+	//
+	// trimContainer.set(0, 0, 0, 0);
+	// double dDelta = 0;
+	// for (DonutSlice slice : sliceList) {
+	// BoundingBox sliceLabelBounds = slice.getLabelBound();
+	//
+	// if (sliceLabelBounds.getLeft() < cellBounds.getLeft()) {
+	// dDelta = cellBounds.getLeft() - sliceLabelBounds.getLeft();
+	// if (cellBounds.getLeft() < dDelta) {
+	// cellBounds.setLeft(dDelta);
+	// }
+	// }
+	// if (sliceLabelBounds.getTop() < cellBounds.getTop()) {
+	// dDelta = cellBounds.getTop() - sliceLabelBounds.getTop();
+	// if (trimContainer.getTop() < dDelta) {
+	// trimContainer.setTop(dDelta);
+	// }
+	// }
+	// if (sliceLabelBounds.getLeft() + sliceLabelBounds.getWidth() > cellBounds
+	// .getLeft()
+	// + cellBounds.getWidth()) {
+	// dDelta = sliceLabelBounds.getLeft()
+	// + sliceLabelBounds.getWidth() - cellBounds.getLeft()
+	// - cellBounds.getWidth();
+	// if (trimContainer.getRight() < dDelta) {
+	// trimContainer.setRight(dDelta);
+	// }
+	// }
+	// if (sliceLabelBounds.getTop() + sliceLabelBounds.getHeight() > cellBounds
+	// .getTop()
+	// + cellBounds.getHeight()) {
+	// dDelta = sliceLabelBounds.getTop()
+	// + sliceLabelBounds.getHeight() - cellBounds.getTop()
+	// - cellBounds.getHeight();
+	// if (trimContainer.getBottom() < dDelta) {
+	// trimContainer.setBottom(dDelta);
+	// }
+	// }
+	// }
+	// return trimContainer;
+	// }
+*/
+	private void computeSliceLabelBounds(Bounds cellBounds, boolean isOutside)
+			throws ChartException {
+
+		double dataPointLabelOffset = 50;
+		cellBounds.setWidth(cellBounds.getWidth() - 2 * leaderLinesLength - 2
+				* dataPointLabelOffset);
+		cellBounds.setLeft(cellBounds.getLeft() + leaderLinesLength
+				+ dataPointLabelOffset);
+
+		for (DonutSlice slice : sliceList) {
+			slice.setBounds(cellBounds, explosion);
+			// FIRST SET LABELBOUNDS _ THEN COMPUTE CELLBOUNDS AS RESULT OF
+			// CELLBOUNDS-SLICELABELBOUNDS
+			slice.computeLabelBoundOutside(leaderLineStyle, leaderLinesLength,
+					null, dataPointLabelOffset);
+		}
+	}
+	
+	
+	/**
+	 * 
+	 * @param idr
+	 * @param bgcolor
+	 * @throws ChartException
+	 */
 	public void debugRender(IDeviceRenderer idr, Fill bgcolor)
 			throws ChartException {
 
@@ -412,8 +601,11 @@ public class DonutRenderer {
 				idr.fillPolygon(polyBordersTwo);
 			}
 			idr.fillPolygon(poly);
+			
+			if (donutseries.getLabel().isSetVisible()){
 			drawLabel(slice, goFactory.createLocation(slice.getXc(), slice
 					.getYc()), idr);
+			}
 		}
 	}
 
@@ -697,212 +889,8 @@ public class DonutRenderer {
 
 	}
 
-	public void computeBounds(Bounds cellBounds) throws ChartException {
+	
+	
 
-		boundsBeforeComputation = goFactory.copyOf(cellBounds);
-		idserver = donut.getXServer();
-
-		// ALLOCATE SPACE FOR THE SERIES TITLE
-		computeTitleArea(cellBounds);
-
-		// BOUNDS AFTER COMPUTING TITLE AREA
-		// boundsAfterTitleComp = goFactory.copyOf(cellBounds);
-
-		ChartWithoutAxes cwoa = (ChartWithoutAxes) donut.getModel();
-		// If there is a percentage of chart-size : cellbounds
-		// Specifies the percentage of size that the chart graphics (pie or
-		// dial) in client area. By default it's not set, which means the size
-		// will be auto adjusted.
-		if (cwoa.isSetCoverage()) {
-			double rate = cwoa.getCoverage();
-			double ww = 0.5 * (1d - rate) * cellBounds.getWidth();
-			double hh = 0.5 * (1d - rate) * cellBounds.getHeight();
-		} else {
-
-			// Bounds just for the chart - without title, label
-			cellBounds = computeLabelBounds(cellBounds);
-
-			// CREATE CHARTCONTAINER WITH ALL COMPUTATIONS
-			chartContainer = goFactory.createInsets(cellBounds.getTop()
-					- boundsBeforeComputation.getTop(), // TOP
-					cellBounds.getLeft() - boundsBeforeComputation.getLeft(), // LEFT
-					boundsBeforeComputation.getTop()
-							+ boundsBeforeComputation.getHeight()
-							- (cellBounds.getTop() + cellBounds.getHeight()), // BOTTOM
-					boundsBeforeComputation.getLeft()
-							+ boundsBeforeComputation.getWidth()
-							- (cellBounds.getLeft() + cellBounds.getWidth())); // RIGHT
-		}
-//		boundsChanged = false;
-	}
-
-	private Bounds computeLabelBounds(Bounds cellBounds) throws ChartException {
-		// IF Value-LABELS SHALL BE SHOWN OUTSIDE THE DONUT SLICES
-		if (labelPos == Position.OUTSIDE_LITERAL) {
-			Bounds cellBoundsWithoutLabelArea = goFactory.copyOf(cellBounds);
-			if (donutseries.getLabel().isVisible())
-			// FILTERED FOR PERFORMANCE GAIN
-			{
-				computeSliceLabelBounds(cellBoundsWithoutLabelArea, true);
-				// ADJUST THE BOUNDS TO ACCOMODATE THE DATA POINT LABELS +
-				// LEADER LINES RENDERED OUTSIDE
-				// Bounds boBeforeAdjusted = BoundsImpl.copyInstance( bo );
-				// Insets trimContainer = goFactory.createInsets(0, 0, 0, 0);
-				// do {
-				// adjust(cellBounds, cellBoundsWithoutLabelArea,
-				// trimContainer);
-				// cellBoundsWithoutLabelArea.adjust(trimContainer);
-				// } while (!trimContainer.areLessThan(0.5)
-				// && cellBoundsWithoutLabelArea.getWidth() > 0
-				// && cellBoundsWithoutLabelArea.getHeight() > 0);
-				// cellBounds = cellBoundsWithoutLabelArea;
-			} else {
-				computeSliceBounds(cellBounds);
-			}
-		}
-		// IF Value-LABELS SHALL BE SHOWN IN DONUT SLICES
-		else if (labelPos == Position.INSIDE_LITERAL) {
-			if (donutseries.getLabel().isVisible())
-			// FILTERED FOR PERFORMANCE GAIN
-			{
-				computeSliceLabelBounds(cellBounds, false);
-			}
-		} else {
-			throw new IllegalArgumentException(
-					"exception.invalid.datapoint.position.donut");
-		}
-		return cellBounds;
-	}
-
-	private void computeSliceBounds(Bounds cellBounds) {
-
-		cellBounds.setHeight(cellBounds.getHeight());
-		for (DonutSlice slice : sliceList) {
-			slice.setBounds(cellBounds, explosion);
-		}
-	}
-
-	private void computeTitleArea(Bounds cellBounds) throws ChartException {
-		titleContainerBounds = null;
-		if (titleLabelText.isSetVisible()) {
-			if (titleLabelPos == null) {
-				throw new ChartException(ChartEngineExtensionPlugin.ID,
-						ChartException.UNDEFINED_VALUE,
-						"exception.unspecified.visible.series.title");
-			}
-
-			// Compute the bounding box ( location and size ) of a label.
-			final BoundingBox bb = cComp.computeBox(idserver, IConstants.BELOW,
-					titleLabelText, 0, 0);
-
-			titleContainerBounds = goFactory.createBounds(0, 0, 0, 0);
-
-			int labelOffset = 50;
-			switch (titleLabelPos.getValue()) {
-			case Position.BELOW:
-				cellBounds.setHeight(cellBounds.getHeight() - bb.getHeight()
-						+ labelOffset);
-				titleContainerBounds.set(cellBounds.getLeft(), cellBounds
-						.getTop()
-						+ cellBounds.getHeight(), cellBounds.getWidth(),
-						cellBounds.getHeight());
-				break;
-			case Position.ABOVE:
-				titleContainerBounds.set(cellBounds.getLeft(), cellBounds
-						.getTop(), cellBounds.getWidth(), bb.getHeight());
-				cellBounds.setTop(cellBounds.getTop() + bb.getHeight()
-						- labelOffset);
-				cellBounds.setHeight(cellBounds.getHeight() - bb.getHeight());
-				break;
-			case Position.LEFT:
-				cellBounds.setWidth(cellBounds.getWidth() - bb.getWidth());
-				titleContainerBounds.set(cellBounds.getLeft(), cellBounds
-						.getTop(), bb.getWidth(), cellBounds.getHeight());
-				cellBounds.setLeft(cellBounds.getLeft() + bb.getWidth());
-				break;
-			case Position.RIGHT:
-				cellBounds.setWidth(cellBounds.getWidth() - bb.getWidth());
-				titleContainerBounds.set(cellBounds.getLeft()
-						+ cellBounds.getWidth(), cellBounds.getTop(), bb
-						.getWidth(), cellBounds.getHeight());
-				break;
-			default:
-				throw new IllegalArgumentException(
-						"exception.illegal.pie.series.title.position");
-			}
-		}
-	}
-
-	// private Insets adjust(Bounds cellBounds, Bounds boAdjusted,
-	// Insets trimContainer) throws ChartException {
-	// // boAdjusted = initial 0 Values
-	// // Set slice.width, slice.height, slice.x, slice.y
-	// computeSliceLabelBounds(boAdjusted, true);
-	//
-	// trimContainer.set(0, 0, 0, 0);
-	// double dDelta = 0;
-	// for (DonutSlice slice : sliceList) {
-	// BoundingBox sliceLabelBounds = slice.getLabelBound();
-	//
-	// if (sliceLabelBounds.getLeft() < cellBounds.getLeft()) {
-	// dDelta = cellBounds.getLeft() - sliceLabelBounds.getLeft();
-	// if (cellBounds.getLeft() < dDelta) {
-	// cellBounds.setLeft(dDelta);
-	// }
-	// }
-	// if (sliceLabelBounds.getTop() < cellBounds.getTop()) {
-	// dDelta = cellBounds.getTop() - sliceLabelBounds.getTop();
-	// if (trimContainer.getTop() < dDelta) {
-	// trimContainer.setTop(dDelta);
-	// }
-	// }
-	// if (sliceLabelBounds.getLeft() + sliceLabelBounds.getWidth() > cellBounds
-	// .getLeft()
-	// + cellBounds.getWidth()) {
-	// dDelta = sliceLabelBounds.getLeft()
-	// + sliceLabelBounds.getWidth() - cellBounds.getLeft()
-	// - cellBounds.getWidth();
-	// if (trimContainer.getRight() < dDelta) {
-	// trimContainer.setRight(dDelta);
-	// }
-	// }
-	// if (sliceLabelBounds.getTop() + sliceLabelBounds.getHeight() > cellBounds
-	// .getTop()
-	// + cellBounds.getHeight()) {
-	// dDelta = sliceLabelBounds.getTop()
-	// + sliceLabelBounds.getHeight() - cellBounds.getTop()
-	// - cellBounds.getHeight();
-	// if (trimContainer.getBottom() < dDelta) {
-	// trimContainer.setBottom(dDelta);
-	// }
-	// }
-	// }
-	// return trimContainer;
-	// }
-
-	private void computeSliceLabelBounds(Bounds cellBounds, boolean isOutside)
-			throws ChartException {
-
-		double dataPointLabelOffset = 50;
-		cellBounds.setWidth(cellBounds.getWidth() - 2 * leaderLinesLength - 2
-				* dataPointLabelOffset);
-		cellBounds.setLeft(cellBounds.getLeft() + leaderLinesLength
-				+ dataPointLabelOffset);
-
-		for (DonutSlice slice : sliceList) {
-			slice.setBounds(cellBounds, explosion);
-			// FIRST SET LABELBOUNDS _ THEN COMPUTE CELLBOUNDS AS RESULT OF
-			// CELLBOUNDS-SLICELABELBOUNDS
-			slice.computeLabelBoundOutside(leaderLineStyle, leaderLinesLength,
-					null, dataPointLabelOffset);
-		}
-
-		// if (!isOutside) {
-		// slice.computeLabelBoundOutside(leaderLineStyle,
-		// leaderLinesLength, null);
-		// } else {
-		// slice.computeLabelBoundInside();
-		// }
-	}
 
 }
