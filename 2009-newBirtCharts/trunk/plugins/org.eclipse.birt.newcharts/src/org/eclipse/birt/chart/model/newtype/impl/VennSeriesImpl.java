@@ -61,12 +61,10 @@ public class VennSeriesImpl extends SeriesImpl implements VennSeries{
 		
 	}
 
-	@Override
 	public Label getTitle() {
 		return this.title;
 	}
 
-	@Override
 	public void setTitle(Label title) {
 		this.title = title;
 	}
@@ -98,42 +96,33 @@ public class VennSeriesImpl extends SeriesImpl implements VennSeries{
 		setTitle(TITLE_DEFAULT);
 	}
 
-	@Override
 	public LineAttributes getLeaderLineAttributes() {
 		return this.leaderLineAttributes;
 	}
 
-	@Override
 	public double getLeaderLineLength() {
 		return this.leaderLineLength;
 	}
 
-	@Override
 	public LeaderLineStyle getLeaderLineStyle() {
 		return this.leaderLineStyle;
 	}
-
-	@Override
 	public void setLeaderLineAttributes(LineAttributes value) {
 		this.leaderLineAttributes = value;
 	}
 
-	@Override
 	public void setLeaderLineLength(double value) {
 		this.leaderLineLength = value;
 	}
 
-	@Override
 	public void setLeaderLineStyle(LeaderLineStyle value) {
 		this.leaderLineStyle = value;
 	}
 
-	@Override
 	public Position getTitlePosition() {
 		return this.titlePosition;
 	}
 
-	@Override
 	public void setTitlePosition(Position p) {
 		this.titlePosition = p;
 	}

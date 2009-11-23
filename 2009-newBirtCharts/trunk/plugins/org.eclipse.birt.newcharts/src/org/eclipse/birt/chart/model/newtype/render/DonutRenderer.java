@@ -62,7 +62,7 @@ public class DonutRenderer {
 	private DonutSlice[] sliceList;
 	private DonutSeries donutseries;
 	private int explosion;
-	private int rotation;
+	private double rotation;
 	private double ratio;
 	private double deviceScale;
 	private Palette seriesPalette;

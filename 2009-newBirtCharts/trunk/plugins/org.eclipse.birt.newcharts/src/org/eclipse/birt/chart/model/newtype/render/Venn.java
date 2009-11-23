@@ -82,7 +82,6 @@ public class Venn extends BaseRenderer {
 	private static int debugCompute = 0;
 	private static int debugRenderSeries = 0;
 
-	@Override
 	public void compute(Bounds bo, Plot p, ISeriesRenderingHints isrh)
 			throws ChartException {
 
@@ -969,14 +968,12 @@ System.out.println("debugginCompute" +debugCompute);
 		}
 	}
 
-	@Override
 	public void renderLegendGraphic(IPrimitiveRenderer ipr, Legend lg,
 			Fill fPaletteEntry, Bounds bo) throws ChartException {
 		// TODO Auto-generated method stub
 
 	}
 
-	@Override
 	public void renderSeries(IPrimitiveRenderer ipr, Plot p,
 			ISeriesRenderingHints isrh) throws ChartException {
 
