@@ -1,0 +1,876 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<genmodel:GenModel xmi:version="2.0"
+    xmlns:xmi="http://www.omg.org/XMI" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore"
+    xmlns:genmodel="http://www.eclipse.org/emf/2002/GenModel" modelDirectory="/emf/src"
+    modelPluginID="emf" modelName="DonutSeries" importerID="org.eclipse.xsd.ecore.importer"
+    complianceLevel="5.0" copyrightFields="false">
+  <foreignModel>../xsd/DonutSeries.xsd</foreignModel>
+  <genPackages prefix="Attribute" basePackage="org.eclipse.birt.chart.model" resource="XML"
+      disposableProviderFactory="true" ecorePackage="attribute.ecore#/">
+    <genEnums typeSafeEnumCompatible="false" ecoreEnum="attribute.ecore#//ActionType">
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//ActionType/URLRedirect"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//ActionType/ShowTooltip"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//ActionType/ToggleVisibility"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//ActionType/InvokeScript"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//ActionType/Highlight"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//ActionType/CallBack"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//ActionType/ToggleDataPointVisibility"/>
+    </genEnums>
+    <genEnums typeSafeEnumCompatible="false" ecoreEnum="attribute.ecore#//Anchor">
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//Anchor/North"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//Anchor/NorthEast"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//Anchor/East"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//Anchor/SouthEast"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//Anchor/South"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//Anchor/SouthWest"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//Anchor/West"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//Anchor/NorthWest"/>
+    </genEnums>
+    <genEnums typeSafeEnumCompatible="false" ecoreEnum="attribute.ecore#//AngleType">
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//AngleType/None"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//AngleType/X"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//AngleType/Y"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//AngleType/Z"/>
+    </genEnums>
+    <genEnums typeSafeEnumCompatible="false" ecoreEnum="attribute.ecore#//AxisType">
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//AxisType/Linear"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//AxisType/Logarithmic"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//AxisType/Text"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//AxisType/DateTime"/>
+    </genEnums>
+    <genEnums typeSafeEnumCompatible="false" ecoreEnum="attribute.ecore#//ChartDimension">
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//ChartDimension/TwoDimensional"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//ChartDimension/TwoDimensionalWithDepth"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//ChartDimension/ThreeDimensional"/>
+    </genEnums>
+    <genEnums typeSafeEnumCompatible="false" ecoreEnum="attribute.ecore#//ChartType">
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//ChartType/Pie"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//ChartType/Bar"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//ChartType/Line"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//ChartType/Combo"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//ChartType/Scatter"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//ChartType/Stock"/>
+    </genEnums>
+    <genEnums typeSafeEnumCompatible="false" ecoreEnum="attribute.ecore#//CursorType">
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//CursorType/Auto"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//CursorType/Crosshair"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//CursorType/Default"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//CursorType/Pointer"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//CursorType/Move"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//CursorType/Text"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//CursorType/Wait"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//CursorType/EResize"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//CursorType/NEResize"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//CursorType/NWResize"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//CursorType/NResize"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//CursorType/SEResize"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//CursorType/SWResize"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//CursorType/SResize"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//CursorType/WResize"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//CursorType/Custom"/>
+    </genEnums>
+    <genEnums typeSafeEnumCompatible="false" ecoreEnum="attribute.ecore#//DataPointComponentType">
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//DataPointComponentType/BaseValue"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//DataPointComponentType/OrthogonalValue"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//DataPointComponentType/SeriesValue"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//DataPointComponentType/PercentileOrthogonalValue"/>
+    </genEnums>
+    <genEnums typeSafeEnumCompatible="false" ecoreEnum="attribute.ecore#//DataType">
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//DataType/Numeric"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//DataType/DateTime"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//DataType/Text"/>
+    </genEnums>
+    <genEnums typeSafeEnumCompatible="false" ecoreEnum="attribute.ecore#//DateFormatDetail">
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//DateFormatDetail/Date"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//DateFormatDetail/DateTime"/>
+    </genEnums>
+    <genEnums typeSafeEnumCompatible="false" ecoreEnum="attribute.ecore#//DateFormatType">
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//DateFormatType/Long"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//DateFormatType/Short"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//DateFormatType/Medium"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//DateFormatType/Full"/>
+    </genEnums>
+    <genEnums typeSafeEnumCompatible="false" ecoreEnum="attribute.ecore#//Direction">
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//Direction/LeftRight"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//Direction/TopBottom"/>
+    </genEnums>
+    <genEnums typeSafeEnumCompatible="false" ecoreEnum="attribute.ecore#//GroupingUnitType">
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//GroupingUnitType/Seconds"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//GroupingUnitType/Minutes"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//GroupingUnitType/Hours"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//GroupingUnitType/Days"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//GroupingUnitType/Weeks"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//GroupingUnitType/Months"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//GroupingUnitType/Quarters"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//GroupingUnitType/Years"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//GroupingUnitType/String"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//GroupingUnitType/StringPrefix"/>
+    </genEnums>
+    <genEnums typeSafeEnumCompatible="false" ecoreEnum="attribute.ecore#//HorizontalAlignment">
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//HorizontalAlignment/Left"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//HorizontalAlignment/Center"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//HorizontalAlignment/Right"/>
+    </genEnums>
+    <genEnums typeSafeEnumCompatible="false" ecoreEnum="attribute.ecore#//IntersectionType">
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//IntersectionType/Min"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//IntersectionType/Max"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//IntersectionType/Value"/>
+    </genEnums>
+    <genEnums typeSafeEnumCompatible="false" ecoreEnum="attribute.ecore#//LeaderLineStyle">
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//LeaderLineStyle/FixedLength"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//LeaderLineStyle/StretchToSide"/>
+    </genEnums>
+    <genEnums typeSafeEnumCompatible="false" ecoreEnum="attribute.ecore#//LegendBehaviorType">
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//LegendBehaviorType/None"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//LegendBehaviorType/ToggleSerieVisibility"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//LegendBehaviorType/HighlightSerie"/>
+    </genEnums>
+    <genEnums typeSafeEnumCompatible="false" ecoreEnum="attribute.ecore#//LegendItemType">
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//LegendItemType/Series"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//LegendItemType/Categories"/>
+    </genEnums>
+    <genEnums typeSafeEnumCompatible="false" ecoreEnum="attribute.ecore#//LineDecorator">
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//LineDecorator/Arrow"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//LineDecorator/Circle"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//LineDecorator/None"/>
+    </genEnums>
+    <genEnums typeSafeEnumCompatible="false" ecoreEnum="attribute.ecore#//LineStyle">
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//LineStyle/Solid"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//LineStyle/Dashed"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//LineStyle/Dotted"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//LineStyle/DashDotted"/>
+    </genEnums>
+    <genEnums typeSafeEnumCompatible="false" ecoreEnum="attribute.ecore#//MarkerType">
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//MarkerType/Crosshair"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//MarkerType/Triangle"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//MarkerType/Box"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//MarkerType/Circle"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//MarkerType/Icon"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//MarkerType/Nabla"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//MarkerType/Diamond"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//MarkerType/FourDiamonds"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//MarkerType/Ellipse"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//MarkerType/SemiCircle"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//MarkerType/Hexagon"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//MarkerType/Rectangle"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//MarkerType/Star"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//MarkerType/Column"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//MarkerType/Cross"/>
+    </genEnums>
+    <genEnums typeSafeEnumCompatible="false" ecoreEnum="attribute.ecore#//MenuStylesKeyType">
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//MenuStylesKeyType/Menu"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//MenuStylesKeyType/MenuItem"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//MenuStylesKeyType/OnMouseOver"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//MenuStylesKeyType/OnMouseOut"/>
+    </genEnums>
+    <genEnums typeSafeEnumCompatible="false" ecoreEnum="attribute.ecore#//Orientation">
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//Orientation/Horizontal"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//Orientation/Vertical"/>
+    </genEnums>
+    <genEnums typeSafeEnumCompatible="false" ecoreEnum="attribute.ecore#//Position">
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//Position/Above"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//Position/Below"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//Position/Left"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//Position/Right"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//Position/Inside"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//Position/Outside"/>
+    </genEnums>
+    <genEnums typeSafeEnumCompatible="false" ecoreEnum="attribute.ecore#//RiserType">
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//RiserType/Rectangle"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//RiserType/Triangle"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//RiserType/Tube"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//RiserType/Cone"/>
+    </genEnums>
+    <genEnums typeSafeEnumCompatible="false" ecoreEnum="attribute.ecore#//RuleType">
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//RuleType/Filter"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//RuleType/Suppress"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//RuleType/Link"/>
+    </genEnums>
+    <genEnums typeSafeEnumCompatible="false" ecoreEnum="attribute.ecore#//ScaleUnitType">
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//ScaleUnitType/Seconds"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//ScaleUnitType/Minutes"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//ScaleUnitType/Hours"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//ScaleUnitType/Days"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//ScaleUnitType/Weeks"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//ScaleUnitType/Months"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//ScaleUnitType/Years"/>
+    </genEnums>
+    <genEnums typeSafeEnumCompatible="false" ecoreEnum="attribute.ecore#//SortOption">
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//SortOption/Ascending"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//SortOption/Descending"/>
+    </genEnums>
+    <genEnums typeSafeEnumCompatible="false" ecoreEnum="attribute.ecore#//Stretch">
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//Stretch/Horizontal"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//Stretch/Vertical"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//Stretch/Both"/>
+    </genEnums>
+    <genEnums typeSafeEnumCompatible="false" ecoreEnum="attribute.ecore#//StyledComponent">
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//StyledComponent/ChartAll"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//StyledComponent/ChartTitle"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//StyledComponent/ChartBackground"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//StyledComponent/PlotBackground"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//StyledComponent/LegendBackground"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//StyledComponent/LegendLabel"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//StyledComponent/AxisTitle"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//StyledComponent/AxisLabel"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//StyledComponent/AxisLine"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//StyledComponent/SeriesTitle"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//StyledComponent/SeriesLabel"/>
+    </genEnums>
+    <genEnums typeSafeEnumCompatible="false" ecoreEnum="attribute.ecore#//TickStyle">
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//TickStyle/Left"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//TickStyle/Right"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//TickStyle/Above"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//TickStyle/Below"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//TickStyle/Across"/>
+    </genEnums>
+    <genEnums typeSafeEnumCompatible="false" ecoreEnum="attribute.ecore#//TriggerCondition">
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//TriggerCondition/MouseHover"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//TriggerCondition/MouseClick"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//TriggerCondition/onclick"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//TriggerCondition/ondblclick"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//TriggerCondition/onmousedown"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//TriggerCondition/onmouseup"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//TriggerCondition/onmouseover"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//TriggerCondition/onmousemove"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//TriggerCondition/onmouseout"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//TriggerCondition/onfocus"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//TriggerCondition/onblur"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//TriggerCondition/onkeydown"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//TriggerCondition/onkeypress"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//TriggerCondition/onkeyup"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//TriggerCondition/accessibility"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//TriggerCondition/onload"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//TriggerCondition/onrightclick"/>
+    </genEnums>
+    <genEnums typeSafeEnumCompatible="false" ecoreEnum="attribute.ecore#//TriggerFlow">
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//TriggerFlow/Capture"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//TriggerFlow/Bubble"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//TriggerFlow/BubbleAndStop"/>
+    </genEnums>
+    <genEnums typeSafeEnumCompatible="false" ecoreEnum="attribute.ecore#//UnitsOfMeasurement">
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//UnitsOfMeasurement/Pixels"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//UnitsOfMeasurement/Points"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//UnitsOfMeasurement/Inches"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//UnitsOfMeasurement/Centimeters"/>
+    </genEnums>
+    <genEnums typeSafeEnumCompatible="false" ecoreEnum="attribute.ecore#//VerticalAlignment">
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//VerticalAlignment/Top"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//VerticalAlignment/Center"/>
+      <genEnumLiterals ecoreEnumLiteral="attribute.ecore#//VerticalAlignment/Bottom"/>
+    </genEnums>
+    <genDataTypes ecoreDataType="attribute.ecore#//ActionTypeObject"/>
+    <genDataTypes ecoreDataType="attribute.ecore#//AnchorObject"/>
+    <genDataTypes ecoreDataType="attribute.ecore#//AngleTypeObject"/>
+    <genDataTypes ecoreDataType="attribute.ecore#//AxisTypeObject"/>
+    <genDataTypes ecoreDataType="attribute.ecore#//ChartDimensionObject"/>
+    <genDataTypes ecoreDataType="attribute.ecore#//ChartTypeObject"/>
+    <genDataTypes ecoreDataType="attribute.ecore#//CursorTypeObject"/>
+    <genDataTypes ecoreDataType="attribute.ecore#//DataPointComponentTypeObject"/>
+    <genDataTypes ecoreDataType="attribute.ecore#//DataTypeObject"/>
+    <genDataTypes ecoreDataType="attribute.ecore#//DateFormatDetailObject"/>
+    <genDataTypes ecoreDataType="attribute.ecore#//DateFormatTypeObject"/>
+    <genDataTypes ecoreDataType="attribute.ecore#//DirectionObject"/>
+    <genDataTypes ecoreDataType="attribute.ecore#//GroupingUnitTypeObject"/>
+    <genDataTypes ecoreDataType="attribute.ecore#//HorizontalAlignmentObject"/>
+    <genDataTypes ecoreDataType="attribute.ecore#//ID"/>
+    <genDataTypes ecoreDataType="attribute.ecore#//IntersectionTypeObject"/>
+    <genDataTypes ecoreDataType="attribute.ecore#//LeaderLineStyleObject"/>
+    <genDataTypes ecoreDataType="attribute.ecore#//LegendBehaviorTypeObject"/>
+    <genDataTypes ecoreDataType="attribute.ecore#//LegendItemTypeObject"/>
+    <genDataTypes ecoreDataType="attribute.ecore#//LineDecoratorObject"/>
+    <genDataTypes ecoreDataType="attribute.ecore#//LineStyleObject"/>
+    <genDataTypes ecoreDataType="attribute.ecore#//MarkerTypeObject"/>
+    <genDataTypes ecoreDataType="attribute.ecore#//MenuStylesKeyTypeObject"/>
+    <genDataTypes ecoreDataType="attribute.ecore#//OrientationObject"/>
+    <genDataTypes ecoreDataType="attribute.ecore#//Percentage"/>
+    <genDataTypes ecoreDataType="attribute.ecore#//PercentageObject"/>
+    <genDataTypes ecoreDataType="attribute.ecore#//PositionObject"/>
+    <genDataTypes ecoreDataType="attribute.ecore#//RGBValue"/>
+    <genDataTypes ecoreDataType="attribute.ecore#//RGBValueObject"/>
+    <genDataTypes ecoreDataType="attribute.ecore#//RiserTypeObject"/>
+    <genDataTypes ecoreDataType="attribute.ecore#//RuleTypeObject"/>
+    <genDataTypes ecoreDataType="attribute.ecore#//ScaleUnitTypeObject"/>
+    <genDataTypes ecoreDataType="attribute.ecore#//SortOptionObject"/>
+    <genDataTypes ecoreDataType="attribute.ecore#//StretchObject"/>
+    <genDataTypes ecoreDataType="attribute.ecore#//StyledComponentObject"/>
+    <genDataTypes ecoreDataType="attribute.ecore#//TickStyleObject"/>
+    <genDataTypes ecoreDataType="attribute.ecore#//TriggerConditionObject"/>
+    <genDataTypes ecoreDataType="attribute.ecore#//TriggerFlowObject"/>
+    <genDataTypes ecoreDataType="attribute.ecore#//UnitsOfMeasurementObject"/>
+    <genDataTypes ecoreDataType="attribute.ecore#//VerticalAlignmentObject"/>
+    <genClasses ecoreClass="attribute.ecore#//AccessibilityValue">
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute attribute.ecore#//AccessibilityValue/text"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute attribute.ecore#//AccessibilityValue/accessibility"/>
+    </genClasses>
+    <genClasses ecoreClass="attribute.ecore#//ActionValue"/>
+    <genClasses ecoreClass="attribute.ecore#//Angle3D">
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute attribute.ecore#//Angle3D/xAngle"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute attribute.ecore#//Angle3D/yAngle"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute attribute.ecore#//Angle3D/zAngle"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute attribute.ecore#//Angle3D/type"/>
+    </genClasses>
+    <genClasses ecoreClass="attribute.ecore#//AxisOrigin">
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute attribute.ecore#//AxisOrigin/type"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference attribute.ecore#//AxisOrigin/value"/>
+    </genClasses>
+    <genClasses ecoreClass="attribute.ecore#//Bounds">
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute attribute.ecore#//Bounds/left"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute attribute.ecore#//Bounds/top"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute attribute.ecore#//Bounds/width"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute attribute.ecore#//Bounds/height"/>
+    </genClasses>
+    <genClasses ecoreClass="attribute.ecore#//CallBackValue">
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute attribute.ecore#//CallBackValue/identifier"/>
+    </genClasses>
+    <genClasses ecoreClass="attribute.ecore#//ColorDefinition">
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute attribute.ecore#//ColorDefinition/transparency"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute attribute.ecore#//ColorDefinition/red"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute attribute.ecore#//ColorDefinition/green"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute attribute.ecore#//ColorDefinition/blue"/>
+    </genClasses>
+    <genClasses ecoreClass="attribute.ecore#//Cursor">
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute attribute.ecore#//Cursor/type"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference attribute.ecore#//Cursor/image"/>
+    </genClasses>
+    <genClasses ecoreClass="attribute.ecore#//DataPoint">
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference attribute.ecore#//DataPoint/components"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute attribute.ecore#//DataPoint/prefix"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute attribute.ecore#//DataPoint/suffix"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute attribute.ecore#//DataPoint/separator"/>
+    </genClasses>
+    <genClasses ecoreClass="attribute.ecore#//DataPointComponent">
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute attribute.ecore#//DataPointComponent/type"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference attribute.ecore#//DataPointComponent/formatSpecifier"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute attribute.ecore#//DataPointComponent/orthogonalType"/>
+    </genClasses>
+    <genClasses ecoreClass="attribute.ecore#//DateFormatSpecifier">
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute attribute.ecore#//DateFormatSpecifier/type"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute attribute.ecore#//DateFormatSpecifier/detail"/>
+    </genClasses>
+    <genClasses ecoreClass="attribute.ecore#//EmbeddedImage">
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute attribute.ecore#//EmbeddedImage/data"/>
+    </genClasses>
+    <genClasses ecoreClass="attribute.ecore#//EStringToStringMapEntry">
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute attribute.ecore#//EStringToStringMapEntry/key"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute attribute.ecore#//EStringToStringMapEntry/value"/>
+    </genClasses>
+    <genClasses ecoreClass="attribute.ecore#//ExtendedProperty">
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute attribute.ecore#//ExtendedProperty/name"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute attribute.ecore#//ExtendedProperty/value"/>
+    </genClasses>
+    <genClasses ecoreClass="attribute.ecore#//Fill">
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute attribute.ecore#//Fill/type"/>
+    </genClasses>
+    <genClasses ecoreClass="attribute.ecore#//FontDefinition">
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute attribute.ecore#//FontDefinition/name"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute attribute.ecore#//FontDefinition/size"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute attribute.ecore#//FontDefinition/bold"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute attribute.ecore#//FontDefinition/italic"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute attribute.ecore#//FontDefinition/strikethrough"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute attribute.ecore#//FontDefinition/underline"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute attribute.ecore#//FontDefinition/wordWrap"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference attribute.ecore#//FontDefinition/alignment"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute attribute.ecore#//FontDefinition/rotation"/>
+    </genClasses>
+    <genClasses ecoreClass="attribute.ecore#//FormatSpecifier"/>
+    <genClasses ecoreClass="attribute.ecore#//FractionNumberFormatSpecifier">
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute attribute.ecore#//FractionNumberFormatSpecifier/precise"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute attribute.ecore#//FractionNumberFormatSpecifier/fractionDigits"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute attribute.ecore#//FractionNumberFormatSpecifier/numerator"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute attribute.ecore#//FractionNumberFormatSpecifier/prefix"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute attribute.ecore#//FractionNumberFormatSpecifier/suffix"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute attribute.ecore#//FractionNumberFormatSpecifier/delimiter"/>
+    </genClasses>
+    <genClasses ecoreClass="attribute.ecore#//Gradient">
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference attribute.ecore#//Gradient/startColor"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference attribute.ecore#//Gradient/endColor"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute attribute.ecore#//Gradient/direction"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute attribute.ecore#//Gradient/cyclic"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute attribute.ecore#//Gradient/transparency"/>
+    </genClasses>
+    <genClasses ecoreClass="attribute.ecore#//Image">
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute attribute.ecore#//Image/uRL"/>
+    </genClasses>
+    <genClasses ecoreClass="attribute.ecore#//Insets">
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute attribute.ecore#//Insets/top"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute attribute.ecore#//Insets/left"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute attribute.ecore#//Insets/bottom"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute attribute.ecore#//Insets/right"/>
+    </genClasses>
+    <genClasses ecoreClass="attribute.ecore#//Interactivity">
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute attribute.ecore#//Interactivity/enable"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute attribute.ecore#//Interactivity/legendBehavior"/>
+    </genClasses>
+    <genClasses ecoreClass="attribute.ecore#//JavaDateFormatSpecifier">
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute attribute.ecore#//JavaDateFormatSpecifier/pattern"/>
+    </genClasses>
+    <genClasses ecoreClass="attribute.ecore#//JavaNumberFormatSpecifier">
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute attribute.ecore#//JavaNumberFormatSpecifier/pattern"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute attribute.ecore#//JavaNumberFormatSpecifier/multiplier"/>
+    </genClasses>
+    <genClasses ecoreClass="attribute.ecore#//LineAttributes">
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute attribute.ecore#//LineAttributes/style"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute attribute.ecore#//LineAttributes/thickness"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference attribute.ecore#//LineAttributes/color"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute attribute.ecore#//LineAttributes/visible"/>
+    </genClasses>
+    <genClasses ecoreClass="attribute.ecore#//Location">
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute attribute.ecore#//Location/x"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute attribute.ecore#//Location/y"/>
+    </genClasses>
+    <genClasses ecoreClass="attribute.ecore#//Location3D">
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute attribute.ecore#//Location3D/z"/>
+    </genClasses>
+    <genClasses ecoreClass="attribute.ecore#//Marker">
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute attribute.ecore#//Marker/type"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute attribute.ecore#//Marker/size"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute attribute.ecore#//Marker/visible"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference attribute.ecore#//Marker/fill"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference attribute.ecore#//Marker/iconPalette"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference attribute.ecore#//Marker/outline"/>
+    </genClasses>
+    <genClasses ecoreClass="attribute.ecore#//MultipleFill">
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference attribute.ecore#//MultipleFill/fills"/>
+    </genClasses>
+    <genClasses ecoreClass="attribute.ecore#//MultiURLValues">
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference attribute.ecore#//MultiURLValues/uRLValues"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute attribute.ecore#//MultiURLValues/tooltip"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference attribute.ecore#//MultiURLValues/propertiesMap"/>
+    </genClasses>
+    <genClasses ecoreClass="attribute.ecore#//NumberFormatSpecifier">
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute attribute.ecore#//NumberFormatSpecifier/prefix"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute attribute.ecore#//NumberFormatSpecifier/suffix"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute attribute.ecore#//NumberFormatSpecifier/multiplier"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute attribute.ecore#//NumberFormatSpecifier/fractionDigits"/>
+    </genClasses>
+    <genClasses ecoreClass="attribute.ecore#//Palette">
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute attribute.ecore#//Palette/name"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference attribute.ecore#//Palette/entries"/>
+    </genClasses>
+    <genClasses ecoreClass="attribute.ecore#//Rotation3D">
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference attribute.ecore#//Rotation3D/angles"/>
+    </genClasses>
+    <genClasses ecoreClass="attribute.ecore#//ScriptValue">
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute attribute.ecore#//ScriptValue/script"/>
+    </genClasses>
+    <genClasses ecoreClass="attribute.ecore#//SeriesValue">
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute attribute.ecore#//SeriesValue/name"/>
+    </genClasses>
+    <genClasses ecoreClass="attribute.ecore#//Size">
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute attribute.ecore#//Size/height"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute attribute.ecore#//Size/width"/>
+    </genClasses>
+    <genClasses ecoreClass="attribute.ecore#//Style">
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference attribute.ecore#//Style/font"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference attribute.ecore#//Style/color"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference attribute.ecore#//Style/backgroundColor"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference attribute.ecore#//Style/backgroundImage"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference attribute.ecore#//Style/padding"/>
+    </genClasses>
+    <genClasses ecoreClass="attribute.ecore#//StyleMap">
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute attribute.ecore#//StyleMap/componentName"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference attribute.ecore#//StyleMap/style"/>
+    </genClasses>
+    <genClasses ecoreClass="attribute.ecore#//Text">
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute attribute.ecore#//Text/value"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference attribute.ecore#//Text/font"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference attribute.ecore#//Text/color"/>
+    </genClasses>
+    <genClasses ecoreClass="attribute.ecore#//TextAlignment">
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute attribute.ecore#//TextAlignment/horizontalAlignment"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute attribute.ecore#//TextAlignment/verticalAlignment"/>
+    </genClasses>
+    <genClasses ecoreClass="attribute.ecore#//TooltipValue">
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute attribute.ecore#//TooltipValue/text"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute attribute.ecore#//TooltipValue/delay"/>
+    </genClasses>
+    <genClasses ecoreClass="attribute.ecore#//URLValue">
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute attribute.ecore#//URLValue/baseUrl"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute attribute.ecore#//URLValue/target"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute attribute.ecore#//URLValue/baseParameterName"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute attribute.ecore#//URLValue/valueParameterName"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute attribute.ecore#//URLValue/seriesParameterName"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute attribute.ecore#//URLValue/tooltip"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference attribute.ecore#//URLValue/label"/>
+    </genClasses>
+  </genPackages>
+  <genPackages prefix="Data" basePackage="org.eclipse.birt.chart.model" resource="XML"
+      disposableProviderFactory="true" ecorePackage="data.ecore#/">
+    <genDataTypes ecoreDataType="data.ecore#//Data"/>
+    <genClasses ecoreClass="data.ecore#//Action">
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute data.ecore#//Action/type"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference data.ecore#//Action/value"/>
+    </genClasses>
+    <genClasses ecoreClass="data.ecore#//BaseSampleData">
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute data.ecore#//BaseSampleData/dataSetRepresentation"/>
+    </genClasses>
+    <genClasses ecoreClass="data.ecore#//BubbleDataSet"/>
+    <genClasses ecoreClass="data.ecore#//DataElement"/>
+    <genClasses ecoreClass="data.ecore#//DataSet">
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute data.ecore#//DataSet/values"/>
+    </genClasses>
+    <genClasses ecoreClass="data.ecore#//DateTimeDataElement">
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute data.ecore#//DateTimeDataElement/value"/>
+    </genClasses>
+    <genClasses ecoreClass="data.ecore#//DateTimeDataSet"/>
+    <genClasses ecoreClass="data.ecore#//DifferenceDataSet"/>
+    <genClasses ecoreClass="data.ecore#//GanttDataSet"/>
+    <genClasses ecoreClass="data.ecore#//NullDataSet"/>
+    <genClasses ecoreClass="data.ecore#//NumberDataElement">
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute data.ecore#//NumberDataElement/value"/>
+    </genClasses>
+    <genClasses ecoreClass="data.ecore#//NumberDataSet"/>
+    <genClasses ecoreClass="data.ecore#//OrthogonalSampleData">
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute data.ecore#//OrthogonalSampleData/dataSetRepresentation"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute data.ecore#//OrthogonalSampleData/seriesDefinitionIndex"/>
+    </genClasses>
+    <genClasses ecoreClass="data.ecore#//Query">
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute data.ecore#//Query/definition"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference data.ecore#//Query/rules"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference data.ecore#//Query/grouping"/>
+    </genClasses>
+    <genClasses ecoreClass="data.ecore#//Rule">
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute data.ecore#//Rule/type"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute data.ecore#//Rule/value"/>
+    </genClasses>
+    <genClasses ecoreClass="data.ecore#//SampleData">
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference data.ecore#//SampleData/baseSampleData"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference data.ecore#//SampleData/orthogonalSampleData"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference data.ecore#//SampleData/ancillarySampleData"/>
+    </genClasses>
+    <genClasses ecoreClass="data.ecore#//SeriesDefinition">
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference data.ecore#//SeriesDefinition/query"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference data.ecore#//SeriesDefinition/seriesPalette"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference data.ecore#//SeriesDefinition/seriesDefinitions"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference data.ecore#//SeriesDefinition/formatSpecifier"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference data.ecore#//SeriesDefinition/series"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference data.ecore#//SeriesDefinition/grouping"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute data.ecore#//SeriesDefinition/sorting"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference data.ecore#//SeriesDefinition/sortKey"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute data.ecore#//SeriesDefinition/zOrder"/>
+    </genClasses>
+    <genClasses ecoreClass="data.ecore#//SeriesGrouping">
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute data.ecore#//SeriesGrouping/enabled"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute data.ecore#//SeriesGrouping/groupingUnit"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference data.ecore#//SeriesGrouping/groupingOrigin"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute data.ecore#//SeriesGrouping/groupingInterval"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute data.ecore#//SeriesGrouping/groupType"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute data.ecore#//SeriesGrouping/aggregateExpression"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute data.ecore#//SeriesGrouping/aggregateParameters"/>
+    </genClasses>
+    <genClasses ecoreClass="data.ecore#//StockDataSet"/>
+    <genClasses ecoreClass="data.ecore#//TextDataSet"/>
+    <genClasses ecoreClass="data.ecore#//Trigger">
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute data.ecore#//Trigger/condition"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference data.ecore#//Trigger/action"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute data.ecore#//Trigger/triggerFlow"/>
+    </genClasses>
+  </genPackages>
+  <genPackages prefix="Type" basePackage="org.eclipse.birt.chart.model" resource="XML"
+      disposableProviderFactory="true" ecorePackage="type.ecore#/">
+    <genClasses ecoreClass="type.ecore#//AreaSeries"/>
+    <genClasses ecoreClass="type.ecore#//BarSeries">
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute type.ecore#//BarSeries/riser"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference type.ecore#//BarSeries/riserOutline"/>
+    </genClasses>
+    <genClasses ecoreClass="type.ecore#//BubbleSeries">
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference type.ecore#//BubbleSeries/accLineAttributes"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute type.ecore#//BubbleSeries/accOrientation"/>
+    </genClasses>
+    <genClasses ecoreClass="type.ecore#//DialSeries">
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference type.ecore#//DialSeries/dial"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference type.ecore#//DialSeries/needle"/>
+    </genClasses>
+    <genClasses ecoreClass="type.ecore#//DifferenceSeries">
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference type.ecore#//DifferenceSeries/negativeMarkers"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference type.ecore#//DifferenceSeries/negativeLineAttributes"/>
+    </genClasses>
+    <genClasses ecoreClass="type.ecore#//GanttSeries">
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference type.ecore#//GanttSeries/startMarker"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute type.ecore#//GanttSeries/startMarkerPosition"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference type.ecore#//GanttSeries/endMarker"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute type.ecore#//GanttSeries/endMarkerPosition"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference type.ecore#//GanttSeries/connectionLine"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference type.ecore#//GanttSeries/outline"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference type.ecore#//GanttSeries/outlineFill"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute type.ecore#//GanttSeries/useDecorationLabelValue"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference type.ecore#//GanttSeries/decorationLabel"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute type.ecore#//GanttSeries/decorationLabelPosition"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute type.ecore#//GanttSeries/paletteLineColor"/>
+    </genClasses>
+    <genClasses ecoreClass="type.ecore#//LineSeries">
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference type.ecore#//LineSeries/markers"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference type.ecore#//LineSeries/marker"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference type.ecore#//LineSeries/lineAttributes"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute type.ecore#//LineSeries/paletteLineColor"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute type.ecore#//LineSeries/curve"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference type.ecore#//LineSeries/shadowColor"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute type.ecore#//LineSeries/connectMissingValue"/>
+    </genClasses>
+    <genClasses ecoreClass="type.ecore#//PieSeries">
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute type.ecore#//PieSeries/explosion"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute type.ecore#//PieSeries/explosionExpression"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference type.ecore#//PieSeries/title"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute type.ecore#//PieSeries/titlePosition"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference type.ecore#//PieSeries/leaderLineAttributes"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute type.ecore#//PieSeries/leaderLineStyle"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute type.ecore#//PieSeries/leaderLineLength"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference type.ecore#//PieSeries/sliceOutline"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute type.ecore#//PieSeries/ratio"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute type.ecore#//PieSeries/rotation"/>
+    </genClasses>
+    <genClasses ecoreClass="type.ecore#//ScatterSeries"/>
+    <genClasses ecoreClass="type.ecore#//StockSeries">
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference type.ecore#//StockSeries/fill"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference type.ecore#//StockSeries/lineAttributes"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute type.ecore#//StockSeries/showAsBarStick"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute type.ecore#//StockSeries/stickLength"/>
+    </genClasses>
+  </genPackages>
+  <genPackages prefix="Component" basePackage="org.eclipse.birt.chart.model" resource="XML"
+      disposableProviderFactory="true" ecorePackage="component.ecore#/">
+    <genClasses ecoreClass="component.ecore#//Axis">
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute component.ecore#//Axis/type"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference component.ecore#//Axis/title"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference component.ecore#//Axis/subTitle"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute component.ecore#//Axis/titlePosition"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference component.ecore#//Axis/associatedAxes"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference component.ecore#//Axis/ancillaryAxes"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference component.ecore#//Axis/seriesDefinitions"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute component.ecore#//Axis/gapWidth"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute component.ecore#//Axis/orientation"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference component.ecore#//Axis/lineAttributes"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference component.ecore#//Axis/label"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference component.ecore#//Axis/formatSpecifier"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute component.ecore#//Axis/labelPosition"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute component.ecore#//Axis/staggered"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute component.ecore#//Axis/interval"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference component.ecore#//Axis/markerLines"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference component.ecore#//Axis/markerRanges"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference component.ecore#//Axis/triggers"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference component.ecore#//Axis/majorGrid"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference component.ecore#//Axis/minorGrid"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference component.ecore#//Axis/scale"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference component.ecore#//Axis/origin"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute component.ecore#//Axis/primaryAxis"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute component.ecore#//Axis/categoryAxis"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute component.ecore#//Axis/percent"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute component.ecore#//Axis/labelWithinAxes"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute component.ecore#//Axis/aligned"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute component.ecore#//Axis/sideBySide"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference component.ecore#//Axis/cursor"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute component.ecore#//Axis/labelSpan"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute component.ecore#//Axis/axisPercent"/>
+    </genClasses>
+    <genClasses ecoreClass="component.ecore#//ChartPreferences">
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference component.ecore#//ChartPreferences/labels"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference component.ecore#//ChartPreferences/blocks"/>
+    </genClasses>
+    <genClasses ecoreClass="component.ecore#//CurveFitting">
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference component.ecore#//CurveFitting/lineAttributes"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference component.ecore#//CurveFitting/label"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute component.ecore#//CurveFitting/labelAnchor"/>
+    </genClasses>
+    <genClasses ecoreClass="component.ecore#//Dial">
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute component.ecore#//Dial/startAngle"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute component.ecore#//Dial/stopAngle"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute component.ecore#//Dial/radius"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference component.ecore#//Dial/lineAttributes"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference component.ecore#//Dial/fill"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference component.ecore#//Dial/dialRegions"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference component.ecore#//Dial/majorGrid"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference component.ecore#//Dial/minorGrid"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference component.ecore#//Dial/scale"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute component.ecore#//Dial/inverseScale"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference component.ecore#//Dial/label"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference component.ecore#//Dial/formatSpecifier"/>
+    </genClasses>
+    <genClasses ecoreClass="component.ecore#//DialRegion">
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute component.ecore#//DialRegion/innerRadius"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute component.ecore#//DialRegion/outerRadius"/>
+    </genClasses>
+    <genClasses ecoreClass="component.ecore#//EStringToDataSetMapEntry">
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute component.ecore#//EStringToDataSetMapEntry/key"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference component.ecore#//EStringToDataSetMapEntry/value"/>
+    </genClasses>
+    <genClasses ecoreClass="component.ecore#//Grid">
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference component.ecore#//Grid/lineAttributes"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute component.ecore#//Grid/tickStyle"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference component.ecore#//Grid/tickAttributes"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute component.ecore#//Grid/tickSize"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute component.ecore#//Grid/tickCount"/>
+    </genClasses>
+    <genClasses ecoreClass="component.ecore#//Label">
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference component.ecore#//Label/caption"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference component.ecore#//Label/background"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference component.ecore#//Label/outline"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference component.ecore#//Label/shadowColor"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference component.ecore#//Label/insets"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute component.ecore#//Label/visible"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute component.ecore#//Label/ellipsis"/>
+    </genClasses>
+    <genClasses ecoreClass="component.ecore#//MarkerLine">
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference component.ecore#//MarkerLine/lineAttributes"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference component.ecore#//MarkerLine/value"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference component.ecore#//MarkerLine/label"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute component.ecore#//MarkerLine/labelAnchor"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference component.ecore#//MarkerLine/formatSpecifier"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference component.ecore#//MarkerLine/triggers"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference component.ecore#//MarkerLine/cursor"/>
+    </genClasses>
+    <genClasses ecoreClass="component.ecore#//MarkerRange">
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference component.ecore#//MarkerRange/outline"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference component.ecore#//MarkerRange/fill"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference component.ecore#//MarkerRange/startValue"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference component.ecore#//MarkerRange/endValue"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference component.ecore#//MarkerRange/label"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute component.ecore#//MarkerRange/labelAnchor"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference component.ecore#//MarkerRange/formatSpecifier"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference component.ecore#//MarkerRange/triggers"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference component.ecore#//MarkerRange/cursor"/>
+    </genClasses>
+    <genClasses ecoreClass="component.ecore#//Needle">
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference component.ecore#//Needle/lineAttributes"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute component.ecore#//Needle/decorator"/>
+    </genClasses>
+    <genClasses ecoreClass="component.ecore#//Scale">
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference component.ecore#//Scale/min"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference component.ecore#//Scale/max"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute component.ecore#//Scale/step"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute component.ecore#//Scale/unit"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute component.ecore#//Scale/minorGridsPerUnit"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute component.ecore#//Scale/stepNumber"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute component.ecore#//Scale/showOutside"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute component.ecore#//Scale/tickBetweenCategories"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute component.ecore#//Scale/autoExpand"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute component.ecore#//Scale/majorGridsStepNumber"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute component.ecore#//Scale/factor"/>
+    </genClasses>
+    <genClasses ecoreClass="component.ecore#//Series">
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute component.ecore#//Series/visible"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference component.ecore#//Series/label"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference component.ecore#//Series/dataDefinition"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute component.ecore#//Series/seriesIdentifier"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference component.ecore#//Series/dataPoint"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference component.ecore#//Series/dataSets"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute component.ecore#//Series/labelPosition"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute component.ecore#//Series/stacked"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference component.ecore#//Series/triggers"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute component.ecore#//Series/translucent"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference component.ecore#//Series/curveFitting"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference component.ecore#//Series/cursor"/>
+    </genClasses>
+  </genPackages>
+  <genPackages prefix="Layout" basePackage="org.eclipse.birt.chart.model" resource="XML"
+      disposableProviderFactory="true" ecorePackage="layout.ecore#/">
+    <genDataTypes ecoreDataType="layout.ecore#//EllipsisType"/>
+    <genDataTypes ecoreDataType="layout.ecore#//EllipsisTypeObject"/>
+    <genDataTypes ecoreDataType="layout.ecore#//TitlePercentType"/>
+    <genDataTypes ecoreDataType="layout.ecore#//TitlePercentTypeObject"/>
+    <genClasses ecoreClass="layout.ecore#//Block">
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference layout.ecore#//Block/children"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference layout.ecore#//Block/bounds"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute layout.ecore#//Block/anchor"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute layout.ecore#//Block/stretch"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference layout.ecore#//Block/insets"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute layout.ecore#//Block/row"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute layout.ecore#//Block/column"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute layout.ecore#//Block/rowspan"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute layout.ecore#//Block/columnspan"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference layout.ecore#//Block/minSize"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference layout.ecore#//Block/outline"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference layout.ecore#//Block/background"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute layout.ecore#//Block/visible"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference layout.ecore#//Block/triggers"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute layout.ecore#//Block/widthHint"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute layout.ecore#//Block/heightHint"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference layout.ecore#//Block/cursor"/>
+    </genClasses>
+    <genClasses ecoreClass="layout.ecore#//ClientArea">
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference layout.ecore#//ClientArea/background"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference layout.ecore#//ClientArea/outline"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference layout.ecore#//ClientArea/shadowColor"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference layout.ecore#//ClientArea/insets"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute layout.ecore#//ClientArea/visible"/>
+    </genClasses>
+    <genClasses ecoreClass="layout.ecore#//LabelBlock">
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference layout.ecore#//LabelBlock/label"/>
+    </genClasses>
+    <genClasses ecoreClass="layout.ecore#//Legend">
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute layout.ecore#//Legend/horizontalSpacing"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute layout.ecore#//Legend/verticalSpacing"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference layout.ecore#//Legend/clientArea"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference layout.ecore#//Legend/text"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute layout.ecore#//Legend/orientation"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute layout.ecore#//Legend/direction"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference layout.ecore#//Legend/separator"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute layout.ecore#//Legend/position"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute layout.ecore#//Legend/itemType"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference layout.ecore#//Legend/title"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute layout.ecore#//Legend/titlePosition"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute layout.ecore#//Legend/showValue"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute layout.ecore#//Legend/showPercent"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute layout.ecore#//Legend/showTotal"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute layout.ecore#//Legend/wrappingSize"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute layout.ecore#//Legend/maxPercent"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute layout.ecore#//Legend/titlePercent"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute layout.ecore#//Legend/ellipsis"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference layout.ecore#//Legend/formatSpecifier"/>
+    </genClasses>
+    <genClasses ecoreClass="layout.ecore#//Plot">
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute layout.ecore#//Plot/horizontalSpacing"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute layout.ecore#//Plot/verticalSpacing"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference layout.ecore#//Plot/clientArea"/>
+    </genClasses>
+    <genClasses ecoreClass="layout.ecore#//TitleBlock"/>
+  </genPackages>
+  <genPackages prefix="Model" basePackage="org.eclipse.birt.chart" resource="XML"
+      disposableProviderFactory="true" ecorePackage="model.ecore#/">
+    <genDataTypes ecoreDataType="model.ecore#//CoverageType"/>
+    <genDataTypes ecoreDataType="model.ecore#//CoverageTypeObject"/>
+    <genClasses ecoreClass="model.ecore#//Chart">
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute model.ecore#//Chart/version"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute model.ecore#//Chart/type"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute model.ecore#//Chart/subType"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference model.ecore#//Chart/description"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference model.ecore#//Chart/block"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute model.ecore#//Chart/dimension"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute model.ecore#//Chart/script"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute model.ecore#//Chart/units"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute model.ecore#//Chart/seriesThickness"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute model.ecore#//Chart/gridColumnCount"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference model.ecore#//Chart/extendedProperties"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference model.ecore#//Chart/sampleData"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference model.ecore#//Chart/styles"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference model.ecore#//Chart/interactivity"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference model.ecore#//Chart/emptyMessage"/>
+    </genClasses>
+    <genClasses ecoreClass="model.ecore#//ChartWithAxes">
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference model.ecore#//ChartWithAxes/axes"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference model.ecore#//ChartWithAxes/wallFill"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference model.ecore#//ChartWithAxes/floorFill"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute model.ecore#//ChartWithAxes/orientation"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute model.ecore#//ChartWithAxes/unitSpacing"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference model.ecore#//ChartWithAxes/rotation"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute model.ecore#//ChartWithAxes/reverseCategory"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute model.ecore#//ChartWithAxes/studyLayout"/>
+    </genClasses>
+    <genClasses ecoreClass="model.ecore#//ChartWithoutAxes">
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference model.ecore#//ChartWithoutAxes/seriesDefinitions"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute model.ecore#//ChartWithoutAxes/minSlice"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute model.ecore#//ChartWithoutAxes/minSlicePercent"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute model.ecore#//ChartWithoutAxes/minSliceLabel"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute model.ecore#//ChartWithoutAxes/coverage"/>
+    </genClasses>
+    <genClasses ecoreClass="model.ecore#//DialChart">
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute model.ecore#//DialChart/dialSuperimposition"/>
+    </genClasses>
+  </genPackages>
+  <genPackages prefix="Series" basePackage="org.eclipse.birt.chart.model.donut" resource="XML"
+      disposableProviderFactory="true" ecorePackage="series.ecore#/">
+    <genClasses ecoreClass="series.ecore#//DonutSeries">
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute series.ecore#//DonutSeries/thickness"/>
+    </genClasses>
+  </genPackages>
+</genmodel:GenModel>
