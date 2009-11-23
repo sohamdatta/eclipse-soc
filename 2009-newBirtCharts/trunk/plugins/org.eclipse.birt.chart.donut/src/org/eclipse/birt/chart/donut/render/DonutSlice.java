@@ -164,7 +164,9 @@ public class DonutSlice {
 
 	public void setQuadrant(int i) {
 		/*
-		 * 2 | 1 ----- 3 | 4
+		 * 2 | 1
+		 *  ----- 
+		 *  3 | 4
 		 */
 		this.quadrant = i;
 	}
