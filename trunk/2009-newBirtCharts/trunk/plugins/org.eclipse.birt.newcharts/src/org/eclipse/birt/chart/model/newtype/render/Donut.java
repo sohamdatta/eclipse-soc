@@ -34,7 +34,6 @@ public class Donut extends BaseRenderer {
 		super();
 	}
 
-	@Override
 	public void compute(Bounds bo, Plot p, ISeriesRenderingHints isrh)
 			throws ChartException {
 
@@ -70,14 +69,12 @@ public class Donut extends BaseRenderer {
 		// getDeviceScale() -> BASERENDERER
 	}
 
-	@Override
 	public void renderLegendGraphic(IPrimitiveRenderer ipr, Legend lg,
 			Fill paletteEntry, Bounds bo) throws ChartException {
 		// TODO Auto-generated method stub
 
 	}
 
-	@Override
 	public void renderSeries(IPrimitiveRenderer ipr, Plot p,
 			ISeriesRenderingHints isrh) throws ChartException {
 
